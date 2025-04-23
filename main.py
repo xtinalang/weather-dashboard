@@ -5,9 +5,10 @@ from decouple import config
 API_KEY = config("WEATHER_API_KEY")
 
 # Fetch actual states in the US 
-def fetch_us_states(url="https://gist.githubusercontent.com/mshafrir/2646763/raw/states_titlecase.json"):
+def fetch_us_states():
+    STATES_url = "https://gist.githubusercontent.com/mshafrir/2646763/raw/states_titlecase.json"
     try:
-        response = requests.get(url)
+        response = requests.get(STATES_url)
         response.raise_for_status()
         states_data = response.json()
         return set(state["name"] for state in states_data)
@@ -16,10 +17,10 @@ def fetch_us_states(url="https://gist.githubusercontent.com/mshafrir/2646763/raw
         return set()
 
 # Validates City/State for US
-def validate_city_state_input(city_state_input, valid_states):
+def validate_city_state_input(city_state_input: str, valid_states: set[str]) -> tuple[bool, str]:
     parts = [part.strip() for part in city_state_input.split(',')]
     if len(parts) != 2:
-        return False, "Please enter city and state separated by a comma. (e.g., Austin, Texas)"
+        return False, "Please enter city and state separated by a comma. (e.g., Seattle, Washington)"
 
     city, state = parts
     city_pattern = re.compile(r"^[a-zA-Z\s\-.']+$")
