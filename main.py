@@ -196,17 +196,57 @@ class WeatherApp:
         print("\nHow would you like to specify the location?")
         print("1. Search for a location")
         print("2. Enter location directly (city name, zip code, lat,lon, etc.)")
-        
+    
         while True:
             choice = input("Enter your choice (1-2): ")
             if choice == "1":
                 return self.search_and_select_location()
             elif choice == "2":
-                location = input("Enter location: ")
-                if location.strip():
-                    return location.strip()
-                else:
-                    print("Please enter a valid location.")
+                # Add verification loop for direct location entry
+                while True:
+                    location = input("Enter location: ")
+                
+                    if not location.strip():
+                        print("Please enter a valid location.")
+                        continue
+                
+                    # Verify the location exists using the search_city method
+                    verification_results = self.weather_api.search_city(location.strip())
+                
+                    if verification_results and len(verification_results) > 0:
+                        # Show the matched locations
+                        print("\nVerified locations matching your entry:")
+                        self.display.show_city(verification_results)
+                    
+                        # Ask if they want to use one of these or continue with original entry
+                        choice = input("\nUse one of these locations? (y/n): ")
+                    
+                        if choice.lower() == 'y':
+                            while True:
+                                try:
+                                    selection = input(f"Select a location (1-{len(verification_results)}) or 'q' to cancel: ")
+                                    if selection.lower() == 'q':
+                                     break
+                                    
+                                    selection_idx = int(selection) - 1
+                                    if 0 <= selection_idx < len(verification_results):
+                                        selected_location = verification_results[selection_idx]
+                                        # Return the lat,lon as the query string for most accurate results
+                                        return f"{selected_location['lat']},{selected_location['lon']}"
+                                    else:
+                                        print(f"Please enter a number between 1 and {len(verification_results)}.")
+                                except ValueError:
+                                    print("Please enter a valid number or 'q'.")
+                        else:
+                            # User wants to use their original entry
+                            print(f"Using your original entry: {location}")
+                            return location.strip()
+                    else:
+                        print("Could not verify this location with the weather service.")
+                        retry = input("Would you like to try again? (y/n): ")
+                        if retry.lower() != 'y':
+                            print("Returning to location selection menu...")
+                            break  # Break the inner loop to return to choice selection
             else:
                 print("Invalid choice. Please enter 1 or 2.")
     
