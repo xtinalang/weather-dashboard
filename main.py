@@ -4,24 +4,24 @@ from decouple import config
 
 
 class WeatherAPI:
-    def __init__(self, api_key=None):
-        self.api_key = config("WEATHER_API_KEY")
-        self.base_url = config("BASE_URL")
-        self.search_url = config("SEARCH_URL")
-        self.forcast_url = config("FORCAST_URL")
+    def __init__(self, api_key: Optional[str] = None) -> None:
+        self.api_key: str = api_key or config("WEATHER_API_KEY")
+        self.base_url: str = config("BASE_URL") #Need to just put as static 
+        #self.search_url: str = config("SEARCH_URL")
+        #self.forecast_url: str = config("FORECAST_URL")
     
-    def get_weather(self, location): ##Need to add hints
+    def get_weather(self, location: str) -> Optional[Dict[str, Any]]:
         """Get weather data from weatherapi.com for a given location"""
         try:
-            params = {
+            params: Dict[str, Any] = {
                 "q": location,
                 "key": self.api_key,
-                "days": 7,  # Get 7-day forecast
-                "aqi": "yes"  # Include air quality data
+                "days": 7, # Get 7-Day forcast
+                "aqi": "yes" #Include Air quality Data
             }
-            response = requests.get(f"{self.forcast_url}", params=params) #uses constant from env file
+            response = requests.get(f"{self.forecast_url}", params=params) #Need to change this to base_url/forcast.json
             response.raise_for_status()
-            weather_data = response.json()
+            weather_data: Dict[str, Any] = response.json()
             
             if "error" in weather_data:
                 print(f"API error: {weather_data['error']['message']}")
@@ -35,17 +35,17 @@ class WeatherAPI:
             print(f"An unexpected error occurred: {e}")
             return None
     
-    def search_city(self, query):
+    def search_city(self, query: str) -> Optional[List[Dict[str, Any]]]:
         """Search for city using weatherapi.com's search/autocomplete API"""
         try:
-            params = {
+            params: Dict[str, str] = {
                 "q": query,
                 "key": self.api_key,
                # "city": location_data
             }
             response = requests.get(f"{self.search_url}", params=params)
             response.raise_for_status()
-            location_data = response.json()
+            location_data: List[Dict[str, Any]] = response.json()
             
             if isinstance(location_data, dict) and "error" in location_data:
                 print(f"API error: {location_data['error']['message']}")
@@ -62,30 +62,29 @@ class WeatherAPI:
 
 class WeatherDisplay:
     @staticmethod
-    def get_weather_emoji(condition):
+    def get_weather_emoji(condition: str) -> Optional[List[Dict[str, Any]]]:
         """Return an emoji matching the weather condition"""
         condition = condition.lower()
-        if "sunny" in condition:
-            return "☀️"
-        elif "cloud" in condition:
-            return "☁️"
-        elif "rain" in condition or "drizzle" in condition:
-            return "🌧️"
-        elif "thunder" in condition:
-            return "⛈️"
-        elif "snow" in condition:
-            return "❄️"
-        elif "fog" in condition or "mist" in condition:
-            return "🌫️"
-        elif "clear" in condition:
-            return "🌕"
-        elif "wind" in condition:
-            return "🌬️"
-        else:
-            return "🌈"  # Default cute fallback
+        emoji_map: Dict[str, str] = {
+            "sunny": "☀️",
+            "cloud": "☁️",
+            "rain": "🌧️",
+            "drizzle": "🌧️",
+            "thunder": "⛈️",
+            "snow": "❄️",
+            "fog": "🌫️",
+            "mist": "🌫️",
+            "clear": "🌕",
+            "wind": "🌬️"
+        }
+        
+        for key, emoji in emoji_map.items():
+            if key in condition:
+                return emoji
+        return "🌈"  # Default cute fallback
 
     @staticmethod
-    def show_city(city):
+    def show_city(city: Optional[List[Dict[str, Any]]]) -> None:
         """Display found city"""
         if not city:
             print("No city found.")
@@ -101,16 +100,16 @@ class WeatherDisplay:
             print("-" * 50)
 
     @staticmethod
-    def show_current_weather(weather_data):
+    def show_current_weather(weather_data: Optional[Dict[str, Any]]) -> None:
         """Display current weather information"""
         if not weather_data:
             print("❌ Could not retrieve weather data.")
             return
 
-        location = weather_data["location"]
-        current = weather_data["current"]
-        condition_text = current['condition']['text']
-        emoji = WeatherDisplay.get_weather_emoji(condition_text)
+        location: Dict[str, Any] = weather_data["location"]
+        current: Dict[str, Any] = weather_data["current"]
+        condition_text: str = current['condition']['text']
+        emoji: str = WeatherDisplay.get_weather_emoji(condition_text)
 
         print(f"\nWeather in 📍 {location['name']}, {location['region']}, {location['country']}:")
         print(f"{emoji} {condition_text}")
@@ -124,23 +123,23 @@ class WeatherDisplay:
         print(f"🔄 Last updated: {current['last_updated']}")
     
     @staticmethod
-    def show_forecast(weather_data):
+    def show_forecast(weather_data: Optional[Dict[str, Any]]) -> None:
         """Display forecast information"""
         if not weather_data or "forecast" not in weather_data:
             return
         
-        forecast = weather_data["forecast"]["forecastday"]
+        forecast: List[Dict[str, Any]] = weather_data["forecast"]["forecastday"]
         
         print("\n🗓️ 7-Day Weather Forecast:")
         print("=" * 40)
         
         for day in forecast:
-            date = day["date"]
-            day_data = day["day"]
-            astro = day["astro"]
+            date: str = day["date"]
+            day_data: Dict[str, Any] = day["day"]
+            astro: Dict[str, str] = day["astro"]
             
-            condition_text = day_data['condition']['text']
-            emoji = WeatherDisplay.get_weather_emoji(condition_text)
+            condition_text: str = day_data['condition']['text']
+            emoji: str = WeatherDisplay.get_weather_emoji(condition_text)
             
             print(f"\n📅 Date: {date}")
             print(f"{emoji} {condition_text}")
@@ -177,13 +176,13 @@ class WeatherApp:
             # Let user select a location
             while True:
                 try:
-                    selection = input(f"Select a location (1-{len(city)}) or 'q' to search again: ")
+                    selection: str = input(f"Select a location (1-{len(city)}) or 'q' to search again: ")
                     if selection.lower() == 'q':
                         break
                         
-                    selection_idx = int(selection) - 1
+                    selection_idx: int = int(selection) - 1
                     if 0 <= selection_idx < len(city):
-                        selected_location = city[selection_idx]
+                        selected_location: Dict[str, Any] = city[selection_idx]
                         # Return the lat,lon as the query string for most accurate results
                         return f"{selected_location['lat']},{selected_location['lon']}"
                     else:
@@ -191,20 +190,20 @@ class WeatherApp:
                 except ValueError:
                     print("Please enter a valid number or 'q'.")
     
-    def get_location_input(self):
+    def get_location_input(self) -> str:
         """Get location input from user with options"""
         print("\nHow would you like to specify the location?")
         print("1. Search for a location")
         print("2. Enter location directly (city name, zip code, lat,lon, etc.)")
     
         while True:
-            choice = input("Enter your choice (1-2): ")
+            choice: str = input("Enter your choice (1-2): ")
             if choice == "1":
                 return self.search_and_select_location()
             elif choice == "2":
                 # Add verification loop for direct location entry
                 while True:
-                    location = input("Enter location: ")
+                    location: str = input("Enter location: ")
                 
                     if not location.strip():
                         print("Please enter a valid location.")
@@ -224,7 +223,7 @@ class WeatherApp:
                         if choice.lower() == 'y':
                             while True:
                                 try:
-                                    selection = input(f"Select a location (1-{len(verification_results)}) or 'q' to cancel: ")
+                                    selection: str = input(f"Select a location (1-{len(verification_results)}) or 'q' to cancel: ")
                                     if selection.lower() == 'q':
                                      break
                                     
