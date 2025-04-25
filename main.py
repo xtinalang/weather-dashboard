@@ -79,9 +79,7 @@ class WeatherAPI:
     def __init__(self, api_key: Optional[str] = None) -> None:
         logger.debug("Initializing WeatherAPI")
         self.api_key: str = api_key or config("WEATHER_API_KEY")
-        self.base_url: str = config("BASE_URL")  # Need to just put as static
-        self.search_url: str = f"{self.base_url}/search.json"
-        self.forecast_url: str = f"{self.base_url}/forecast.json"
+        self.base_url: str = "http://api.weatherapi.com/v1/" 
         logger.debug(f"Base URL set to: {self.base_url}")
     
     def get_weather(self, location: str) -> Optional[Dict[str, Any]]:
@@ -94,8 +92,8 @@ class WeatherAPI:
                 "days": 7,  # Get 7-Day forcast
                 "aqi": "yes"  # Include Air quality Data
             }
-            logger.debug(f"Making API request to {self.forecast_url}")
-            response = requests.get(f"{self.forecast_url}", params=params)
+            logger.debug(f"Making API request to {self.base_url}/forecast.json")
+            response = requests.get(f"{self.base_url}/forecast.json", params=params)
             response.raise_for_status()
             weather_data: Dict[str, Any] = response.json()
             
@@ -124,8 +122,8 @@ class WeatherAPI:
                 "key": self.api_key,
                # "city": location_data
             }
-            logger.debug(f"Making API request to {self.search_url}")
-            response = requests.get(f"{self.search_url}", params=params)
+            logger.debug(f"Making API request to {self.base_url}/search.json")
+            response = requests.get(f"{self.base_url}/search.json", params=params)
             response.raise_for_status()
             location_data: List[Dict[str, Any]] = response.json()
             
