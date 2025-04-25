@@ -18,8 +18,8 @@ logging.basicConfig(
 logger = logging.getLogger("weather_app")
 
 
-class User_Input_Information:
-    """Handles all user input operations"""
+class User_Input_Information: ###May go into a new module called USER_INPUT_FORM###
+    """This Handles all user input operations and they are used in the Manager"""
     
     @staticmethod
     def get_search_query() -> str:
@@ -76,6 +76,7 @@ class User_Input_Information:
 
 
 class WeatherAPI:
+    '''This Gets information from WeatherAPI.com'''
     def __init__(self, api_key: Optional[str] = None) -> None:
         logger.debug("Initializing WeatherAPI")
         self.api_key: str = api_key or config("WEATHER_API_KEY")
@@ -145,6 +146,7 @@ class WeatherAPI:
 
 
 class WeatherDisplay:
+    '''This displays the information to the user.  These hold functions that display weather data for a city. '''
     def __init__(self) -> None:
         logger.debug("Initializing WeatherDisplay")
         
@@ -252,13 +254,13 @@ class WeatherDisplay:
             print("-" * 40)
 
 
-class LocationManager:
-    """Handles location search and selection operations"""
+class LocationManager: ### THIS MAY BECOME THE ORCHASTRATOR ###
+    """Manages the location search and selection operations"""
     
     def __init__(self, weather_api: WeatherAPI, display: WeatherDisplay) -> None:
         self.weather_api = weather_api
         self.display = display
-        self.user_input = User_Input_Information()
+        self.user_input = User_Input_Information() # This has all the operations for searching
         logger.debug("Initializing LocationManager")
     
     def search_and_select_location(self) -> str:
