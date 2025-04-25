@@ -174,4 +174,5 @@ cython_debug/
 .pypirc
 
 #Experiments
+Experimental/*
 Experimental/
