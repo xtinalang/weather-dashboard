@@ -1,5 +1,7 @@
 # weather-dashboard
 
+## Will need to be re-written  
+
 ## 1. Overall Structure
 
 The code is organized into three main classes:
