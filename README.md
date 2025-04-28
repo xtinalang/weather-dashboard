@@ -9,8 +9,8 @@ weather_app/
 │   └── weather_api.py
 ├── ui/
 │   ├── user_input.py
-│   ├── weather_formatter.py   # New file
-│   └── weather_display.py     # Modified file
+│   ├── weather_formatter.py   # Potential New file
+│   └── weather_display.py     
 ├── handlers/
 |    └── location_manager.py
 ├── models/
