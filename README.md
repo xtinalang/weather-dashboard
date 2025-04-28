@@ -1,6 +1,6 @@
 # weather-dashboard
 
-
+```
 weather_app/
 ├── config.py # This may become a config folder
 ├── logger.py
@@ -14,3 +14,4 @@ weather_app/
 ├── handlers/
 |    └── location_manager.py
 ├── models/
+```
