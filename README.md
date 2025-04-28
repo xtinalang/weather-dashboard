@@ -12,6 +12,26 @@ weather_app/
 │   ├── weather_formatter.py   # Potential New file
 │   └── weather_display.py     
 ├── handlers/
-|    └── location_manager.py
+│   └── location_manager.py
 ├── models/
+```
+#### Other option
+
+```
+weather_app/
+├── __main__.py                # Entry point (currently your if __name__ == "__main__")
+├── config.py                  # Configuration and constants (e.g. default location, units)
+├── api/
+│   └── weather_api.py         # WeatherAPI class
+├── cli/
+│   ├── user_input.py          # User_Input_Information class
+│   ├── display.py             # WeatherDisplay class
+│   └── location_manager.py    # LocationManager class
+├── core/
+│   └── app.py 
+├── models/
+│              
+├── logs/
+│   └── weather_app.log        # Output log (you already handle this)
+└── requirements.txt     
 ```
