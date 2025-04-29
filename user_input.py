@@ -33,3 +33,12 @@ class User_Input_Information:
     @staticmethod
     def confirm_retry() -> str:
         return input("Would you like to try again? (y/n): ").lower()
+    
+    #@staticmethod
+    # def get_temperature_choice() -> str:
+    #     """Ask user to choose temperature unit"""
+    #     print("\nSelect temperature unit:")
+    #     print("1. Celsius (°C)")
+    #     print("2. Fahrenheit (°F)")
+    #     choice = input("Enter choice (1 or 2): ").strip()
+    #     return choice

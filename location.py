@@ -1,6 +1,6 @@
 from user_input import User_Input_Information
-from weather_api import WeatherAPI
-from weather_display import WeatherDisplay
+from api import WeatherAPI
+from display import WeatherDisplay
 import logging
 
 logger = logging.getLogger("weather_app")
