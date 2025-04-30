@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from emoji import get_weather_emoji
+from .emoji import get_weather_emoji
 
 logger = logging.getLogger("weather_app")
 
@@ -53,13 +53,13 @@ class WeatherDisplay:
             f"\nWeather in 📍 {location['name']}, {location['region']}, {location['country']}:"
         )
         print(f"{emoji} {condition_text}")
-        # Disply temperature in C or F
-        # if unit == "F":
-        #     print(f"🌡️ Temperature: {current['temp_f']}°F")
-        #     print(f"🌡️ Feels like: {current['feelslike_f']}°F")
-        # else:
-        #     print(f"🌡️ Temperature: {current['temp_c']}°C")
-        #     print(f"🌡️ Feels like: {current['feelslike_c']}°C")
+        #Disply temperature in C or F
+        if unit == "F":
+            print(f"🌡️ Temperature: {current['temp_f']}°F")
+            print(f"🌡️ Feels like: {current['feelslike_f']}°F")
+        else:
+            print(f"🌡️ Temperature: {current['temp_c']}°C")
+            print(f"🌡️ Feels like: {current['feelslike_c']}°C")
 
         print(f"🌡️ Temperature: {current['temp_c']}°C / {current['temp_f']}°F")
         print(f"🌡️ Feels like: {current['feelslike_c']}°C / {current['feelslike_f']}°F")
@@ -97,12 +97,12 @@ class WeatherDisplay:
             print(f"\n📅 Date: {date}")
             print(f"{emoji} {condition_text}")
             # Display min/max C or F in forcast
-            # if unit == "F":
-            #     print(f"🌡️ Max: {day_data['maxtemp_f']}°F")
-            #     print(f"🌡️ Min: {day_data['mintemp_f']}°F")
-            # else:
-            #     print(f"🌡️ Max: {day_data['maxtemp_c']}°C")
-            #     print(f"🌡️ Min: {day_data['mintemp_c']}°C")
+            if unit == "F":
+                print(f"🌡️ Max: {day_data['maxtemp_f']}°F")
+                print(f"🌡️ Min: {day_data['mintemp_f']}°F")
+            else:
+                print(f"🌡️ Max: {day_data['maxtemp_c']}°C")
+                print(f"🌡️ Min: {day_data['mintemp_c']}°C")
 
             print(f"🌡️ Max: {day_data['maxtemp_c']}°C / {day_data['maxtemp_f']}°F")
             print(f"🌡️ Min: {day_data['mintemp_c']}°C / {day_data['mintemp_f']}°F")

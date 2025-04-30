@@ -1,9 +1,10 @@
 # Main WeatherApp (application orchestration)
 import logging
 
-from api import WeatherAPI
-from display import WeatherDisplay
-from location import LocationManager
+from .api import WeatherAPI
+from .display import WeatherDisplay
+from .location import LocationManager
+from .user_input import User_Input_Information
 
 logger = logging.getLogger("weather_app")
 
@@ -14,18 +15,19 @@ class WeatherApp:
         self.weather_api = WeatherAPI()
         self.display = WeatherDisplay()
         self.location_manager = LocationManager(self.weather_api, self.display)
-        # self.unit = "C"  # Default to Celsius
+        self.unit = "C"  # Default to Celsius
+        self.user_input = User_Input_Information
 
     def run(self):
         """Main application flow"""
         print("Welcome to the Weather App!")
         print("==========================")
 
-        # unit_choice = self.user_input.get_temperature_unit()
-        # if unit_choice == "2":
-        #     self.unit = "F"
-        # else:
-        #     self.unit = "C"
+        unit_choice = self.user_input.get_temperature_choice()
+        if unit_choice == "2":
+            self.unit = "F"
+        else:
+            self.unit = "C"
 
         try:
             location = self.location_manager.get_location()

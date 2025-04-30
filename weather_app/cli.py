@@ -1,23 +1,26 @@
-"""This is for Typer"""
-
 import typer
+from . import logger
+from .app import WeatherApp
+
 
 app = typer.Typer(help="🌤️ A Totally Awesome Command-line Weather App")
 
 # function to run application interactively
-# @app_cli.command()
-# def typer_interactive_cli()
-#   WeatherApp().run() '''Verify syntax'''
-
-
 @app.command()
-def run():
-    print("Running the WeatherApp...")
+def typer_interactive_cli():
+  try:
+    logger.info("===== Weather App Started =====")
+    app = WeatherApp()
+    app.run()
+  except Exception as e:
+    logger.critical("Fatal error", exc_info=True)
+    print(f"Fatal error occurred: {e}")
+  finally:
+    logger.info("===== Weather App Finished =====")
 
-
-# function to grab weather location from user
-# app_cli.command()
-# def get_weather(location:str)
+# function to grab weather location from user --maybe fixes bug
+# @app.command()
+# def get_weather(location:str):
 #     api = WeatherAPI()
 #     display = WeatherDisplay()
 
