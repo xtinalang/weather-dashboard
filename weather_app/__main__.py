@@ -1,1 +1,3 @@
-#Need to learn how this works. 
+from .cli import app
+
+app()

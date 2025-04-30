@@ -1,7 +1,8 @@
-from app import WeatherApp
-import logging
+# from app import WeatherApp
+# import logging
 
 # Configure logging
+"""
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -12,8 +13,10 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("weather_app")
+"""
 
 if __name__ == "__main__":
+    """
     try:
         logger.info("===== Weather App Started =====")
         app = WeatherApp()
@@ -23,3 +26,5 @@ if __name__ == "__main__":
         print(f"Fatal error occurred: {e}")
     finally:
         logger.info("===== Weather App Finished =====")
+    """
+    pass
