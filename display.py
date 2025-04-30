@@ -1,8 +1,10 @@
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
 from emoji import get_weather_emoji
 
 logger = logging.getLogger("weather_app")
+
 
 class WeatherDisplay:
     """Handles all output and presentation of weather information."""
@@ -24,13 +26,17 @@ class WeatherDisplay:
 
         for i, location in enumerate(city, 1):
             logger.debug(f"City {i}: {location['name']}")
-            print(f"{i}. {location['name']}, {location.get('region', 'N/A')}, {location['country']}")
+            print(
+                f"{i}. {location['name']}, {location.get('region', 'N/A')}, {location['country']}"
+            )
             print(f"   Lat: {location['lat']}, Lon: {location['lon']}")
             print(f"   URL: {location.get('url', 'N/A')}")
             print("-" * 50)
 
     @staticmethod
-    def show_current_weather(weather_data: Optional[Dict[str, Any]], unit: str = "C") -> None:
+    def show_current_weather(
+        weather_data: Optional[Dict[str, Any]], unit: str = "C"
+    ) -> None:
         """Display current weather for a location."""
         logger.info("Displaying current weather")
         if not weather_data:
@@ -43,7 +49,9 @@ class WeatherDisplay:
         condition_text = current["condition"]["text"]
         emoji = get_weather_emoji(condition_text)
 
-        print(f"\nWeather in 📍 {location['name']}, {location['region']}, {location['country']}:")
+        print(
+            f"\nWeather in 📍 {location['name']}, {location['region']}, {location['country']}:"
+        )
         print(f"{emoji} {condition_text}")
         # Disply temperature in C or F
         # if unit == "F":
@@ -56,10 +64,14 @@ class WeatherDisplay:
         print(f"🌡️ Temperature: {current['temp_c']}°C / {current['temp_f']}°F")
         print(f"🌡️ Feels like: {current['feelslike_c']}°C / {current['feelslike_f']}°F")
         print(f"💧 Humidity: {current['humidity']}%")
-        print(f"💨 Wind: {current['wind_kph']} kph / {current['wind_mph']} mph, {current['wind_dir']}")
+        print(
+            f"💨 Wind: {current['wind_kph']} kph / {current['wind_mph']} mph, {current['wind_dir']}"
+        )
         print(f"🌫️ Visibility: {current['vis_km']} km / {current['vis_miles']} miles")
         print(f"📊 Pressure: {current['pressure_mb']} mb / {current['pressure_in']} in")
-        print(f"☔ Precipitation: {current['precip_mm']} mm / {current['precip_in']} in")
+        print(
+            f"☔ Precipitation: {current['precip_mm']} mm / {current['precip_in']} in"
+        )
         print(f"🔄 Last updated: {current['last_updated']}")
 
     @staticmethod

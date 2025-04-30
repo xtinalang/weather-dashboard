@@ -1,5 +1,5 @@
-import pytest
 from src.emoji import get_weather_emoji
+
 
 def test_get_weather_emoji():
     assert get_weather_emoji("Sunny") == "☀️"

@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger("weather_app")
 
+
 class User_Input_Information:
     @staticmethod
     def get_search_query() -> str:
@@ -33,8 +34,8 @@ class User_Input_Information:
     @staticmethod
     def confirm_retry() -> str:
         return input("Would you like to try again? (y/n): ").lower()
-    
-    #@staticmethod
+
+    # @staticmethod
     # def get_temperature_choice() -> str:
     #     """Ask user to choose temperature unit"""
     #     print("\nSelect temperature unit:")

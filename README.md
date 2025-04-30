@@ -10,7 +10,7 @@ weather_app/
 ├── ui/
 │   ├── user_input.py
 │   ├── weather_formatter.py   # Potential New file
-│   └── weather_display.py     
+│   └── weather_display.py
 ├── handlers/
 │   └── location_manager.py
 ├── models/
@@ -28,10 +28,10 @@ weather_app/
 │   ├── display.py             # WeatherDisplay class
 │   └── location_manager.py    # LocationManager class
 ├── core/
-│   └── app.py 
+│   └── app.py
 ├── models/
-│              
+│
 ├── logs/
 │   └── weather_app.log        # Output log (you already handle this)
-└── requirements.txt     
+└── requirements.txt
 ```
