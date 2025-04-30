@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger("weather_app")
 
+
 def get_weather_emoji(condition: str) -> str:
     condition = condition.lower()
     emoji_map = {
@@ -14,7 +15,7 @@ def get_weather_emoji(condition: str) -> str:
         "fog": "🌫️",
         "mist": "🌫️",
         "clear": "🌕",
-        "wind": "🌬️"
+        "wind": "🌬️",
     }
     for key, emoji in emoji_map.items():
         if key in condition:

@@ -1,10 +1,12 @@
 # Main WeatherApp (application orchestration)
+import logging
+
 from api import WeatherAPI
 from display import WeatherDisplay
 from location import LocationManager
-import logging
 
 logger = logging.getLogger("weather_app")
+
 
 class WeatherApp:
     def __init__(self):
@@ -41,7 +43,9 @@ class WeatherApp:
                 self.display.show_forecast(weather_data)
             else:
                 logger.error("Weather data could not be retrieved")
-                print("Could not retrieve weather data. Please check your input or connection.")
+                print(
+                    "Could not retrieve weather data. Please check your input or connection."
+                )
         except KeyboardInterrupt:
             logger.info("Application terminated by user")
             print("\nApplication terminated by user.")

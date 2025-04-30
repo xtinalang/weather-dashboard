@@ -1,9 +1,11 @@
-import requests
 import logging
+from typing import Any, Dict, List, Optional
+
+import requests
 from decouple import config
-from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger("weather_app")
+
 
 class WeatherAPI:
     def __init__(self, api_key: Optional[str] = None) -> None:
@@ -20,7 +22,7 @@ class WeatherAPI:
             logger.error(f"Weather fetch error: {e}", exc_info=True)
             print("Error getting weather data.")
             return None
-    
+
     # def get_current_weather(self, location: str) -> Optional[Dict[str, Any]]:
     #     try:
     #         params = {"q": location, "key": self.api_key }

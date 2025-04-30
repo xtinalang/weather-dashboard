@@ -1,9 +1,11 @@
-from user_input import User_Input_Information
-from api import WeatherAPI
-from display import WeatherDisplay
 import logging
 
+from api import WeatherAPI
+from display import WeatherDisplay
+from user_input import User_Input_Information
+
 logger = logging.getLogger("weather_app")
+
 
 class LocationManager:
     def __init__(self, weather_api: WeatherAPI, display: WeatherDisplay):
