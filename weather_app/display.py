@@ -7,10 +7,7 @@ logger = logging.getLogger("weather_app")
 
 
 class WeatherDisplay:
-    """Handles all output and presentation of weather information."""
-
-    def __init__(self) -> None:
-        logger.debug("Initializing WeatherDisplay")
+    logger.debug("Initializing WeatherDisplay")
 
     @staticmethod
     def show_city(city: Optional[List[Dict[str, Any]]]) -> None:
@@ -53,7 +50,7 @@ class WeatherDisplay:
             f"\nWeather in 📍 {location['name']}, {location['region']}, {location['country']}:"
         )
         print(f"{emoji} {condition_text}")
-        #Disply temperature in C or F
+        # Disply temperature in C or F
         if unit == "F":
             print(f"🌡️ Temperature: {current['temp_f']}°F")
             print(f"🌡️ Feels like: {current['feelslike_f']}°F")
