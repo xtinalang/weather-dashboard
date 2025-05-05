@@ -9,8 +9,8 @@ logger = logging.getLogger("weather_app")
 
 class WeatherAPI:
     def __init__(self, api_key: Optional[str] = None) -> None:
-        self.api_key = api_key or config("WEATHER_API_KEY")
-        self.base_url = "http://api.weatherapi.com/v1/"
+        self.api_key: str = api_key or config("WEATHER_API_KEY")
+        self.base_url: str = "http://api.weatherapi.com/v1/"
 
     def get_weather(self, location: str) -> Optional[Dict[str, Any]]:
         try:
