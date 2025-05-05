@@ -1,3 +1,6 @@
-from .cli import app
+# Call the interactive function directly
+# to maintain backward compatibility
+from .cli import interactive
 
-app()
+if __name__ == "__main__":
+    interactive()

@@ -18,6 +18,9 @@ dependencies = [
     "alembic>=1.13.1",  # For database migrations
 ]
 
+[project.scripts]
+weather-dashboard = "weather_app.cli:app"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",

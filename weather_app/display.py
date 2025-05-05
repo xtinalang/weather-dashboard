@@ -50,7 +50,8 @@ class WeatherDisplay:
             f"\nWeather in 📍 {location['name']}, {location['region']}, {location['country']}:"
         )
         print(f"{emoji} {condition_text}")
-        # Disply temperature in C or F
+
+        # Display temperature based on unit preference
         if unit == "F":
             print(f"🌡️ Temperature: {current['temp_f']}°F")
             print(f"🌡️ Feels like: {current['feelslike_f']}°F")
@@ -58,8 +59,6 @@ class WeatherDisplay:
             print(f"🌡️ Temperature: {current['temp_c']}°C")
             print(f"🌡️ Feels like: {current['feelslike_c']}°C")
 
-        print(f"🌡️ Temperature: {current['temp_c']}°C / {current['temp_f']}°F")
-        print(f"🌡️ Feels like: {current['feelslike_c']}°C / {current['feelslike_f']}°F")
         print(f"💧 Humidity: {current['humidity']}%")
         print(
             f"💨 Wind: {current['wind_kph']} kph / {current['wind_mph']} mph, {current['wind_dir']}"
@@ -93,7 +92,8 @@ class WeatherDisplay:
 
             print(f"\n📅 Date: {date}")
             print(f"{emoji} {condition_text}")
-            # Display min/max C or F in forcast
+
+            # Display temperature based on unit preference
             if unit == "F":
                 print(f"🌡️ Max: {day_data['maxtemp_f']}°F")
                 print(f"🌡️ Min: {day_data['mintemp_f']}°F")
@@ -101,8 +101,6 @@ class WeatherDisplay:
                 print(f"🌡️ Max: {day_data['maxtemp_c']}°C")
                 print(f"🌡️ Min: {day_data['mintemp_c']}°C")
 
-            print(f"🌡️ Max: {day_data['maxtemp_c']}°C / {day_data['maxtemp_f']}°F")
-            print(f"🌡️ Min: {day_data['mintemp_c']}°C / {day_data['mintemp_f']}°F")
             print(f"☔ Chance of rain: {day_data['daily_chance_of_rain']}%")
             print(f"❄️ Chance of snow: {day_data['daily_chance_of_snow']}%")
             print(f"🌄 Sunrise: {astro['sunrise']} | 🌇 Sunset: {astro['sunset']}")

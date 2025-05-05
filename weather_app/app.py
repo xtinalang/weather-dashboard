@@ -41,8 +41,8 @@ class WeatherApp:
 
             if weather_data:
                 logger.info("Weather data retrieved successfully")
-                self.display.show_current_weather(weather_data)
-                self.display.show_forecast(weather_data)
+                self.display.show_current_weather(weather_data, self.unit)
+                self.display.show_forecast(weather_data, self.unit)
             else:
                 logger.error("Weather data could not be retrieved")
                 print(
