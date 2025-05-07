@@ -1,6 +1,6 @@
 # Weather Dashboard
 
-A weather dashboard application with PostgreSQL database integration for storing weather data, locations, and user preferences.
+A weather dashboard application with SQLite database integration for storing weather data, locations, and user preferences.
 
 ## Project Structure
 
@@ -12,11 +12,13 @@ weather_app/
 ├── api.py            # WeatherAPI class (HTTP communication)
 ├── cli.py            # Typer-based CLI (user prompts, commands)
 ├── display.py        # WeatherDisplay class (terminal output)
+├── current.py        # CurrentWeatherManager for fetching current weather
+├── forecast.py       # ForecastManager for fetching forecast data
 ├── display_types.py  # Type definitions for display data
 ├── location.py       # LocationManager (search and select locations)
 ├── exceptions.py     # Custom exceptions
 ├── models.py         # SQLModel models for database entities
-├── database.py       # Database connection manager
+├── database.py       # Database connection manager with SQLite
 ├── repository.py     # CRUD operations for database entities
 ```
 
@@ -26,7 +28,7 @@ weather_app/
 - Location search and favorites
 - Historical weather data storage
 - User preferences (temperature unit, etc.)
-- PostgreSQL database integration with SQLModel ORM
+- SQLite database integration with SQLModel ORM
 - Data persistence across application restarts
 
 ## Setup
@@ -34,7 +36,6 @@ weather_app/
 ### Prerequisites
 
 - Python 3.9+
-- PostgreSQL (or SQLite for local development)
 - Weather API key (from weatherapi.com)
 
 ### Installation
@@ -55,33 +56,44 @@ weather_app/
    cp .env-template .env
    ```
 
-4. Update the .env file with your API key and database settings.
+4. Update the .env file with your API key.
 
-### PostgreSQL Setup
+### Database Setup
 
-For detailed PostgreSQL setup instructions, see [POSTGRES_SETUP.md](POSTGRES_SETUP.md).
+The application uses SQLite by default and will create a database file at `~/.weather_app/weather.db`. You can initialize the database and add sample data by running:
+
+```bash
+python init_database.py
+```
 
 ### Running the App
 
 ```bash
-python -m weather_app
+python -m weather_app interactive
+```
+
+You can also use other CLI commands:
+
+```bash
+# Get current weather
+python -m weather_app current
+
+# Get a forecast
+python -m weather_app forecast
+
+# Initialize database
+python -m weather_app init-db
+
+# Run diagnostics
+python -m weather_app diagnostics
 ```
 
 ## Tests
 
-```
-tests/
-├── __init__.py
-├── test_api.py
-├── test_cli.py
-├── test_location.py
-├── test_display.py
-├── test_app.py
-```
+You can test the application's core functionality with:
 
-Run tests with:
 ```bash
-pytest
+python test_location.py
 ```
 
 ## Database Schema
@@ -92,4 +104,10 @@ The application uses SQLModel with the following entities:
 - **WeatherRecord**: Stores weather data for locations
 - **UserSettings**: Stores user preferences
 
-The schema supports both SQLite (for development) and PostgreSQL (for production).
+## Troubleshooting
+
+If you encounter session-related errors or "Error retrieving location" messages, try these steps:
+
+1. Initialize the database: `python init_database.py`
+2. Run the diagnostics: `python -m weather_app diagnostics`
+3. Test location handling: `python test_location.py`

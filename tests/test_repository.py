@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from weather_app.database import Database
-from weather_app.models import Location, WeatherRecord
+from weather_app.models import Location, UserSettings, WeatherRecord
 from weather_app.repository import (
     LocationRepository,
     SettingsRepository,
@@ -228,3 +228,185 @@ def test_settings_repository(settings_repo):
     # Get settings again to verify persistence
     settings = settings_repo.get_settings()
     assert settings.temperature_unit == "fahrenheit"
+
+
+def test_location_repo_create(mock_location_repo, test_db_session, sample_location):
+    """Test creating a location."""
+    # Create a location
+    result = mock_location_repo.create(sample_location)
+
+    # Check that the location was created
+    assert result.id is not None
+    assert result.name == sample_location.name
+    assert result.latitude == sample_location.latitude
+    assert result.longitude == sample_location.longitude
+
+    # Verify in the database
+    db_location = test_db_session.get(Location, result.id)
+    assert db_location is not None
+    assert db_location.name == sample_location.name
+
+
+def test_location_repo_get_by_id(mock_location_repo, test_db_session, sample_location):
+    """Test getting a location by ID."""
+    # Add a location to the database
+    test_db_session.add(sample_location)
+    test_db_session.commit()
+
+    # Get the location by ID
+    result = mock_location_repo.get_by_id(sample_location.id)
+
+    # Check that the location was retrieved
+    assert result is not None
+    assert result.id == sample_location.id
+    assert result.name == sample_location.name
+
+
+def test_location_repo_find_by_coordinates(
+    mock_location_repo, test_db_session, sample_location
+):
+    """Test finding a location by coordinates."""
+    # Add a location to the database
+    test_db_session.add(sample_location)
+    test_db_session.commit()
+
+    # Find the location by coordinates
+    result = mock_location_repo.find_by_coordinates(
+        sample_location.latitude, sample_location.longitude
+    )
+
+    # Check that the location was found
+    assert result is not None
+    assert result.id == sample_location.id
+    assert result.name == sample_location.name
+
+
+def test_location_repo_get_favorites(mock_location_repo, test_db_session):
+    """Test getting favorite locations."""
+    # Create favorite and non-favorite locations
+    favorite = Location(
+        name="Paris", latitude=48.85, longitude=2.35, country="France", is_favorite=True
+    )
+    not_favorite = Location(
+        name="Berlin",
+        latitude=52.52,
+        longitude=13.40,
+        country="Germany",
+        is_favorite=False,
+    )
+
+    # Add locations to the database
+    test_db_session.add(favorite)
+    test_db_session.add(not_favorite)
+    test_db_session.commit()
+
+    # Get favorite locations
+    favorites = mock_location_repo.get_favorites()
+
+    # Check that only the favorite location was returned
+    assert len(favorites) == 1
+    assert favorites[0].name == favorite.name
+    assert favorites[0].is_favorite is True
+
+
+def test_location_repo_update(mock_location_repo, test_db_session, sample_location):
+    """Test updating a location."""
+    # Add a location to the database
+    test_db_session.add(sample_location)
+    test_db_session.commit()
+
+    # Update the location
+    mock_location_repo.update(
+        sample_location.id, {"name": "New London", "is_favorite": True}
+    )
+
+    # Check that the location was updated
+    updated = test_db_session.get(Location, sample_location.id)
+    assert updated.name == "New London"
+    assert updated.is_favorite is True
+    # Other fields should remain unchanged
+    assert updated.latitude == sample_location.latitude
+
+
+def test_location_repo_delete(mock_location_repo, test_db_session, sample_location):
+    """Test deleting a location."""
+    # Add a location to the database
+    test_db_session.add(sample_location)
+    test_db_session.commit()
+
+    # Delete the location
+    result = mock_location_repo.delete(sample_location.id)
+
+    # Check that the location was deleted
+    assert result is True
+    assert test_db_session.get(Location, sample_location.id) is None
+
+
+def test_settings_repo_get_settings(mock_settings_repo, test_db_session):
+    """Test getting application settings."""
+    # Get settings (this should create defaults if none exist)
+    settings = mock_settings_repo.get_settings()
+
+    # Check that settings were created
+    assert settings is not None
+    assert settings.id == 1
+    assert settings.temperature_unit == "celsius"
+
+    # Verify in the database
+    db_settings = test_db_session.get(UserSettings, 1)
+    assert db_settings is not None
+
+
+def test_settings_repo_update_temperature_unit(
+    mock_settings_repo, test_db_session, sample_user_settings
+):
+    """Test updating temperature unit."""
+    # Add settings to the database
+    test_db_session.add(sample_user_settings)
+    test_db_session.commit()
+
+    # Update temperature unit
+    updated = mock_settings_repo.update_temperature_unit("fahrenheit")
+
+    # Check that the settings were updated
+    assert updated.temperature_unit == "fahrenheit"
+
+    # Verify in the database
+    db_settings = test_db_session.get(UserSettings, 1)
+    assert db_settings.temperature_unit == "fahrenheit"
+
+
+def test_weather_repo_get_by_location(
+    mock_weather_repo, test_db_session, sample_location, sample_weather_record
+):
+    """Test getting weather records for a location."""
+    # Add location and weather record to the database
+    test_db_session.add(sample_location)
+    test_db_session.add(sample_weather_record)
+    test_db_session.commit()
+
+    # Get weather records for the location
+    records = mock_weather_repo.get_by_location(sample_location.id)
+
+    # Check that the weather record was returned
+    assert len(records) == 1
+    assert records[0].id == sample_weather_record.id
+    assert records[0].temperature == sample_weather_record.temperature
+
+
+def test_weather_repo_get_latest_for_location(
+    mock_weather_repo, test_db_session, sample_location, sample_weather_record
+):
+    """Test getting the latest weather record for a location."""
+    # Add location and weather record to the database
+    test_db_session.add(sample_location)
+    test_db_session.add(sample_weather_record)
+    test_db_session.commit()
+
+    # Get the latest weather record
+    record = mock_weather_repo.get_latest_for_location(sample_location.id)
+
+    # Check that the weather record was returned
+    assert record is not None
+    assert record.id == sample_weather_record.id
+    assert record.temperature == sample_weather_record.temperature
