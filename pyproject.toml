@@ -1,5 +1,5 @@
 [project]
-name = "weather-dashboard"
+name = "weather_app"
 version = "0.1.0"
 description = "Weather dashboard application with PostgreSQL database storage"
 readme = "README.md"
