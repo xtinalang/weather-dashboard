@@ -283,7 +283,6 @@ def run_diagnostics(
     # 1. Check database connection
     try:
         console.print("\n[bold]1. Database Connection Test[/bold]")
-        # db = Database()
         console.print("[green]✓ Database connection established[/green]")
 
         # Get database path information
