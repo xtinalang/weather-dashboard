@@ -90,9 +90,9 @@ class Database:
     @classmethod
     def get_database_path(cls) -> str:
         """Return the database path or URL."""
-        if DATABASE_URL.startswith("sqlite:///"):
-            return str(DATABASE_URL.replace("sqlite:///", ""))
-        return DATABASE_URL
+        # if DATABASE_URL.startswith("sqlite:///"):
+        #     return str(DATABASE_URL.replace("sqlite:///", ""))
+        return str(DATABASE_URL)
 
 
 def init_db() -> "Database":
