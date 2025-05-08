@@ -10,7 +10,8 @@ dependencies = [
     "ruff>=0.11.8",
     "typer>=0.15.3",
     "sqlmodel>=0.0.8",
-    "rich>=13.7.0",  # For improved CLI display
+    "rich>=13.7.0", # For improved CLI display
+    "psycopg2-binary>=2.9.10",
 ]
 
 [project.scripts]
