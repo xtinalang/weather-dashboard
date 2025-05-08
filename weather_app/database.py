@@ -25,6 +25,7 @@ class Database:
         """Singleton pattern to ensure only one database instance exists."""
         if cls._instance is None:
             cls._instance = super(Database, cls).__new__(cls)
+            cls._initialize_db()
         return cls._instance
 
     @classmethod
