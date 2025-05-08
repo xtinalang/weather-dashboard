@@ -3,7 +3,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.expression import func
-from sqlmodel import SQLModel, col, or_, select
+from sqlmodel import Session, SQLModel, col, or_, select
 
 from weather_app.database import Database
 from weather_app.exceptions import DatabaseError
@@ -23,15 +23,11 @@ class BaseRepository(Generic[T]):
 
     def create(self, obj: T) -> T:
         """Create a new database record"""
-        try:
-            with self.db.get_session() as session:
-                session.add(obj)
-                session.commit()
-                session.refresh(obj)
-                return obj
-        except SQLAlchemyError as e:
-            error_msg = f"Failed to create {self.model_class.__name__}: {e}"
-            raise DatabaseError(error_msg) from e
+        with Session(Database.get_engine()) as session:
+            session.add(obj)
+            session.commit()
+            session.refresh(obj)
+            return obj
 
     def get_by_id(self, id: int) -> Optional[T]:
         """Get a record by ID"""
