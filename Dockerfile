@@ -2,24 +2,27 @@
 FROM python:3.12-alpine
 
 # Set the working directory inside the container
-WORKDIR /weather_app
+WORKDIR /app
 
-# Copy the application files into the container
-COPY . /weather_app
-
-# Install SQLite and build tools
+# Install SQLite and build tools needed for SQLModel
 RUN apk update && apk add --no-cache \
     sqlite \
-    sqlite-dev \
-    build-base  # Needed if you're building packages with C extensions
+    build-base
 
-# Install any dependencies
-#RUN pip install --no-cache-dir -r requirements.txt
+# Copy just the requirements first (for better caching)
+COPY pyproject.toml ./
 
-#
+# Install the package
+RUN pip install --no-cache-dir -e .
 
-# Expose the port the app runs on
+# Copy the application files
+COPY . .
+
+# Create data directory for SQLite
+RUN mkdir -p /root/.weather_app
+
+# Expose the port for potential future web interface
 EXPOSE 8000
 
-# Command to run the application
-CMD ["python"]
+# Command to run the application in interactive mode
+CMD ["python", "-m", "weather_app", "interactive"]
