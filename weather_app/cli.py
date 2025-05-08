@@ -576,7 +576,7 @@ def configure_logging(verbose=False):
     log_level = logging.DEBUG if verbose else logging.INFO
 
     # Log format with timestamp, level and message
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    log_format = "%(asctime)s - %(name)s - %(module)s%(levelname)s - %(message)s"
 
     # Configure root logger with console handler
     logging.basicConfig(

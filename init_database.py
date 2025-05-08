@@ -7,6 +7,8 @@ import logging
 import sys
 from pathlib import Path
 
+from decouple import config
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -23,6 +25,15 @@ logger = logging.getLogger("database_init")
 def init_database():
     """Initialize the database"""
     try:
+        # Print database configuration
+        db_type = config("DB_TYPE", default="sqlite")
+        logger.info(f"Database type: {db_type}")
+
+        if db_type.lower() == "postgresql":
+            logger.info("Using PostgreSQL configuration")
+        else:
+            logger.info("Using SQLite configuration")
+
         from weather_app.database import init_db
 
         logger.info("Initializing database...")
@@ -44,6 +55,9 @@ def init_database():
                 print(f"Database file size: {size/1024:.1f} KB")
             else:
                 print(f"Warning: Database file doesn't exist at {db_path}")
+        else:
+            print(f"Database URL: {DATABASE_URL}")
+
     except Exception as e:
         logger.error(f"Error initializing database: {e}", exc_info=True)
         print(f"❌ Error initializing database: {e}")
