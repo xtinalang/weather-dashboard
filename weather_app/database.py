@@ -30,6 +30,7 @@ class Database:
     @classmethod
     def _initialize_db(cls) -> None:
         """Initialize the database engine with appropriate settings."""
+        # create another @classmethod to create the database from scratch
         if cls._engine is not None:
             return
 
@@ -90,8 +91,6 @@ class Database:
     @classmethod
     def get_database_path(cls) -> str:
         """Return the database path or URL."""
-        # if DATABASE_URL.startswith("sqlite:///"):
-        #     return str(DATABASE_URL.replace("sqlite:///", ""))
         return str(DATABASE_URL)
 
 
