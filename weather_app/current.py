@@ -5,7 +5,7 @@ Handles retrieving, processing, and displaying current weather data.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, cast
+from typing import cast
 
 from .api import WeatherAPI
 from .display import WeatherDisplay
@@ -54,8 +54,8 @@ class CurrentWeatherManager:
 
             # Get weather data from API
             coords: str = f"{location.latitude},{location.longitude}"
-            weather_data: Optional[WeatherData] = cast(
-                Optional[WeatherData], self.api.get_weather(coords)
+            weather_data: WeatherData | None = cast(
+                WeatherData | None, self.api.get_weather(coords)
             )
 
             if not weather_data:
@@ -66,7 +66,7 @@ class CurrentWeatherManager:
 
             # Save weather data to database
             try:
-                saved_record: Optional[WeatherRecord] = self._save_weather_record(
+                saved_record: WeatherRecord | None = self._save_weather_record(
                     location, weather_data
                 )
                 if saved_record:
@@ -97,8 +97,8 @@ class CurrentWeatherManager:
 
         # Get historical weather data from API
         coords: str = f"{location.latitude},{location.longitude}"
-        weather_data: Optional[WeatherData] = cast(
-            Optional[WeatherData], self.api.get_weather(coords, date=date_str)
+        weather_data: WeatherData | None = cast(
+            WeatherData | None, self.api.get_weather(coords, date=date_str)
         )
 
         if not weather_data:
@@ -128,7 +128,6 @@ class CurrentWeatherManager:
             unit_value: str = "celsius" if valid_unit == "C" else "fahrenheit"
 
             # Update settings directly using the update_temperature_unit method
-            # This method handles session errors internally
             try:
                 self.settings_repo.update_temperature_unit(unit_value)
                 self.display.show_message(f"Temperature unit updated to {unit_value}")
@@ -137,14 +136,13 @@ class CurrentWeatherManager:
                 self.display.show_error(
                     f"Failed to update temperature unit in database: {e}"
                 )
-                # Even if the database update fails, try to continue with the new setting for this session
 
         except Exception as e:
             self.display.show_error(f"Failed to update temperature unit: {e}")
 
     def _save_weather_record(
         self, location: Location, weather_data: WeatherData
-    ) -> Optional[WeatherRecord]:
+    ) -> WeatherRecord | None:
         """
         Save weather data to database
 
@@ -179,7 +177,7 @@ class CurrentWeatherManager:
             self.display.show_error(f"Failed to save weather data: {e}")
             return None
 
-    def get_latest_weather(self, location: Location) -> Optional[WeatherRecord]:
+    def get_latest_weather(self, location: Location) -> WeatherRecord | None:
         """
         Get the most recent weather record for a location from database.
 
@@ -190,7 +188,7 @@ class CurrentWeatherManager:
             Most recent WeatherRecord or None if not found
         """
         try:
-            record: Optional[WeatherRecord] = self.weather_repo.get_latest_for_location(
+            record: WeatherRecord | None = self.weather_repo.get_latest_for_location(
                 location.id
             )
             if record:
