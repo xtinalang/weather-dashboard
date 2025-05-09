@@ -1,10 +1,8 @@
 import logging
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Generator, Optional, TypeVar
 
 from decouple import config
-from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -32,35 +30,7 @@ class Database:
     def _initialize_db(cls) -> None:
         """Initialize the database engine with appropriate settings."""
         # create another @classmethod to create the database from scratch
-        if cls._engine is not None:
-            return
-
-        try:
-            # SQLite-specific setup
-            if DATABASE_URL.startswith("sqlite:///"):
-                db_path: Path = Path(DATABASE_URL.replace("sqlite:///", ""))
-                db_path.parent.mkdir(parents=True, exist_ok=True)
-                connect_args = {"check_same_thread": False}
-            else:
-                connect_args = {}
-
-            # Create the engine
-            cls._engine = create_engine(
-                DATABASE_URL,
-                connect_args=connect_args,
-                echo=False,
-                pool_pre_ping=True,  # Enable connection health checks
-            )
-
-            # Test the connection
-            with cls._engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-
-            logger.info("Database initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-            cls._engine = None  # Reset engine on failure
-            raise
+        cls._engine = create_engine(DATABASE_URL)
 
     @classmethod
     def create_tables(cls) -> None:
