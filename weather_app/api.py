@@ -11,9 +11,7 @@ from typing import (
 import requests
 from decouple import config
 
-from .schema import (
-    WeatherResponse,
-)
+from .schema import WeatherResponse
 
 logger = logging.getLogger("weather_app")
 

@@ -96,16 +96,19 @@ class ForecastDays(TypedDict):
     forecastday: List[ForecastDay]
 
 
+# Forecast data for forecast data
 class ForecastData(TypedDict, total=False):
     forecast: ForecastDays
 
 
+# Weather data for weather from /current.json or /forecast.json "current" or "forecast"
 class WeatherData(TypedDict, total=False):
     location: LocationData
     current: CurrentWeather
     forecast: Optional[ForecastDays]
 
 
+# Weather response for weather from /current.json or /forecast.json "current" or "forecast"
 class WeatherResponse(TypedDict, total=False):
     location: LocationData
     current: CurrentWeather
