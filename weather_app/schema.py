@@ -100,36 +100,6 @@ class ForecastData(TypedDict, total=False):
     forecast: ForecastDays
 
 
-# class ConditionData(TypedDict):
-#     text: str
-#     code: int
-
-
-# class CurrentWeatherData(TypedDict):
-#     temp_c: float
-#     temp_f: float
-#     feelslike_c: float
-#     feelslike_f: float
-#     humidity: int
-#     pressure_mb: float
-#     pressure_in: float
-#     wind_kph: float
-#     wind_mph: float
-#     wind_dir: str
-#     vis_km: float
-#     vis_miles: float
-#     precip_mm: float
-#     precip_in: float
-#     last_updated: str
-#     condition: ConditionData
-
-
-# class WeatherData(TypedDict, total=False):
-#     current: CurrentWeather
-#     location: Dict[str, Any]
-#     forecast: Optional[ForcastDays]
-
-
 class WeatherData(TypedDict, total=False):
     location: LocationData
     current: CurrentWeather

@@ -1,24 +1,15 @@
 import logging
-from typing import List, Optional, TypedDict, Union, cast
+from typing import List, Optional, Union, cast
 
 from .api import WeatherAPI
 from .database import init_db
 from .display import WeatherDisplay
 from .models import Location
 from .repository import LocationRepository
+from .schema import LocationData
 from .user_input import User_Input_Information
 
 logger = logging.getLogger("weather_app")
-
-
-# Define typed dictionaries for location data
-class LocationData(TypedDict, total=False):
-    name: str
-    lat: Union[float, str]
-    lon: Union[float, str]
-    country: str
-    region: Optional[str]
-    id: Optional[int]
 
 
 class LocationManager:
