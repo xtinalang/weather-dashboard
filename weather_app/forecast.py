@@ -1,29 +1,11 @@
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional, TypedDict, cast
+from typing import Any, Dict, Optional, cast
 
 from .api import WeatherAPI
 from .display import WeatherDisplay
 from .models import Location, UserSettings
 from .repository import LocationRepository, SettingsRepository
-
-
-# Define typed dictionaries for better typing of API responses
-class ForecastDay(TypedDict, total=False):
-    date: str
-    day: Dict[str, Any]
-    astro: Dict[str, str]
-
-
-class ForecastDays(TypedDict):
-    forecastday: List[ForecastDay]
-
-
-class ForecastData(TypedDict, total=False):
-    forecast: ForecastDays
-
-
-# Define temperature unit literal type
-TemperatureUnit = Literal["C", "F"]
+from .schema import ForecastData, ForecastDay, TemperatureUnit
 
 
 class ForecastManager:

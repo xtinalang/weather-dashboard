@@ -5,44 +5,15 @@ Handles retrieving, processing, and displaying current weather data.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, Literal, Optional, TypedDict, cast
+from typing import Optional, cast
 
 from .api import WeatherAPI
 from .display import WeatherDisplay
 from .models import Location, UserSettings, WeatherRecord
 from .repository import LocationRepository, SettingsRepository, WeatherRepository
+from .schema import CurrentWeather, TemperatureUnit, WeatherCondition, WeatherData
 
 logger = logging.getLogger(__name__)
-
-
-# Define typed dictionaries for weather data
-class WeatherCondition(TypedDict, total=False):
-    text: str
-    icon: str
-    code: int
-
-
-class CurrentWeather(TypedDict, total=False):
-    temp_c: float
-    temp_f: float
-    feelslike_c: float
-    feelslike_f: float
-    humidity: int
-    pressure_mb: float
-    wind_kph: float
-    wind_mph: float
-    wind_dir: str
-    condition: WeatherCondition
-
-
-class WeatherData(TypedDict, total=False):
-    current: CurrentWeather
-    location: Dict[str, Any]
-    forecast: Dict[str, Any]
-
-
-# Define temperature unit literal type
-TemperatureUnit = Literal["C", "F"]
 
 
 class CurrentWeatherManager:

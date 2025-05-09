@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, TypedDict
+from typing import Optional, TypedDict
 
 
 class LocationData(TypedDict):
@@ -38,11 +38,3 @@ class CurrentWeatherData(TypedDict):
     precip_in: float
     last_updated: str
     condition: ConditionData
-
-
-class WeatherData(TypedDict):
-    """Type definition for complete weather data including forecast"""
-
-    location: Dict[str, Any]
-    current: CurrentWeatherData
-    forecast: Optional[Dict[str, Any]]
