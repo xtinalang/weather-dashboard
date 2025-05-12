@@ -15,6 +15,7 @@ from .weather_types import WeatherResponse
 
 logger = logging.getLogger("weather_app")
 
+WEATHER_URL = "https://api.weatherapi.com/v1/"
 
 # Define typed dictionaries for API responses
 
@@ -41,7 +42,7 @@ class WeatherAPI:
         except Exception as e:
             logger.error(f"Failed to initialize WeatherAPI: {e}")
             raise ValueError("Failed to initialize WeatherAPI") from e
-        self.base_url: str = "https://api.weatherapi.com/v1/"
+        self.base_url: str = WEATHER_URL
 
     def get_weather(
         self, location: str, date: Optional[str] = None
@@ -60,7 +61,7 @@ class WeatherAPI:
                 endpoint = "history.json"
                 params["dt"] = date
 
-            request_url: str = f"{self.base_url}{endpoint}"
+            request_url: str = f"{WEATHER_URL}{endpoint}"
             response: requests.Response = requests.get(request_url, params=params)
             response.raise_for_status()
 
@@ -86,7 +87,7 @@ class WeatherAPI:
                 "aqi": "no",
             }
 
-            request_url: str = f"{self.base_url}forecast.json"
+            request_url: str = f"{WEATHER_URL}forecast.json"
             response: requests.Response = requests.get(request_url, params=params)
             response.raise_for_status()
 
@@ -103,7 +104,7 @@ class WeatherAPI:
     def search_city(self, query: str) -> Optional[List[CitySearchResult]]:
         try:
             params: Dict[str, str] = {"q": query, "key": self.api_key}
-            request_url: str = f"{self.base_url}search.json"
+            request_url: str = f"{WEATHER_URL}search.json"
 
             response: requests.Response = requests.get(request_url, params=params)
             response.raise_for_status()
