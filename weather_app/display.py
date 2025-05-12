@@ -92,13 +92,6 @@ class WeatherDisplay:
     def show_forecast(
         weather_data: Optional[Dict[str, Any]], unit: str = "C", days: int = None
     ) -> None:
-        """Display weather forecast for the specified number of days.
-
-        Args:
-            weather_data: Weather data from API
-            unit: Temperature unit ('C' for Celsius, 'F' for Fahrenheit)
-            days: Number of days to display (None for all available days)
-        """
         logger.info("Displaying weather forecast")
         if not weather_data:
             logger.warning("No weather data to display")
@@ -173,12 +166,6 @@ class WeatherDisplay:
     def show_historical_weather(
         weather_data: Optional[Dict[str, Any]], date_str: str
     ) -> None:
-        """Display historical weather data for a specific date.
-
-        Args:
-            weather_data: Weather data from API
-            date_str: Date string in YYYY-MM-DD format
-        """
         logger.info(f"Displaying historical weather for {date_str}")
         if not weather_data:
             logger.warning("No historical weather data to display")

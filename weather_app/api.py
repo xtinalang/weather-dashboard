@@ -31,15 +31,6 @@ class CitySearchResult(TypedDict, total=False):
 
 class WeatherAPI:
     def __init__(self, api_key: Optional[str] = None) -> None:
-        """
-        Initialize the Weather API with an API key.
-
-        Args:
-            api_key: API key for authentication, if None, read from environment
-
-        Raises:
-            ValueError: If API key is not found
-        """
         try:
             self.api_key: str = api_key or config("WEATHER_API_KEY")
             if not self.api_key:
@@ -55,16 +46,6 @@ class WeatherAPI:
     def get_weather(
         self, location: str, date: Optional[str] = None
     ) -> Optional[WeatherResponse]:
-        """
-        Get current weather and forecast for a location.
-
-        Args:
-            location: Location string (can be coordinates like "lat,lon")
-            date: Optional date string for historical weather (YYYY-MM-DD)
-
-        Returns:
-            Weather data response or None if request failed
-        """
         try:
             endpoint: str = "forecast.json"
             params: Dict[str, Union[str, int]] = {
@@ -94,16 +75,6 @@ class WeatherAPI:
             return None
 
     def get_forecast(self, location: str, days: int = 7) -> Optional[WeatherResponse]:
-        """
-        Get weather forecast for a location.
-
-        Args:
-            location: Location string (can be coordinates like "lat,lon")
-            days: Number of days to forecast (1-7)
-
-        Returns:
-            Dictionary with forecast data or None if request failed
-        """
         try:
             # Ensure days is within valid range
             valid_days: int = max(1, min(days, 7))
@@ -130,15 +101,6 @@ class WeatherAPI:
             return None
 
     def search_city(self, query: str) -> Optional[List[CitySearchResult]]:
-        """
-        Search for a city by name.
-
-        Args:
-            query: City name or partial name to search for
-
-        Returns:
-            List of matching cities or None if request failed
-        """
         try:
             params: Dict[str, str] = {"q": query, "key": self.api_key}
             request_url: str = f"{self.base_url}search.json"

@@ -53,15 +53,6 @@ class WeatherApp:
         )
 
     def refresh_location(self, location: Location) -> Optional[Location]:
-        """
-        Refresh a location from the database to ensure it's attached to an active session.
-
-        Args:
-            location: The location object to refresh
-
-        Returns:
-            A fresh Location object attached to a session, or None if not found
-        """
         try:
             logger.debug(
                 f"Refreshing location: {location.name if hasattr(location, 'name') else 'Unknown'} (ID: {location.id if hasattr(location, 'id') else 'Unknown'})"
