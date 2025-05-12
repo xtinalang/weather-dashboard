@@ -5,7 +5,13 @@ Utility script to initialize the weather app database directly.
 
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
+
+from weather_app.database import DATABASE_URL
+from weather_app.database import init_db as initialize_database
+from weather_app.models import Location
+from weather_app.repository import LocationRepository
 
 # Configure logging
 logging.basicConfig(
@@ -23,15 +29,10 @@ logger = logging.getLogger("database_init")
 def init_database():
     """Initialize the database"""
     try:
-        from weather_app.database import init_db
-
         logger.info("Initializing database...")
-        init_db()
+        initialize_database()
         logger.info("Database initialized successfully!")
         print("✅ Database initialized successfully!")
-
-        # Show database location
-        from weather_app.database import DATABASE_URL
 
         if DATABASE_URL.startswith("sqlite"):
             db_path = DATABASE_URL.replace("sqlite:///", "")
@@ -44,6 +45,9 @@ def init_database():
                 print(f"Database file size: {size/1024:.1f} KB")
             else:
                 print(f"Warning: Database file doesn't exist at {db_path}")
+        else:
+            print(f"Database URL: {DATABASE_URL}")
+
     except Exception as e:
         logger.error(f"Error initializing database: {e}", exc_info=True)
         print(f"❌ Error initializing database: {e}")
@@ -55,11 +59,6 @@ def init_database():
 def create_sample_location():
     """Create a sample location in the database"""
     try:
-        from datetime import datetime
-
-        from weather_app.models import Location
-        from weather_app.repository import LocationRepository
-
         # Create sample location
         repo = LocationRepository()
 
