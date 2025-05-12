@@ -5,7 +5,7 @@ from .api import WeatherAPI
 from .display import WeatherDisplay
 from .models import Location, UserSettings
 from .repository import LocationRepository, SettingsRepository
-from .schema import ForecastData, ForecastDay, TemperatureUnit
+from .weather_types import ForecastData, ForecastDay, TemperatureUnit
 
 
 class ForecastManager:
