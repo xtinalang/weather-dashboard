@@ -1,8 +1,8 @@
 import logging
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Generator, Optional, TypeVar
 
+from decouple import config
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -10,20 +10,11 @@ T = TypeVar("T", bound=SQLModel)
 
 logger = logging.getLogger(__name__)
 
-# Default SQLite database path in the user's home directory
-DEFAULT_SQLITE_PATH = Path.home() / ".weather_app" / "weather.db"
-
-# Database URL will always be SQLite
-DATABASE_URL = f"sqlite:///{DEFAULT_SQLITE_PATH}"
+DATABASE_URL = config("DATABASE_URL")
 
 
 class Database:
-    """
-    Database connection manager for the weather application.
-
-    This class implements the singleton pattern to ensure only one database
-    connection is active throughout the application lifetime.
-    """
+    """Database connection manager for the weather application."""
 
     _instance: Optional["Database"] = None
     _engine: Optional[Engine] = None
@@ -37,30 +28,15 @@ class Database:
 
     @classmethod
     def _initialize_db(cls) -> None:
-        """
-        Initialize the database engine with SQLite connection settings.
-
-        Creates the parent directory for the database file if it doesn't exist.
-        """
-        # Ensure directory exists for SQLite database
-        db_path: Path = Path(DATABASE_URL.replace("sqlite:///", ""))
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-
-        # Connect with SQLite optimizations
-        connect_args: dict[str, bool] = {"check_same_thread": False}
-        cls._engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
-        logger.info(f"SQLite database initialized at {db_path}")
+        """Initialize the database engine with appropriate settings."""
+        # create another @classmethod to create the database from scratch
+        cls._engine = create_engine(DATABASE_URL)
 
     @classmethod
     def create_tables(cls) -> None:
-        """
-        Create all tables defined in SQLModel models.
-
-        Raises:
-            Exception: If table creation fails
-        """
+        """Create all tables based on the imported models."""
         try:
-            # Import all models to ensure they're registered with SQLModel
+            # Import models so that SQLModel knows them
             from .models import Location, UserSettings, WeatherRecord  # noqa: F401
 
             SQLModel.metadata.create_all(cls.get_engine())
@@ -71,15 +47,7 @@ class Database:
 
     @classmethod
     def get_engine(cls) -> Engine:
-        """
-        Get the SQLAlchemy engine instance.
-
-        Returns:
-            Engine: SQLAlchemy engine for database connections
-
-        Raises:
-            AssertionError: If the engine is not initialized
-        """
+        """Return the database engine, initializing if needed."""
         if cls._engine is None:
             cls._initialize_db()
         assert cls._engine is not None, "Database engine not initialized"
@@ -87,39 +55,18 @@ class Database:
 
     @contextmanager
     def get_session(self) -> Generator[Session, None, None]:
-        """
-        Get a database session within a context manager.
-
-        Yields:
-            Session: An active SQLAlchemy session
-
-        Raises:
-            Exception: Re-raises any exceptions after rolling back the session
-        """
+        """Context-managed session generator."""
         with Session(self.get_engine()) as session:
             yield session
 
     @classmethod
     def get_database_path(cls) -> str:
-        """
-        Get the path to the SQLite database file.
-
-        Returns:
-            str: Path to the database file
-        """
-        return str(DEFAULT_SQLITE_PATH)
+        """Return the database path or URL."""
+        return str(DATABASE_URL)
 
 
 def init_db() -> "Database":
-    """
-    Initialize the database and create tables.
-
-    Returns:
-        Database: Initialized database instance
-
-    Raises:
-        Exception: Re-raises any exceptions from database initialization
-    """
+    """Initialize the database and create tables."""
     try:
         db: Database = Database()
         db.create_tables()
@@ -131,11 +78,6 @@ def init_db() -> "Database":
 
 
 def get_session() -> Generator[Session, None, None]:
-    """
-    Session dependency for FastAPI.
-
-    Yields:
-        Session: An active database session
-    """
+    """Yield a session using the global database engine."""
     with Session(Database.get_engine()) as session:
         yield session

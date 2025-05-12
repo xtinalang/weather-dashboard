@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from datetime import datetime
 from typing import Optional
@@ -9,9 +10,11 @@ from rich.console import Console
 from . import logger
 from .api import WeatherAPI
 from .app import WeatherApp
-from .database import init_db
+from .database import DATABASE_URL
+from .database import init_db as initialize_database
 from .display import WeatherDisplay
 from .exceptions import APIError, InputError
+from .location import LocationManager
 from .models import Location
 from .repository import LocationRepository
 
@@ -171,9 +174,9 @@ def init_database(
     configure_logging(verbose)
     try:
         # Directly initialize the database without going through the app
-        from .database import init_db as initialize_database
-
         initialize_database()
+
+        # initialize_database()
         console.print("[bold green]Database initialized successfully![/bold green]")
     except Exception as e:
         console.print(f"[bold red]Error initializing database: {e}[/bold red]")
@@ -285,11 +288,6 @@ def run_diagnostics(
         console.print("\n[bold]1. Database Connection Test[/bold]")
         console.print("[green]✓ Database connection established[/green]")
 
-        # Get database path information
-        import os
-
-        from .database import DATABASE_URL
-
         console.print(f"Database URL: {DATABASE_URL}")
 
         if DATABASE_URL.startswith("sqlite"):
@@ -320,7 +318,7 @@ def run_diagnostics(
             console.print(f"[red]✗ Error accessing Location table: {e}[/red]")
             console.print("[yellow]Attempting to initialize database...[/yellow]")
             try:
-                init_db()
+                initialize_database()
                 console.print("[green]Database initialized successfully[/green]")
             except Exception as init_err:
                 console.print(f"[red]Failed to initialize database: {init_err}[/red]")
@@ -405,10 +403,6 @@ def add_location(
     """Add a new location to the database manually."""
     configure_logging(verbose)
 
-    from datetime import datetime
-
-    from .repository import LocationRepository
-
     try:
         # Create location object
         location = Location(
@@ -455,12 +449,6 @@ def test_location_saving(
     console.print(f"[blue]Testing location saving with {city}, {country}[/blue]")
 
     try:
-        from datetime import datetime
-
-        from .app import WeatherApp
-        from .models import Location
-        from .repository import LocationRepository
-
         # 1. Try direct repository creation
         console.print("\n[bold]1. Testing direct repository creation[/bold]")
         repo = LocationRepository()
@@ -534,10 +522,6 @@ def test_location_saving(
         # 3. Test the location manager functionality
         console.print("\n[bold]3. Testing location manager[/bold]")
         try:
-            from .api import WeatherAPI
-            from .display import WeatherDisplay
-            from .location import LocationManager
-
             api = WeatherAPI()
             display = WeatherDisplay()
             manager = LocationManager(api, display)
@@ -576,7 +560,7 @@ def configure_logging(verbose=False):
     log_level = logging.DEBUG if verbose else logging.INFO
 
     # Log format with timestamp, level and message
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    log_format = "%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s"
 
     # Configure root logger with console handler
     logging.basicConfig(
