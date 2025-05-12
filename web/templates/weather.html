@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Weather for {{ weather.location.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <!-- Header and Controls -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-geo-alt"></i>
+                        {{ weather.location.name }}
+                        {% if weather.location.region %}, {{ weather.location.region }}{% endif %}
+                    </h3>
+
+                    <!-- Toggle Buttons -->
+                    <div class="d-flex">
+                        <!-- Temperature Toggle -->
+                        <a href="{{ url_for('toggle_unit', unit=temp_unit, display=display_type, lat=lat, lon=lon) }}"
+                           class="btn btn-sm btn-light me-2">
+                            <i class="bi bi-thermometer-half"></i>
+                            Switch to {% if temp_unit == 'C' %}°F{% else %}°C{% endif %}
+                        </a>
+
+                        <!-- Display Toggle -->
+                        <a href="{{ url_for('toggle_display', unit=temp_unit, display=display_type, lat=lat, lon=lon) }}"
+                           class="btn btn-sm btn-light">
+                            <i class="bi bi-arrow-repeat"></i>
+                            {% if display_type == 'current' %}Show Forecast{% else %}Show Current{% endif %}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Weather Badge Bar -->
+                <div class="card-body bg-light py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-info text-dark">
+                            <i class="bi bi-geo-alt"></i> {{ weather.location.country }}
+                        </span>
+                        <span class="badge bg-primary">
+                            <i class="bi bi-thermometer-half"></i> {{ temp_unit }}°
+                        </span>
+                        <span class="badge bg-success">
+                            <i class="bi {% if display_type == 'current' %}bi-sun{% else %}bi-calendar-week{% endif %}"></i>
+                            {{ display_type|capitalize }}
+                        </span>
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-clock"></i> {{ weather.current.last_updated }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {% if display_type == 'current' %}
+            <!-- Current Weather Display -->
+            <div class="card shadow mb-4 current-weather-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <!-- Main Weather Display -->
+                        <div class="col-md-6 text-center mb-4 mb-md-0">
+                            <img src="{{ weather.current.icon|replace('//cdn.weatherapi.com', 'https://cdn.weatherapi.com') }}"
+                                 alt="{{ weather.current.condition }}" class="weather-icon mb-3">
+                            <h3>{{ weather.current.condition }}</h3>
+                            <h1 class="display-4">{{ weather.current.temp }}°{{ temp_unit }}</h1>
+                            <p class="lead">Feels like {{ weather.current.feelslike }}°{{ temp_unit }}</p>
+
+                            <!-- Favorite Toggle Button -->
+                            <form method="post" action="{{ url_for('toggle_favorite', location_id=location.id, next=request.path) }}" class="mt-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn {% if location.is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %} favorite-toggle">
+                                    <i class="bi {% if location.is_favorite %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                                    {% if location.is_favorite %}Remove from Favorites{% else %}Add to Favorites{% endif %}
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Weather Details -->
+                        <div class="col-md-6">
+                            <h4 class="border-bottom pb-2 mb-3">Weather Details</h4>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-droplet text-primary me-2 fs-5"></i>
+                                        <div>
+                                            <div class="small text-muted">Humidity</div>
+                                            <div class="fw-bold">{{ weather.current.humidity }}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-wind text-success me-2 fs-5"></i>
+                                        <div>
+                                            <div class="small text-muted">Wind</div>
+                                            <div class="fw-bold">
+                                                {% if temp_unit == 'C' %}
+                                                    {{ weather.current.wind_kph }} km/h
+                                                {% else %}
+                                                    {{ weather.current.wind_mph }} mph
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-compass text-info me-2 fs-5"></i>
+                                        <div>
+                                            <div class="small text-muted">Direction</div>
+                                            <div class="fw-bold">{{ weather.current.wind_dir }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-cloud-drizzle text-primary me-2 fs-5"></i>
+                                        <div>
+                                            <div class="small text-muted">Precipitation</div>
+                                            <div class="fw-bold">
+                                                {% if temp_unit == 'C' %}
+                                                    {{ weather.current.precip_mm }} mm
+                                                {% else %}
+                                                    {{ weather.current.precip_in }} in
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-cloud-haze text-secondary me-2 fs-5"></i>
+                                        <div>
+                                            <div class="small text-muted">Pressure</div>
+                                            <div class="fw-bold">
+                                                {% if temp_unit == 'C' %}
+                                                    {{ weather.current.pressure_mb }} mb
+                                                {% else %}
+                                                    {{ weather.current.pressure_in }} in
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-eye text-warning me-2 fs-5"></i>
+                                        <div>
+                                            <div class="small text-muted">Visibility</div>
+                                            <div class="fw-bold">
+                                                {% if temp_unit == 'C' and weather.current.vis_km is defined %}
+                                                    {{ weather.current.vis_km }} km
+                                                {% elif weather.current.vis_miles is defined %}
+                                                    {{ weather.current.vis_miles }} miles
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Forecast Display -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-week"></i> Weather Forecast
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if weather.forecast %}
+                            {% for day in weather.forecast %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light text-center">
+                                        <h5 class="card-title mb-0">{{ day.date }}</h5>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <img src="{{ day.icon|replace('//cdn.weatherapi.com', 'https://cdn.weatherapi.com') }}"
+                                             alt="{{ day.condition }}" class="mb-2" style="width: 64px; height: 64px;">
+                                        <h5 class="mb-3">{{ day.condition }}</h5>
+
+                                        <div class="d-flex justify-content-around mb-3">
+                                            <div>
+                                                <i class="bi bi-thermometer-high text-danger"></i>
+                                                <span class="max-temp">{{ day.max_temp }}°{{ temp_unit }}</span>
+                                            </div>
+                                            <div>
+                                                <i class="bi bi-thermometer-low text-primary"></i>
+                                                <span class="min-temp">{{ day.min_temp }}°{{ temp_unit }}</span>
+                                            </div>
+                                        </div>
+
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span><i class="bi bi-droplet"></i> Humidity:</span>
+                                                <span class="fw-bold">{{ day.humidity }}%</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span><i class="bi bi-cloud-rain"></i> Rain:</span>
+                                                <span class="fw-bold">{{ day.chance_of_rain }}%</span>
+                                            </li>
+                                            {% if day.chance_of_snow != 'N/A' and day.chance_of_snow != '0' %}
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                <span><i class="bi bi-snow"></i> Snow:</span>
+                                                <span class="fw-bold">{{ day.chance_of_snow }}%</span>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        <small class="text-muted">
+                                            <i class="bi bi-sunrise"></i> {{ day.sunrise }} |
+                                            <i class="bi bi-sunset"></i> {{ day.sunset }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> No forecast data available.
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Back Button -->
+            <div class="mb-4">
+                <a href="{{ url_for('index', unit=temp_unit, display=display_type) }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Search
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+/* Weather Dashboard Styles */
+
+body {
+    background-color: #36454F;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Card styling */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    font-weight: bold;
+    border-bottom: none;
+}
+
+/* Weather display */
+.weather-icon {
+    width: 100px;
+    height: 100px;
+}
+
+.display-4 {
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+/* Temperature display */
+.max-temp {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.min-temp {
+    color: #0d6efd;
+    font-weight: bold;
+}
+
+/* Favorite location cards */
+.favorite-location {
+    border-left: 4px solid #ffc107;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.85rem;
+    padding: 0.4em 0.6em;
+}
+
+/* Button styling */
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+/* Footer styling */
+.footer {
+    margin-top: 2rem;
+    padding: 1rem 0;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .display-4 {
+        font-size: 2.5rem;
+    }
+
+    .weather-icon {
+        width: 80px;
+        height: 80px;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+}

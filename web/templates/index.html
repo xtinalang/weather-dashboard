@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Weather Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="bi bi-cloud-sun"></i> Weather Dashboard
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Toggle Buttons -->
+                    <div class="d-flex justify-content-between mb-4">
+                        <!-- Temperature Unit Toggle -->
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('toggle_unit', unit=temp_unit, display=display_type) }}"
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-thermometer-half"></i>
+                                {% if temp_unit == 'C' %}
+                                    °C (Switch to °F)
+                                {% else %}
+                                    °F (Switch to °C)
+                                {% endif %}
+                            </a>
+                        </div>
+
+                        <!-- Display Type Toggle -->
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('toggle_display', unit=temp_unit, display=display_type) }}"
+                               class="btn btn-outline-primary">
+                                {% if display_type == 'current' %}
+                                    <i class="bi bi-sun"></i> Current (Switch to Forecast)
+                                {% else %}
+                                    <i class="bi bi-calendar-week"></i> Forecast (Switch to Current)
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form action="{{ url_for('search') }}" method="post" class="mb-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="input-group">
+                            <input type="text" name="location" class="form-control"
+                                   placeholder="Enter city name (e.g., London, New York, Tokyo)" required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if favorites %}
+                    <!-- Favorite Locations -->
+                    <div class="mt-4">
+                        <h4>Your Favorite Locations</h4>
+                        <div class="row">
+                            {% for location in favorites %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 {% if location.is_favorite %}favorite-location{% endif %}">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            {{ location.name }}
+                                        </h5>
+                                        <p class="card-text">
+                                            {% if location.region %}{{ location.region }}, {% endif %}
+                                            {{ location.country }}
+                                        </p>
+                                        <a href="{{ url_for('weather', lat=location.latitude, lon=location.longitude, unit=temp_unit, display=display_type) }}"
+                                           class="btn btn-primary">
+                                            Get Weather
+                                        </a>
+
+                                        <!-- Favorite Toggle Button -->
+                                        <form method="post" action="{{ url_for('toggle_favorite', location_id=location.id, next=request.path) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-outline-warning btn-sm favorite-toggle">
+                                                <i class="bi bi-star"></i>
+                                                Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        Search for a location and add it to your favorites to see it here.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto text-center">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Current Settings</h5>
+                    <p>
+                        Temperature Unit: <span class="badge bg-primary">{{ temp_unit }}°</span>
+                        <br>
+                        Display Mode: <span class="badge bg-primary">{{ display_type|capitalize }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
