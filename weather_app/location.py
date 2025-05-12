@@ -1,24 +1,15 @@
 import logging
-from typing import List, Optional, TypedDict, Union, cast
+from typing import Optional, cast
 
 from .api import WeatherAPI
 from .database import init_db
 from .display import WeatherDisplay
 from .models import Location
 from .repository import LocationRepository
+from .schema import LocationData
 from .user_input import User_Input_Information
 
 logger = logging.getLogger("weather_app")
-
-
-# Define typed dictionaries for location data
-class LocationData(TypedDict, total=False):
-    name: str
-    lat: Union[float, str]
-    lon: Union[float, str]
-    country: str
-    region: Optional[str]
-    id: Optional[int]
 
 
 class LocationManager:
@@ -28,7 +19,7 @@ class LocationManager:
         self.user_input: User_Input_Information = User_Input_Information()
         self.location_repo: LocationRepository = LocationRepository()
 
-    def get_location(self) -> Optional[str]:
+    def get_location(self) -> str | None:
         """
         Get location coordinates from user input or database
 
@@ -73,7 +64,7 @@ class LocationManager:
                     "Please run 'python -m weather_app init-db' to initialize the database"
                 )
 
-    def _search_location(self) -> Optional[str]:
+    def _search_location(self) -> str | None:
         """
         Search for a location by name
 
@@ -88,8 +79,8 @@ class LocationManager:
                     continue
 
                 logger.debug(f"Searching for location: {query}")
-                city_list: Optional[List[LocationData]] = cast(
-                    Optional[List[LocationData]], self.weather_api.search_city(query)
+                city_list: list[LocationData] | None = cast(
+                    list[LocationData] | None, self.weather_api.search_city(query)
                 )
 
                 if not city_list:
@@ -122,8 +113,8 @@ class LocationManager:
                                 f"Location saved with ID: {location_info['id']}"
                             )
 
-                        lat: Union[float, str] = selected["lat"]
-                        lon: Union[float, str] = selected["lon"]
+                        lat: float | str = selected["lat"]
+                        lon: float | str = selected["lon"]
                         return f"{lat},{lon}"
                     else:
                         print(
@@ -136,7 +127,7 @@ class LocationManager:
         print("Maximum search attempts reached. Please try again later.")
         return None
 
-    def _direct_location(self) -> Optional[str]:
+    def _direct_location(self) -> str | None:
         """
         Enter a location directly
 
@@ -151,8 +142,8 @@ class LocationManager:
                     continue
 
                 logger.debug(f"Searching for direct location: {location}")
-                results: Optional[List[LocationData]] = cast(
-                    Optional[List[LocationData]], self.weather_api.search_city(location)
+                results: list[LocationData] | None = cast(
+                    list[LocationData] | None, self.weather_api.search_city(location)
                 )
 
                 if not results:
@@ -175,8 +166,8 @@ class LocationManager:
                 if "id" in location_info:
                     logger.debug(f"Location saved with ID: {location_info['id']}")
 
-                lat: Union[float, str] = results[0]["lat"]
-                lon: Union[float, str] = results[0]["lon"]
+                lat: float | str = results[0]["lat"]
+                lon: float | str = results[0]["lon"]
                 return f"{lat},{lon}"
             except Exception as e:
                 logger.error(f"Error in direct location: {e}")
@@ -185,7 +176,7 @@ class LocationManager:
         print("Maximum location attempts reached. Please try again later.")
         return None
 
-    def _use_saved_location(self) -> Optional[str]:
+    def _use_saved_location(self) -> str | None:
         """
         Use a previously saved location
 
@@ -194,10 +185,10 @@ class LocationManager:
         """
         try:
             # Get favorite locations first
-            favorites: List[Location] = self.location_repo.get_favorites()
+            favorites: list[Location] = self.location_repo.get_favorites()
 
             # If no favorites, get all locations
-            locations: List[Location]
+            locations: list[Location]
             if not favorites:
                 locations = self.location_repo.get_all(limit=10)
             else:
@@ -311,7 +302,7 @@ class LocationManager:
             lon_value = location_data.get("lon", 0)
             return {"lat": float(lat_value), "lon": float(lon_value)}
 
-    def get_favorite_locations(self) -> List[Location]:
+    def get_favorite_locations(self) -> list[Location]:
         """
         Get all favorite locations from the database
 

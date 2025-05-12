@@ -1,29 +1,11 @@
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional, TypedDict, cast
+from typing import Any, cast
 
 from .api import WeatherAPI
 from .display import WeatherDisplay
 from .models import Location, UserSettings
 from .repository import LocationRepository, SettingsRepository
-
-
-# Define typed dictionaries for better typing of API responses
-class ForecastDay(TypedDict, total=False):
-    date: str
-    day: Dict[str, Any]
-    astro: Dict[str, str]
-
-
-class ForecastDays(TypedDict):
-    forecastday: List[ForecastDay]
-
-
-class ForecastData(TypedDict, total=False):
-    forecast: ForecastDays
-
-
-# Define temperature unit literal type
-TemperatureUnit = Literal["C", "F"]
+from .schema import ForecastData, ForecastDay, TemperatureUnit
 
 
 class ForecastManager:
@@ -36,8 +18,8 @@ class ForecastManager:
     def get_forecast(
         self,
         location: Location,
-        days: Optional[int] = None,
-        unit: Optional[TemperatureUnit] = None,
+        days: int | None = None,
+        unit: TemperatureUnit | None = None,
     ) -> None:
         """
         Get and display forecast for a location
@@ -86,7 +68,7 @@ class ForecastManager:
 
             # Get forecast data from API
             coords: str = f"{location.latitude},{location.longitude}"
-            forecast_data: Optional[Dict[str, Any]] = self.api.get_forecast(
+            forecast_data: dict[str, Any] | None = self.api.get_forecast(
                 coords, days=forecast_days
             )
 
@@ -105,7 +87,7 @@ class ForecastManager:
         self,
         location: Location,
         target_date: datetime,
-        unit: Optional[TemperatureUnit] = None,
+        unit: TemperatureUnit | None = None,
     ) -> None:
         """
         Get and display forecast for a specific date
@@ -140,7 +122,7 @@ class ForecastManager:
 
             # Get forecast data
             coords: str = f"{location.latitude},{location.longitude}"
-            forecast_data: Optional[Dict[str, Any]] = self.api.get_forecast(
+            forecast_data: dict[str, Any] | None = self.api.get_forecast(
                 coords,
                 days=days_ahead + 1,  # +1 because we need to include the target day
             )
@@ -150,7 +132,7 @@ class ForecastManager:
                 return
 
             # Filter for the specific day and display
-            target_forecast: Optional[ForecastDay] = self._filter_forecast_for_date(
+            target_forecast: ForecastDay | None = self._filter_forecast_for_date(
                 forecast_data, target_date
             )
             if target_forecast:
@@ -166,8 +148,8 @@ class ForecastManager:
             self.display.show_error(f"Error getting forecast for date: {e}")
 
     def _filter_forecast_for_date(
-        self, forecast_data: Dict[str, Any], target_date: datetime
-    ) -> Optional[ForecastDay]:
+        self, forecast_data: dict[str, Any], target_date: datetime
+    ) -> ForecastDay | None:
         """
         Filter forecast data for a specific date
 
