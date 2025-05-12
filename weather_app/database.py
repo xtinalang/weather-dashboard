@@ -96,15 +96,8 @@ class Database:
         Raises:
             Exception: Re-raises any exceptions after rolling back the session
         """
-        session: Session = Session(self.get_engine())
-        try:
+        with Session(self.get_engine()) as session:
             yield session
-            session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
 
     @classmethod
     def get_database_path(cls) -> str:
