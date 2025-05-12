@@ -6,8 +6,8 @@ from .database import init_db
 from .display import WeatherDisplay
 from .models import Location
 from .repository import LocationRepository
-from .schema import LocationData
 from .user_input import User_Input_Information
+from .weather_types import LocationData
 
 logger = logging.getLogger("weather_app")
 

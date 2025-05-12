@@ -11,7 +11,12 @@ from .api import WeatherAPI
 from .display import WeatherDisplay
 from .models import Location, UserSettings, WeatherRecord
 from .repository import LocationRepository, SettingsRepository, WeatherRepository
-from .schema import CurrentWeather, TemperatureUnit, WeatherCondition, WeatherData
+from .weather_types import (
+    CurrentWeather,
+    TemperatureUnit,
+    WeatherCondition,
+    WeatherData,
+)
 
 logger = logging.getLogger(__name__)
 
