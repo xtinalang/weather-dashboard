@@ -1,4 +1,4 @@
-from src.emoji import get_weather_emoji
+from weather_app.emoji import get_weather_emoji
 
 
 def test_get_weather_emoji():
