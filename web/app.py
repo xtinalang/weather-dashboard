@@ -20,6 +20,8 @@ from weather_app.forecast import ForecastManager
 from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
 
+from .utils import format_weather_data
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config["SECRET_KEY"] = config("SECRET_KEY")
@@ -247,7 +249,7 @@ def toggle_favorite(location_id):
     return redirect(next_page)
 
 
-def format_weather_data(weather_data, unit="C"):
+def format_weather_data_unit(weather_data, unit="C"):
     """Format weather data for display in templates."""
     if not weather_data:
         return {}
