@@ -36,9 +36,22 @@ def weather():
     )
 
 
+# @app.route("/weather/forecast")
+# def forecast():
+#     try:
+#         city = request.args.get("city", "Unknown")
+#         unit = request.args.get("unit", "C")
+
+#         # Get forecast data from API
+#         forecast_data = get_forecast_data(city, unit)
+
+
+#     return render_template("forecast.html")
+
+
 # Run the app
 if __name__ == "__main__":
     # Use a different port since 8008 is in use
-    port = 8009
+    port = 5001
     print(f"Starting Weather Dashboard on http://localhost:{port}")
     app.run(host="0.0.0.0", port=port, debug=True)
