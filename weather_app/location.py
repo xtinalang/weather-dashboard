@@ -20,12 +20,6 @@ class LocationManager:
         self.location_repo: LocationRepository = LocationRepository()
 
     def get_location(self) -> str | None:
-        """
-        Get location coordinates from user input or database
-
-        Returns:
-            String with "latitude,longitude" format or None if cancelled
-        """
         try:
             # Check if database is initialized and has locations
             self._check_database()
@@ -65,12 +59,6 @@ class LocationManager:
                 )
 
     def _search_location(self) -> str | None:
-        """
-        Search for a location by name
-
-        Returns:
-            String with "latitude,longitude" format or None if cancelled
-        """
         max_attempts: int = 3
         for _ in range(max_attempts):
             try:
@@ -128,12 +116,6 @@ class LocationManager:
         return None
 
     def _direct_location(self) -> str | None:
-        """
-        Enter a location directly
-
-        Returns:
-            String with "latitude,longitude" format or None if cancelled
-        """
         max_attempts: int = 3
         for _ in range(max_attempts):
             try:
@@ -177,12 +159,6 @@ class LocationManager:
         return None
 
     def _use_saved_location(self) -> str | None:
-        """
-        Use a previously saved location
-
-        Returns:
-            String with "latitude,longitude" format or None if cancelled
-        """
         try:
             # Get favorite locations first
             favorites: list[Location] = self.location_repo.get_favorites()
@@ -237,16 +213,6 @@ class LocationManager:
             return None
 
     def _save_location_to_db(self, location_data: LocationData) -> LocationData:
-        """
-        Save a location to the database if it doesn't already exist
-
-        Args:
-            location_data: Dictionary with location data from API
-
-        Returns:
-            Dictionary with location data rather than the Location object
-            to avoid session binding issues.
-        """
         try:
             # Extract and validate data
             name: str = location_data.get("name", "Unknown")
@@ -303,24 +269,9 @@ class LocationManager:
             return {"lat": float(lat_value), "lon": float(lon_value)}
 
     def get_favorite_locations(self) -> list[Location]:
-        """
-        Get all favorite locations from the database
-
-        Returns:
-            List of favorite Location objects
-        """
         return self.location_repo.get_favorites()
 
     def toggle_favorite(self, location_id: int) -> bool:
-        """
-        Toggle the favorite status of a location
-
-        Args:
-            location_id: ID of the location to toggle
-
-        Returns:
-            True if successful, False otherwise
-        """
         try:
             location: Optional[Location] = self.location_repo.get_by_id(location_id)
             if location:
