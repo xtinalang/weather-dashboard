@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-Minimal Weather Dashboard
-"""
-
 from datetime import datetime
 
 from flask import Flask, render_template, request

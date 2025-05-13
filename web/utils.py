@@ -24,7 +24,9 @@ def format_weather_data(
             "pressure_in": weather_data["current"]["pressure_in"],
             "precip_mm": weather_data["current"]["precip_mm"],
             "precip_in": weather_data["current"]["precip_in"],
-            "last_updated": weather_data["current"]["last_updated"],
+            "last_updated": weather_data["current"][
+                "last_updated"
+            ],  # still need to add more to this.
         },
         "unit": unit,
     }
