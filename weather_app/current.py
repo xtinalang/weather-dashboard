@@ -36,12 +36,6 @@ class CurrentWeatherManager:
         self.settings_repo: SettingsRepository = SettingsRepository()
 
     def get_current_weather(self, location: Location) -> None:
-        """
-        Get and display current weather for a location
-
-        Args:
-            location: The location to get weather for
-        """
         try:
             # Get user settings for temperature unit
             temp_unit: TemperatureUnit
@@ -86,13 +80,6 @@ class CurrentWeatherManager:
             self.display.show_error(f"Error retrieving current weather: {e}")
 
     def get_historical_weather(self, location: Location, days_back: int = 1) -> None:
-        """
-        Get and display historical weather data for a location
-
-        Args:
-            location: The location to get weather for
-            days_back: Number of days in the past (1-7)
-        """
         # Ensure days_back is within valid range (API usually limits to 7 days)
         valid_days_back: int = max(1, min(days_back, 7))
 
@@ -116,12 +103,6 @@ class CurrentWeatherManager:
         self.display.show_historical_weather(weather_data, date_str)
 
     def update_display_preferences(self, temperature_unit: str) -> None:
-        """
-        Update the default temperature unit for weather display
-
-        Args:
-            temperature_unit: Temperature unit ("C" or "F")
-        """
         try:
             # Validate unit value
             valid_unit: str = temperature_unit.upper()
@@ -148,16 +129,6 @@ class CurrentWeatherManager:
     def _save_weather_record(
         self, location: Location, weather_data: WeatherData
     ) -> WeatherRecord | None:
-        """
-        Save weather data to database
-
-        Args:
-            location: The location to save weather for
-            weather_data: Weather data from API
-
-        Returns:
-            Saved WeatherRecord or None if failed
-        """
         try:
             # Extract current weather from API response
             current: CurrentWeather = weather_data.get("current", {})
@@ -183,15 +154,6 @@ class CurrentWeatherManager:
             return None
 
     def get_latest_weather(self, location: Location) -> WeatherRecord | None:
-        """
-        Get the most recent weather record for a location from database.
-
-        Args:
-            location: The location to get weather for
-
-        Returns:
-            Most recent WeatherRecord or None if not found
-        """
         try:
             record: WeatherRecord | None = self.weather_repo.get_latest_for_location(
                 location.id

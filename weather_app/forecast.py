@@ -21,14 +21,6 @@ class ForecastManager:
         days: int | None = None,
         unit: TemperatureUnit | None = None,
     ) -> None:
-        """
-        Get and display forecast for a location
-
-        Args:
-            location: The location to get forecast for
-            days: Number of days to forecast, defaults to user preference if None
-            unit: Temperature unit to display ("C" or "F"), defaults to user preference if None
-        """
         try:
             # Use user's preferred forecast days from settings if not specified
             forecast_days: int
@@ -89,14 +81,6 @@ class ForecastManager:
         target_date: datetime,
         unit: TemperatureUnit | None = None,
     ) -> None:
-        """
-        Get and display forecast for a specific date
-
-        Args:
-            location: The location to get forecast for
-            target_date: The specific date to get forecast for
-            unit: Temperature unit to display ("C" or "F"), defaults to user preference if None
-        """
         try:
             # Use user's preferred temperature unit if not specified
             temp_unit: TemperatureUnit
@@ -150,16 +134,6 @@ class ForecastManager:
     def _filter_forecast_for_date(
         self, forecast_data: dict[str, Any], target_date: datetime
     ) -> ForecastDay | None:
-        """
-        Filter forecast data for a specific date
-
-        Args:
-            forecast_data: The full forecast data from the API
-            target_date: The specific date to filter for
-
-        Returns:
-            The forecast for the target date or None if not found
-        """
         target_date_str: str = target_date.date().isoformat()
 
         for day in forecast_data.get("forecast", {}).get("forecastday", []):
@@ -168,12 +142,6 @@ class ForecastManager:
         return None
 
     def update_forecast_days(self, days: int) -> None:
-        """
-        Update the default number of forecast days
-
-        Args:
-            days: Number of days to forecast (1-7)
-        """
         try:
             # Ensure days is within valid range
             valid_days: int = max(1, min(days, 7))

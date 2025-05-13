@@ -1,4 +1,4 @@
-from typing import List, Literal, Optional, TypedDict
+from typing import Literal, TypedDict
 
 # Temperature unit type used across modules (for now)
 TemperatureUnit = Literal["C", "F"]
@@ -93,7 +93,7 @@ class ForecastDay(TypedDict, total=False):
 
 # Forecast list for forecast day
 class ForecastDays(TypedDict):
-    forecastday: List[ForecastDay]
+    forecastday: list[ForecastDay]
 
 
 # Forecast data for forecast data
@@ -105,7 +105,7 @@ class ForecastData(TypedDict, total=False):
 class WeatherData(TypedDict, total=False):
     location: LocationData
     current: CurrentWeather
-    forecast: Optional[ForecastDays]
+    forecast: ForecastDays | None
 
 
 # Weather response for weather from /current.json or /forecast.json "current" or "forecast"
