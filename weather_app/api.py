@@ -42,7 +42,6 @@ class WeatherAPI:
         except Exception as e:
             logger.error(f"Failed to initialize WeatherAPI: {e}")
             raise ValueError("Failed to initialize WeatherAPI") from e
-        self.base_url: str = WEATHER_URL
 
     def get_weather(
         self, location: str, date: Optional[str] = None
