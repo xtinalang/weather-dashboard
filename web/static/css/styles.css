@@ -1,6 +1,10 @@
 /* Weather Dashboard Styles */
 
 body {
+    background-image: url('../images/weather1.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     background-color: #36454F;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }

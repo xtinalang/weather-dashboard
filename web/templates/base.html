@@ -11,6 +11,13 @@
 </head>
 <body></body>
     <h1>Weather Dashboard</h1>
+        <!-- Navigation Links -->
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('index', display='forecast') }}">Forecast</a>
+            <a href="{{ url_for('index', unit='F') }}">°F</a>
+            <a href="{{ url_for('index', unit='C') }}">°C</a>
+        </div>
     {% block content %}
     {% endblock %}
 </body>
