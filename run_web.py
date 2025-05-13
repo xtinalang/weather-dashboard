@@ -16,14 +16,14 @@ from web.app import app
 # Load environment variables from .env file if it exists
 load_dotenv()
 
-# Set a default SECRET_KEY if not provided
-if not os.environ.get("SECRET_KEY"):
-    os.environ["SECRET_KEY"] = "dev-weather-dashboard-key"
+# # Set a default SECRET_KEY if not provided
+# if not os.environ.get("SECRET_KEY"):
+#     os.environ["SECRET_KEY"] = "dev-weather-dashboard-key"
 
-# Set Flask environment variables
-if os.environ.get("FLASK_ENV") != "production":
-    os.environ["FLASK_ENV"] = "development"
-    os.environ["FLASK_DEBUG"] = "1"
+# # Set Flask environment variables
+# if os.environ.get("FLASK_ENV") != "production":
+#     os.environ["FLASK_ENV"] = "development"
+#     os.environ["FLASK_DEBUG"] = "1"
 
 # Import after setting environment variables
 

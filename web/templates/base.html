@@ -3,20 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Weather Dashboard{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body></body>
-    <h1>Weather Dashboard</h1>
-        <!-- Navigation Links -->
-        <div class="nav-links">
-            <a href="{{ url_for('index') }}">Home</a>
-            <a href="{{ url_for('index', display='forecast') }}">Forecast</a>
-            <a href="{{ url_for('index', unit='F') }}">°F</a>
-            <a href="{{ url_for('index', unit='C') }}">°C</a>
-        </div>
-    {% block content %}
-    {% endblock %}
-</body>
+<body>
+    <div class="container">
+        <h1>Weather Dashboard</h1>
 
+        <div class="nav">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('index', unit='C') }}">°C</a>
+            <a href="{{ url_for('index', unit='F') }}">°F</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+        <div class="footer">
+            <p>&copy; {{ current_year }} Weather Dashboard</p>
+        </div>
+    </div>
+</body>
 </html>

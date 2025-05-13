@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results for "{{ query }}"{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-search"></i> Search Results for "{{ query }}"
+                </h3>
+            </div>
+            <div class="card-body">
+                <p>Select a location to view the weather:</p>
+
+                <div class="list-group mb-4">
+                    {% for location in results %}
+                    <a href="{{ url_for('weather', lat=location.lat, lon=location.lon) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ location.name }}</h5>
+                            <span class="badge bg-primary">
+                                {{ location.lat }}, {{ location.lon }}
+                            </span>
+                        </div>
+                        <p class="mb-1">
+                            {% if location.region %}{{ location.region }}, {% endif %}
+                            {{ location.country }}
+                        </p>
+                        {% if location.url %}
+                        <small class="text-muted">{{ location.url }}</small>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Search
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
