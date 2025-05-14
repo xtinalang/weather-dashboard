@@ -16,6 +16,18 @@ from weather_app.repository import LocationRepository, SettingsRepository
 from .forms import LocationSearchForm, UnitSelectionForm, UserInputLocationForm
 from .utils import format_weather_data
 
+# Configure port from environment variables with fallbacks
+# Try different possible environment variable names in order of preference
+PORT = config(
+    "FLASK_PORT",
+    default=config(
+        "PORT",
+        default=config("APP_PORT", default=os.environ.get("FLASK_PORT", 5050)),
+        cast=int,
+    ),
+    cast=int,
+)
+
 # Initialize Flask app
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
@@ -336,9 +348,7 @@ def api_weather(lat, lon):
 # Run the app
 def run():
     """Run the Flask application"""
-    app.run(
-        debug=True, host="0.0.0.0", port=config("FLASK_PORT", default=5050, cast=int)
-    )
+    app.run(debug=True, host="0.0.0.0", port=PORT)
 
 
 if __name__ == "__main__":
