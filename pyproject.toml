@@ -19,7 +19,7 @@ dependencies = [
 
 [project.scripts]
 weather-dashboard = "weather_app.cli:app"
-weather-webapp = "web.app:run"
+weather-webapp = "flask run"
 
 [project.optional-dependencies]
 dev = [

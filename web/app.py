@@ -7,7 +7,7 @@ from datetime import datetime
 from flask import Flask, render_template, request
 
 # Create Flask app
-app = Flask(__name__, template_folder="web/templates")
+app = Flask(__name__, template_folder="templates")
 
 
 # Home page
@@ -52,6 +52,6 @@ def weather():
 # Run the app
 if __name__ == "__main__":
     # Use a different port since 8008 is in use
-    port = 5001
+    port = 5000
     print(f"Starting Weather Dashboard on http://localhost:{port}")
     app.run(host="0.0.0.0", port=port, debug=True)
