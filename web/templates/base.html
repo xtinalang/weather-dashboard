@@ -1,44 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Weather Dashboard{% endblock %}</title>
-    <style>
-        body {
-            font-family: Times New Roman;
-            margin: 0;
-            padding: 30px;
-            background: #36454F;
-        }
-        h1 { text-align: center;
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #4A4A4A;
-            padding: 20px;
-            color: white;
-            border-radius: 5px;
-        }
-        footer {
-            text-align:
-            center;
-            margin-top:
-            20px;
-            color: pink;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <h1>Weather Dashboard</h1>
     <div class="container">
         {% block content %}{% endblock %}
     </div>
-    <footer>
+    <div class="footer">
         &copy; {{ current_year }} Weather Dashboard
-    </footer>
+    </div>
 </body>
 </html>
