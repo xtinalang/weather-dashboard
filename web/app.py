@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+from decouple import config
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFProtect
 
@@ -335,7 +336,9 @@ def api_weather(lat, lon):
 # Run the app
 def run():
     """Run the Flask application"""
-    app.run(debug=True, host="0.0.0.0", port=5050)
+    app.run(
+        debug=True, host="0.0.0.0", port=config("FLASK_PORT", default=5050, cast=int)
+    )
 
 
 if __name__ == "__main__":
