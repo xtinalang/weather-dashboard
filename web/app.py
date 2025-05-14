@@ -1,5 +1,7 @@
+import logging
 import os
 from datetime import datetime
+from logging.handlers import RotatingFileHandler
 
 from decouple import config
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
@@ -20,6 +22,34 @@ from .utils import format_weather_data
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 csrf = CSRFProtect(app)
+
+# Configure logging
+if not app.debug:
+    # In production
+    log_level = logging.WARNING
+else:
+    # In development
+    log_level = logging.DEBUG
+
+# Create logs directory if it doesn't exist
+if not os.path.exists("logs"):
+    os.mkdir("logs")
+
+# Set up a file handler
+file_handler = RotatingFileHandler(
+    "logs/weather_app.log", maxBytes=10240, backupCount=10
+)
+file_handler.setFormatter(
+    logging.Formatter(
+        "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
+    )
+)
+file_handler.setLevel(log_level)
+
+# Add the handler to the app logger
+app.logger.addHandler(file_handler)
+app.logger.setLevel(log_level)
+app.logger.info("Weather Dashboard startup")
 
 # Initialize database
 try:
@@ -47,6 +77,7 @@ def inject_current_year():
 @app.route("/")
 def index():
     """Home page with search form"""
+    app.logger.debug("Index page accessed")
     search_form = LocationSearchForm()
     ui_form = UserInputLocationForm()
     unit_form = UnitSelectionForm()
@@ -57,14 +88,18 @@ def index():
         unit_form.unit.default = (
             "F" if settings.temperature_unit.lower() == "fahrenheit" else "C"
         )
-    except Exception:
+        app.logger.debug(f"Default unit set to {unit_form.unit.default}")
+    except Exception as e:
+        app.logger.error(f"Error getting settings: {e}")
         pass
 
     # Get favorite locations for quick access
     favorites = []
     try:
         favorites = location_repo.get_favorites()
+        app.logger.debug(f"Loaded {len(favorites)} favorite locations")
     except Exception as e:
+        app.logger.error(f"Error loading favorite locations: {e}")
         flash(f"Error loading favorite locations: {e}", "error")
 
     return render_template(
@@ -106,19 +141,24 @@ def weather_path(coordinates):
     Handle weather path with coordinates that may include negative values.
     This is a workaround for Flask's router which can have issues with negative numbers.
     """
+    app.logger.debug(f"Weather path accessed with coordinates: {coordinates}")
+
     # Parse coordinates from the path
     try:
         # Split by slash and convert to float
         parts = coordinates.split("/")
         if len(parts) != 2:
+            app.logger.warning(f"Invalid coordinates format: {coordinates}")
             flash("Invalid coordinates format", "error")
             return redirect(url_for("index"))
 
         lat = float(parts[0])
         lon = float(parts[1])
+        app.logger.debug(f"Parsed coordinates: lat={lat}, lon={lon}")
 
         # Call the weather function directly
         unit = request.args.get("unit", "C").upper()
+        app.logger.debug(f"Using temperature unit: {unit}")
         if unit not in ["C", "F"]:
             unit = "C"
 
@@ -133,9 +173,17 @@ def weather_path(coordinates):
 
         # Get weather data
         coords = f"{lat},{lon}"
-        weather_data = weather_api.get_weather(coords)
+        app.logger.debug(f"Fetching weather data for coordinates: {coords}")
+        try:
+            weather_data = weather_api.get_weather(coords)
+            app.logger.debug("Weather data retrieved successfully")
+        except Exception as e:
+            app.logger.error(f"Error retrieving weather data: {e}")
+            flash("Failed to get weather data", "error")
+            return redirect(url_for("index"))
 
         if not weather_data:
+            app.logger.warning("Weather API returned empty data")
             flash("Failed to get weather data", "error")
             return redirect(url_for("index"))
 
@@ -192,9 +240,17 @@ def weather(lat, lon):
 
         # Get weather data
         coords = f"{lat},{lon}"
-        weather_data = weather_api.get_weather(coords)
+        app.logger.debug(f"Fetching weather data for coordinates: {coords}")
+        try:
+            weather_data = weather_api.get_weather(coords)
+            app.logger.debug("Weather data retrieved successfully")
+        except Exception as e:
+            app.logger.error(f"Error retrieving weather data: {e}")
+            flash("Failed to get weather data", "error")
+            return redirect(url_for("index"))
 
         if not weather_data:
+            app.logger.warning("Weather API returned empty data")
             flash("Failed to get weather data", "error")
             return redirect(url_for("index"))
 
@@ -337,7 +393,7 @@ def api_weather(lat, lon):
 def run():
     """Run the Flask application"""
     app.run(
-        debug=True, host="0.0.0.0", port=config("FLASK_PORT", default=5050, cast=int)
+        debug=True, host="0.0.0.0", port=config("FLASK_PORT", default=5000, cast=int)
     )
 
 
