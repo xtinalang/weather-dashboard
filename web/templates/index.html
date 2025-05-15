@@ -15,7 +15,7 @@
 {% endwith %}
 
 <div class="section">
-    <h2>Search for Weather</h2>
+    <h2>Search for Weather Location</h2>
 
     <!-- Search Form -->
     <form action="{{ url_for('search') }}" method="post">
@@ -25,13 +25,31 @@
             {{ search_form.query(placeholder="Enter city name") }}
         </div>
         <div>
+            <p>Forecast Days:</p>
+            {% for choice in forecast_days_form.forecast_days %}
+                <label>
+                    {{ choice }}
+                    {{ choice.label }}
+                </label>
+            {% endfor %}
+        </div>
+        <div>
+            <p>Temperature Unit:</p>
+            <label>
+                <input type="radio" name="unit" value="C" {% if unit_form.unit.default == 'C' %}checked{% endif %}> Celsius (°C)
+            </label>
+            <label>
+                <input type="radio" name="unit" value="F" {% if unit_form.unit.default == 'F' %}checked{% endif %}> Fahrenheit (°F)
+            </label>
+        </div>
+        <div>
             {{ search_form.submit(class="btn") }}
         </div>
     </form>
 </div>
 
 <div class="section">
-    <h2>Direct Location Entry</h2>
+    <h2>Weather Location Entry</h2>
 
     <!-- Location Form -->
     <form action="{{ url_for('ui_location') }}" method="post">
@@ -39,6 +57,16 @@
         <div>
             {{ ui_form.location.label }}
             {{ ui_form.location(placeholder="e.g., London, Tokyo, New York") }}
+        </div>
+
+        <div>
+            <p>Forecast Days:</p>
+            {% for choice in forecast_days_form.forecast_days %}
+                <label>
+                    {{ choice }}
+                    {{ choice.label }}
+                </label>
+            {% endfor %}
         </div>
 
         <div>
@@ -57,13 +85,18 @@
     </form>
 </div>
 
-<!-- Unit Preference -->
 <div class="section">
-    <h2>Default Unit</h2>
+    <h2>Temperature Unit Preference</h2>
     <form action="{{ url_for('update_unit') }}" method="post">
         {{ unit_form.csrf_token }}
         <div>
-            {{ unit_form.unit }}
+            <p>Temperature Unit:</p>
+            {% for choice in unit_form.unit %}
+                <label>
+                    {{ choice }}
+                    {{ choice.label }}
+                </label>
+            {% endfor %}
         </div>
         <div>
             {{ unit_form.submit(class="btn") }}
@@ -78,7 +111,10 @@
     {% for location in favorites %}
         <div class="favorite-item">
             <a href="{{ url_for('weather_path', coordinates=location.latitude ~ '/' ~ location.longitude) }}">
-                {{ location.name }}{% if location.region %}, {{ location.region }}{% endif %} ({{ location.country }})
+                {{ location.name }}{% if location.region %}, {{ location.region }}{% endif %} ({{ location.country }}) - Weather
+            </a>
+            <a href="{{ url_for('forecast_path', coordinates=location.latitude ~ '/' ~ location.longitude) }}">
+                Forecast
             </a>
         </div>
     {% endfor %}

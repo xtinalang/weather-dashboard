@@ -53,12 +53,12 @@ def format_weather_data(
             }
 
             # Add temperature based on unit
-            if unit == "F":
-                forecast_day["max_temp"] = day["day"]["maxtemp_f"]
-                forecast_day["min_temp"] = day["day"]["mintemp_f"]
-            else:
+            if unit == "C":
                 forecast_day["max_temp"] = day["day"]["maxtemp_c"]
                 forecast_day["min_temp"] = day["day"]["mintemp_c"]
+            else:
+                forecast_day["max_temp"] = day["day"]["maxtemp_f"]
+                forecast_day["min_temp"] = day["day"]["mintemp_f"]
 
             # Add sunrise/sunset if available
             if "astro" in day:

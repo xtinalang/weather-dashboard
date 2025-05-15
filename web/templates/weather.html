@@ -45,6 +45,7 @@
 
 <div class="nav">
     <a href="{{ url_for('index') }}">Back to Home</a>
+    <a href="{{ url_for('forecast_path', coordinates=lat ~ '/' ~ lon, unit=unit) }}">View Forecast</a>
     <a href="{{ url_for('weather', lat=lat, lon=lon, unit='C' if weather.unit == 'F' else 'F') }}">
         Switch to °{{ 'C' if weather.unit == 'F' else 'F' }}
     </a>

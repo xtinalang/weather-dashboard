@@ -16,6 +16,9 @@
             <a href="{{ url_for('weather', lat=location.lat, lon=location.lon, unit=unit|default('C')) }}" class="btn">
                 View Weather
             </a>
+            <a href="{{ url_for('forecast_path', coordinates=location.lat ~ '/' ~ location.lon, unit=unit|default('C')) }}" class="btn">
+                View Forecast
+            </a>
         </p>
     </div>
     {% endfor %}
