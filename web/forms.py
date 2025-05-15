@@ -26,3 +26,14 @@ class UnitSelectionForm(FlaskForm):
         default="C",
     )
     submit = SubmitField("Update")
+
+
+class ForecastDaysForm(FlaskForm):
+    """Form for selecting forecast days"""
+
+    forecast_days = RadioField(
+        "Forecast Days",
+        choices=[("1", "1 Day"), ("3", "3 Days"), ("5", "5 Days"), ("7", "7 Days")],
+        default="7",
+    )
+    submit = SubmitField("Update")

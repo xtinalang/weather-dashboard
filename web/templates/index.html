@@ -15,7 +15,7 @@
 {% endwith %}
 
 <div class="section">
-    <h2>Search for Location</h2>
+    <h2>Search for Weather Location</h2>
 
     <!-- Search Form -->
     <form action="{{ url_for('search') }}" method="post">
@@ -23,6 +23,23 @@
         <div>
             {{ search_form.query.label }}
             {{ search_form.query(placeholder="Enter city name") }}
+        </div>
+        <div>
+            {{ forecast_days_form.forecast_days.label }}
+            {{ forecast_days_form.forecast_days(default="7") }}
+            <p>Default is 7 days</p>
+            <label>
+                <input type="radio" name="forecast_days" value="1" {% if forecast_days_form.forecast_days.default == '1' %}checked{% endif %}> 1 Day
+            </label>
+            <label>
+                <input type="radio" name="forecast_days" value="3" {% if forecast_days_form.forecast_days.default == '3' %}checked{% endif %}> 3 Days
+            </label>
+            <label>
+                <input type="radio" name="forecast_days" value="5" {% if forecast_days_form.forecast_days.default == '5' %}checked{% endif %}> 5 Days
+            </label>
+            <label>
+                <input type="radio" name="forecast_days" value="7" {% if forecast_days_form.forecast_days.default == '7' %}checked{% endif %}> 7 Days
+            </label>
         </div>
         <div>
             <p>Temperature Unit:</p>
@@ -40,7 +57,7 @@
 </div>
 
 <div class="section">
-    <h2>Location Entry</h2>
+    <h2>Weather Location Entry</h2>
 
     <!-- Location Form -->
     <form action="{{ url_for('ui_location') }}" method="post">
