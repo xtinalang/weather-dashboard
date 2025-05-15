@@ -13,8 +13,8 @@ dependencies = [
     "rich>=13.7.0", # For improved CLI display
     "psycopg2-binary>=2.9.10",
     "python-decouple>=3.8",
-    "flask>=2.3.3",       # Flask web framework
-    "flask-wtf>=1.2.1",   # Flask form handling
+    "flask>=2.3.3", # Flask web framework
+    "flask-wtf>=1.2.1", # Flask form handling
 ]
 
 [project.scripts]

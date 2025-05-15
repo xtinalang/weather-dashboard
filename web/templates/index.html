@@ -26,20 +26,8 @@
         </div>
         <div>
             {{ forecast_days_form.forecast_days.label }}
-            {{ forecast_days_form.forecast_days(default="7") }}
+            {{ forecast_days_form.forecast_days(default="7")}}
             <p>Default is 7 days</p>
-            <label>
-                <input type="radio" name="forecast_days" value="1" {% if forecast_days_form.forecast_days.default == '1' %}checked{% endif %}> 1 Day
-            </label>
-            <label>
-                <input type="radio" name="forecast_days" value="3" {% if forecast_days_form.forecast_days.default == '3' %}checked{% endif %}> 3 Days
-            </label>
-            <label>
-                <input type="radio" name="forecast_days" value="5" {% if forecast_days_form.forecast_days.default == '5' %}checked{% endif %}> 5 Days
-            </label>
-            <label>
-                <input type="radio" name="forecast_days" value="7" {% if forecast_days_form.forecast_days.default == '7' %}checked{% endif %}> 7 Days
-            </label>
         </div>
         <div>
             <p>Temperature Unit:</p>
@@ -66,7 +54,11 @@
             {{ ui_form.location.label }}
             {{ ui_form.location(placeholder="e.g., London, Tokyo, New York") }}
         </div>
-
+        <div>
+            {{ forecast_days_form.forecast_days.label }}
+            {{ forecast_days_form.forecast_days(default="7")}}
+            <p>Default is 7 days</p>
+        </div>
         <div>
             <p>Temperature Unit:</p>
             <label>
@@ -91,7 +83,10 @@
     {% for location in favorites %}
         <div class="favorite-item">
             <a href="{{ url_for('weather_path', coordinates=location.latitude ~ '/' ~ location.longitude) }}">
-                {{ location.name }}{% if location.region %}, {{ location.region }}{% endif %} ({{ location.country }})
+                {{ location.name }}{% if location.region %}, {{ location.region }}{% endif %} ({{ location.country }}) - Weather
+            </a>
+            <a href="{{ url_for('forecast_path', coordinates=location.latitude ~ '/' ~ location.longitude) }}">
+                Forecast
             </a>
         </div>
     {% endfor %}

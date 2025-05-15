@@ -13,7 +13,12 @@ from weather_app.forecast import ForecastManager
 from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
 
-from .forms import LocationSearchForm, UnitSelectionForm, UserInputLocationForm
+from .forms import (
+    ForecastDaysForm,
+    LocationSearchForm,
+    UnitSelectionForm,
+    UserInputLocationForm,
+)
 from .utils import format_weather_data
 
 # Configure port from environment variables with fallbacks
@@ -62,6 +67,7 @@ def index():
     search_form = LocationSearchForm()
     ui_form = UserInputLocationForm()
     unit_form = UnitSelectionForm()
+    forecast_days_form = ForecastDaysForm()
 
     # Default to user's saved setting if available
     try:
@@ -69,6 +75,9 @@ def index():
         unit_form.unit.default = (
             "F" if settings.temperature_unit.lower() == "fahrenheit" else "C"
         )
+        forecast_days_form.forecast_days.default = str(settings.forecast_days)
+        unit_form.process()
+        forecast_days_form.process()
     except Exception:
         pass
 
@@ -84,6 +93,7 @@ def index():
         search_form=search_form,
         ui_form=ui_form,
         unit_form=unit_form,
+        forecast_days_form=forecast_days_form,
         favorites=favorites,
     )
 
@@ -343,6 +353,179 @@ def api_weather(lat, lon):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/forecast/<float:lat>/<float:lon>", methods=["GET", "POST"])
+def forecast(lat, lon):
+    """Show forecast for a location"""
+    unit = request.args.get("unit", "C").upper()
+    if unit not in ["C", "F"]:
+        unit = "C"
+
+    # Get forecast days from form or default to 7
+    forecast_days = 7
+    if request.method == "POST":
+        form = ForecastDaysForm()
+        if form.validate_on_submit():
+            forecast_days = int(form.forecast_days.data)
+    else:
+        forecast_days = int(request.args.get("days", 7))
+
+    try:
+        # Find or get location
+        location = location_repo.find_or_create_by_coordinates(
+            name="Custom Location",
+            latitude=lat,
+            longitude=lon,
+            country="",
+            region=None,
+        )
+
+        # Get forecast data
+        coords = f"{lat},{lon}"
+        forecast_data = weather_api.get_forecast(coords, days=forecast_days)
+
+        if not forecast_data:
+            flash("Failed to get forecast data", "error")
+            return redirect(url_for("index"))
+
+        # Update location name from API data if it was auto-created
+        if location.name == "Custom Location" and "location" in forecast_data:
+            api_location = forecast_data["location"]
+            location = location_repo.update(
+                location.id,
+                {
+                    "name": api_location["name"],
+                    "country": api_location["country"],
+                    "region": api_location.get("region"),
+                },
+            )
+
+        # Format data for template
+        formatted_forecast = []
+        if "forecast" in forecast_data and "forecastday" in forecast_data["forecast"]:
+            for day in forecast_data["forecast"]["forecastday"]:
+                formatted_day = {
+                    "date": day["date"],
+                    "max_temp": day["day"]["maxtemp_c"]
+                    if unit == "C"
+                    else day["day"]["maxtemp_f"],
+                    "min_temp": day["day"]["mintemp_c"]
+                    if unit == "C"
+                    else day["day"]["mintemp_f"],
+                    "condition": day["day"]["condition"]["text"],
+                    "icon": day["day"]["condition"]["icon"],
+                    "chance_of_rain": day["day"]["daily_chance_of_rain"],
+                    "chance_of_snow": day["day"]["daily_chance_of_snow"],
+                    "humidity": day["day"]["avghumidity"],
+                    "wind_speed": day["day"]["maxwind_kph"]
+                    if unit == "C"
+                    else day["day"]["maxwind_mph"],
+                    "wind_unit": "km/h" if unit == "C" else "mph",
+                }
+                formatted_forecast.append(formatted_day)
+
+        # Render forecast template
+        return render_template(
+            "forecast.html",
+            forecast=formatted_forecast,
+            location=location,
+            unit=unit,
+            lat=lat,
+            lon=lon,
+            forecast_days=forecast_days,
+        )
+
+    except Exception as e:
+        flash(f"Error getting forecast: {e}", "error")
+        return redirect(url_for("index"))
+
+
+# Keep the existing forecast route for form submission
+@app.route("/forecast", methods=["POST"])
+def forecast_form():
+    """Process forecast form and redirect to forecast page"""
+    form = ForecastDaysForm()
+    lat = request.form.get("lat")
+    lon = request.form.get("lon")
+    unit = request.form.get("unit", "C")
+
+    # If the request is coming from weather.html, it should have lat/lon
+    if lat and lon:
+        if form.validate_on_submit():
+            forecast_days = form.forecast_days.data
+            return redirect(
+                url_for(
+                    "forecast_path",
+                    coordinates=f"{lat}/{lon}",
+                    unit=unit,
+                    days=forecast_days,
+                )
+            )
+        else:
+            flash("Invalid forecast days selection", "error")
+            return redirect(
+                url_for("weather_path", coordinates=f"{lat}/{lon}", unit=unit)
+            )
+
+    # If the request is coming from index.html, it may have a location name to search
+    location = request.form.get("location")
+    if location:
+        try:
+            # Search for the location
+            results = weather_api.search_city(location)
+            if not results or len(results) == 0:
+                flash(f"No cities found matching '{location}'", "warning")
+                return redirect(url_for("index"))
+
+            # If only one result, go directly to forecast
+            if len(results) == 1 and form.validate_on_submit():
+                forecast_days = form.forecast_days.data
+                lat = results[0]["lat"]
+                lon = results[0]["lon"]
+                return redirect(
+                    url_for(
+                        "forecast_path",
+                        coordinates=f"{lat}/{lon}",
+                        unit=unit,
+                        days=forecast_days,
+                    )
+                )
+
+            # If multiple results, show them
+            return render_template(
+                "search_results.html", results=results, query=location, unit=unit
+            )
+        except Exception as e:
+            flash(f"Error finding location: {e}", "error")
+
+    # If we get here, the request was invalid
+    flash("Missing location information", "error")
+    return redirect(url_for("index"))
+
+
+@app.route("/forecast/<path:coordinates>", methods=["GET", "POST"])
+def forecast_path(coordinates):
+    """
+    Handle forecast path with coordinates that may include negative values.
+    This is a workaround for Flask's router which can have issues with negative numbers.
+    """
+    # Parse coordinates from the path
+    try:
+        # Split by slash and convert to float
+        parts = coordinates.split("/")
+        if len(parts) != 2:
+            flash("Invalid coordinates format", "error")
+            return redirect(url_for("index"))
+
+        lat = float(parts[0])
+        lon = float(parts[1])
+
+        # Call the forecast function directly with the parsed coordinates
+        return forecast(lat, lon)
+    except Exception as e:
+        flash(f"Error getting forecast: {e}", "error")
+        return redirect(url_for("index"))
 
 
 # Run the app

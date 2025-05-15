@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import RadioField, StringField, SubmitField
+from wtforms import RadioField, SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
 
@@ -29,9 +29,9 @@ class UnitSelectionForm(FlaskForm):
 
 
 class ForecastDaysForm(FlaskForm):
-    """Form for selecting forecast days"""
+    """Form for selecting number of forecast days (now as a dropdown)"""
 
-    forecast_days = RadioField(
+    forecast_days = SelectField(
         "Forecast Days",
         choices=[("1", "1 Day"), ("3", "3 Days"), ("5", "5 Days"), ("7", "7 Days")],
         default="7",
