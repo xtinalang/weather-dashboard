@@ -36,9 +36,6 @@ class Database:
     def create_tables(cls) -> None:
         """Create all tables based on the imported models."""
         try:
-            # Import models so that SQLModel knows them
-            from .models import Location, UserSettings, WeatherRecord  # noqa: F401
-
             SQLModel.metadata.create_all(cls.get_engine())
             logger.info("Database tables created successfully")
         except Exception as e:

@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import traceback
 from datetime import datetime
 from typing import Optional
 
@@ -550,7 +551,6 @@ def test_location_saving(
 
     except Exception as e:
         console.print(f"[bold red]Test failed with error: {e}[/bold red]")
-        import traceback
 
         console.print(traceback.format_exc())
 
