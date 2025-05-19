@@ -1,7 +1,13 @@
 from typing import Literal, TypedDict
 
 # Temperature unit type used across modules (for now)
-TemperatureUnit = Literal["C", "F"]
+CELSIUS = "C"
+FAHRENHEIT = "F"
+VALID_UNITS = {CELSIUS, FAHRENHEIT}
+TemperatureUnit = Literal[CELSIUS, FAHRENHEIT]
+VALID_TEMP_UNITS = ["F", "C"]
+DEFAULT_TEMP_UNIT = "C"
+DEFAULT_FORECAST_DAYS = 7
 
 
 # Shared condition structure
