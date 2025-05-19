@@ -3,6 +3,7 @@
 {% block title %}Weather Dashboard - Home{% endblock %}
 
 {% block content %}
+<title>Weather Dashboard - Home</title>
 <!-- Flash Messages -->
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -25,13 +26,9 @@
             {{ search_form.query(placeholder="Enter city name") }}
         </div>
         <div>
-            <p>Forecast Days:</p>
-            {% for choice in forecast_days_form.forecast_days %}
-                <label>
-                    {{ choice }}
-                    {{ choice.label }}
-                </label>
-            {% endfor %}
+            {{ forecast_days_form.forecast_days.label }}
+            {{ forecast_days_form.forecast_days(default="7")}}
+            <p>Default is 7 days</p>
         </div>
         <div>
             <p>Temperature Unit:</p>
@@ -58,17 +55,11 @@
             {{ ui_form.location.label }}
             {{ ui_form.location(placeholder="e.g., London, Tokyo, New York") }}
         </div>
-
         <div>
-            <p>Forecast Days:</p>
-            {% for choice in forecast_days_form.forecast_days %}
-                <label>
-                    {{ choice }}
-                    {{ choice.label }}
-                </label>
-            {% endfor %}
+            {{ forecast_days_form.forecast_days.label }}
+            {{ forecast_days_form.forecast_days(default="7")}}
+            <p>Default is 7 days</p>
         </div>
-
         <div>
             <p>Temperature Unit:</p>
             <label>
@@ -85,24 +76,6 @@
     </form>
 </div>
 
-<div class="section">
-    <h2>Temperature Unit Preference</h2>
-    <form action="{{ url_for('update_unit') }}" method="post">
-        {{ unit_form.csrf_token }}
-        <div>
-            <p>Temperature Unit:</p>
-            {% for choice in unit_form.unit %}
-                <label>
-                    {{ choice }}
-                    {{ choice.label }}
-                </label>
-            {% endfor %}
-        </div>
-        <div>
-            {{ unit_form.submit(class="btn") }}
-        </div>
-    </form>
-</div>
 
 <!-- Favorite Locations -->
 {% if favorites %}

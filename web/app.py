@@ -387,3 +387,13 @@ def forecast_path(coordinates):
     except Exception as e:
         flash(f"Error getting forecast: {e}", "error")
         return redirect(url_for("index"))
+
+
+# Run the app
+def run():
+    """Run the Flask application"""
+    app.run(debug=True, host="0.0.0.0", port=PORT)
+
+
+if __name__ == "__main__":
+    run()
