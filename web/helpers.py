@@ -32,7 +32,10 @@ class Helpers:
     @classmethod
     def search_location_and_handle_results(cls, query: str, unit: str) -> Any:
         try:
-            results = cls.weather_api.search_city(query)
+            location_name = cls.normalize_location_input(query)
+            print(f"Searching API for: {location_name}")
+            results = cls.weather_api.search_city(location_name)
+            print(f"API results: {results}")
             if not results or len(results) == 0:
                 flash(f"No cities found matching '{query}'", "warning")
                 return redirect(url_for("index"))
@@ -49,6 +52,8 @@ class Helpers:
                 )
 
             # If multiple results, show them
+            print(f"Searching API for: {location_name}")
+            print(f"API results: {results}")
             return render_template(
                 "search_results.html", results=results, query=query, unit=unit
             )
@@ -105,3 +110,18 @@ class Helpers:
             raise ValueError("Invalid coordinates format")
 
         return float(parts[0]), float(parts[1])
+
+    @staticmethod
+    def normalize_location_input(location: str) -> str:
+        """Normalize location input by handling common abbreviations"""
+        mapping = {
+            "UK": "United Kingdom",
+            "U.S.": "United States",
+            "USA": "United States",
+            "UAE": "United Arab Emirates",
+            # Add more as needed
+        }
+        for abbr, full in mapping.items():
+            if location.strip().upper().endswith(abbr):
+                return location.strip()[: -(len(abbr))].strip() + " " + full
+        return location.strip()

@@ -285,3 +285,56 @@ class LocationManager:
         except Exception as e:
             logger.error(f"Error toggling favorite status: {e}")
             return False
+
+    def get_coordinates(self, location_name: str) -> tuple[float, float] | None:
+        """Get coordinates for a location"""
+        try:
+            # First try to find by name in database
+            location: Optional[Location] = self.location_repo.find_by_name(
+                location_name
+            )
+            if location:
+                return location.latitude, location.longitude
+
+            # If not found, try to find by region
+            location: Optional[Location] = self.location_repo.find_by_region(
+                location_name
+            )
+            if location:
+                return location.latitude, location.longitude
+
+            # If not found, try to find by country
+            location: Optional[Location] = self.location_repo.find_by_country(
+                location_name
+            )
+            if location:
+                return location.latitude, location.longitude
+
+            # If not found in database, try API search
+            try:
+                results = self.weather_api.search_city(location_name)
+                if results and len(results) > 0:
+                    # Use the first result
+                    lat = float(results[0]["lat"])
+                    lon = float(results[0]["lon"])
+
+                    # Create and save new location
+                    new_location = Location(
+                        name=results[0]["name"],
+                        region=results[0].get("region", ""),
+                        country=results[0].get("country", ""),
+                        latitude=lat,
+                        longitude=lon,
+                    )
+                    self.location_repo.save(new_location)
+
+                    return lat, lon
+            except Exception as api_error:
+                logger.error(f"API search failed for {location_name}: {api_error}")
+
+            # If all searches fail, return None
+            return None
+
+        except Exception as e:
+            logger.error(f"Error getting coordinates for {location_name}: {e}")
+            return None

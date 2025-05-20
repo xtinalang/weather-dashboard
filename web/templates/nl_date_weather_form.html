@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ask about the weather</h1>
+<form method="POST">
+    {{ form.csrf_token }}
+    {{ form.query.label }}<br>
+    {{ form.query(size=80) }}<br>
+    {{ form.submit() }}
+</form>
+{% endblock %}

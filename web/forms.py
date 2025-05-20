@@ -1,5 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import RadioField, SelectField, StringField, SubmitField
+from wtforms import (
+    DateField,
+    RadioField,
+    SelectField,
+    StringField,
+    SubmitField,
+)
 from wtforms.validators import DataRequired
 
 
@@ -37,3 +43,19 @@ class ForecastDaysForm(FlaskForm):
         default="7",
     )
     submit = SubmitField("Update")
+
+
+class DateWeatherForm(FlaskForm):
+    """Form for querying weather on a specific date"""
+
+    date = DateField("Date", validators=[DataRequired()], format="%Y-%m-%d")
+    location = StringField("Location", validators=[DataRequired()])
+    unit = SelectField(
+        "Unit", choices=[("C", "Celsius"), ("F", "Fahrenheit")], default="C"
+    )
+    submit = SubmitField("Get Weather")
+
+
+class DateWeatherNLForm(FlaskForm):
+    query = StringField("Ask about the weather", validators=[DataRequired()])
+    submit = SubmitField("Get Weather")
