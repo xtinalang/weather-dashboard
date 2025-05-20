@@ -12,9 +12,10 @@ dependencies = [
     "sqlmodel>=0.0.8",
     "rich>=13.7.0", # For improved CLI display
     "psycopg2-binary>=2.9.10",
-    "python-decouple>=3.8",
-    "flask>=2.3.3", # Flask web framework
+    "python-decouple>=3.8", # Flask web framework
     "flask-wtf>=1.2.1", # Flask form handling
+    "flask>=3.1.0",
+    "playwright>=1.52.0",
 ]
 
 [project.scripts]

@@ -6,13 +6,14 @@
 PYTHON = python
 PIP = pip
 PORT = 5001
+FLASK_APP = web.app
 
 # Default target
 all: install run-flask
 
 # Run the Flask application using uv
 run-flask:
-	uv run flask run --port=$(PORT)
+	FLASK_PORT=$(PORT) uv run python -m web &
 
 # Run the Typer CLI
 run-typer:

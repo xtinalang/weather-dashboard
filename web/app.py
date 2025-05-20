@@ -389,10 +389,9 @@ def forecast_path(coordinates):
         return redirect(url_for("index"))
 
 
-# Run the app
 def run():
     """Run the Flask application"""
-    app.run(debug=True, host="0.0.0.0", port=PORT)
+    app.run(host="0.0.0.0", port=PORT)
 
 
 if __name__ == "__main__":
