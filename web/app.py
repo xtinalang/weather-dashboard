@@ -402,6 +402,7 @@ def forecast_path(coordinates):
 @app.route("/date-weather", methods=["GET", "POST"])
 def date_weather():
     """Handle weather queries for specific dates"""
+    breakpoint()  # Add this line
     form = DateWeatherForm()
     unit = Helpers.get_normalized_unit()
 
@@ -454,6 +455,7 @@ def date_weather():
 @app.route("/nl-date-weather", methods=["POST"])
 def nl_date_weather():
     """Handle natural language weather queries"""
+    breakpoint()  # Add this line
     start_time = time.time()  # Start timing
     query = request.form.get("query", "").strip()
     unit = Helpers.get_normalized_unit()
@@ -462,6 +464,7 @@ def nl_date_weather():
         # Extract date using dateutil
         date = date_parser.parse(query, fuzzy=True)
         print(f"Date parsing took: {time.time() - start_time:.2f} seconds")
+        breakpoint()  # Add breakpoint here to inspect form data
 
         # Extract location using regex
         location_match = re.search(
