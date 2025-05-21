@@ -111,7 +111,6 @@ def search():
     """Search for locations"""
     form = LocationSearchForm()
     unit = request.form.get("unit", DEFAULT_TEMP_UNIT).upper()
-    breakpoint()  # Add breakpoint here to inspect form data
 
     if form.validate_on_submit():
         query = form.query.data
@@ -412,6 +411,7 @@ def date_weather():
             location = form.location.data
             location_name = Helpers.normalize_location_input(location)
             coords = location_manager.get_coordinates(location_name)
+            breakpoint()  # Add breakpoint here to inspect form data
             if not coords:
                 flash(f"Could not find location: {location}", "error")
                 return redirect(url_for("index"))
