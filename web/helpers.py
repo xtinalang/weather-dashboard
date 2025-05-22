@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional, Tuple
 from flask import flash, redirect, render_template, request, url_for
 
 from weather_app.api import WeatherAPI
-from weather_app.app import WeatherApp
+from weather_app.cli_app import WeatherApp
 from weather_app.current import CurrentWeatherManager
 from weather_app.display import WeatherDisplay
 from weather_app.forecast import ForecastManager

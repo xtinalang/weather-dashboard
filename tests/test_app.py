@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from weather_app.app import WeatherApp
+from weather_app.cli_app import WeatherApp
 
 
 @pytest.fixture
