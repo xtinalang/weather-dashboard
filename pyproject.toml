@@ -15,6 +15,7 @@ dependencies = [
     "python-decouple>=3.8", # Flask web framework
     "flask-wtf>=1.2.1", # Flask form handling
     "python-dateutil>=2.9.0.post0",
+    "flask>=3.1.0",
 ]
 
 [project.scripts]
