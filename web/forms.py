@@ -17,6 +17,10 @@ class UserInputLocationForm(FlaskForm):
     submit = SubmitField("Get Weather")
 
 
+class DateWeatherForm(FlaskForm):
+    location = StringField("todo ... ", validators=[DataRequired()])
+
+
 class UnitSelectionForm(FlaskForm):
     """Form for selecting temperature unit"""
 

@@ -17,6 +17,7 @@ from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
 
 from .forms import (
+    DateWeatherForm,
     ForecastDaysForm,
     LocationSearchForm,
     UnitSelectionForm,
@@ -395,7 +396,7 @@ def forecast_path(coordinates):
 @app.route("/date-weather", methods=["GET", "POST"])
 def date_weather():
     """Handle weather queries for specific dates"""
-    form = None  # DateWeatherForm()
+    form = DateWeatherForm()
     unit = Helpers.get_normalized_unit()
 
     if form.validate_on_submit():
