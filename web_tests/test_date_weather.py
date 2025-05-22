@@ -7,23 +7,13 @@ def test_date_weather_form(page, base_url):
     # Navigate to the home page first
     page.goto(base_url)
 
-    # Fill in the form using the UI location form
+    breakpoint()
     page.fill('input[name="location"]', "London")
-
-    # Submit the form
     page.click('button:has-text("Get Weather")')
-
-    # Wait for the results page to load
     page.wait_for_selector(".weather-display")
-
-    # Verify the location is displayed
     expect(page.locator("h2")).to_contain_text("Forecast for London")
-
-    # Verify weather data is displayed
     expect(page.locator(".temperature")).to_be_visible()
     expect(page.locator(".condition")).to_be_visible()
-
-    # Verify weather details are displayed
     expect(page.locator(".weather-details")).to_be_visible()
 
 

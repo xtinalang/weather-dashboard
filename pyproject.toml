@@ -17,6 +17,7 @@ dependencies = [
     "flask>=3.1.0",
     "playwright>=1.52.0",
     "pytest-playwright>=0.7.0",
+    "python-dateutil>=2.9.0.post0",
 ]
 
 [project.scripts]
