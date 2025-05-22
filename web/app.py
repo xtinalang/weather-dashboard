@@ -26,7 +26,6 @@ from weather_app.weather_types import (
 )
 
 from .forms import (
-    DateWeatherForm,
     DateWeatherNLForm,
     ForecastDaysForm,
     LocationSearchForm,
@@ -474,44 +473,6 @@ def forecast_path(coordinates: str) -> Any:
     except Exception as e:
         flash(f"Error getting forecast: {e}", "error")
         return redirect(url_for("index"))
-
-
-@app.route("/date-weather", methods=["GET", "POST"])
-def date_weather() -> Any:
-    """Handle weather queries for specific dates."""
-    form = DateWeatherForm()
-    unit = Helpers.get_normalized_unit()
-
-    if not form.validate_on_submit():
-        return render_template("date_weather_form.html", form=form, unit=unit)
-
-    try:
-        location = form.location.data
-        location_name = Helpers.normalize_location_input(location)
-        coords = location_manager.get_coordinates(location_name)
-
-        if not coords:
-            flash(f"Could not find location: {location}", "error")
-            return render_template("date_weather_form.html", form=form, unit=unit)
-
-        current_weather_data, location_obj = get_weather_data(coords, unit)
-        forecast_data = get_forecast_data(coords, unit)
-
-        Helpers.save_weather_record(location_obj, current_weather_data)
-
-        return render_template(
-            "results_date_weather.html",
-            current_weather=current_weather_data,
-            forecast_data=forecast_data,
-            dates=[day["date"] for day in forecast_data],
-            location=location_obj,
-            unit=unit,
-            lat=coords[0],
-            lon=coords[1],
-        )
-    except Exception as e:
-        flash(f"Error getting weather: {e}", "error")
-        return render_template("date_weather_form.html", form=form, unit=unit)
 
 
 @app.route("/nl-date-weather", methods=["POST"])
