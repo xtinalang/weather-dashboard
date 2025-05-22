@@ -1,6 +1,9 @@
 import os
+import re
+import time
 from datetime import datetime
 
+from dateutil import parser as date_parser
 from decouple import config
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFProtect
@@ -389,6 +392,150 @@ def forecast_path(coordinates):
         return redirect(url_for("index"))
 
 
+@app.route("/date-weather", methods=["GET", "POST"])
+def date_weather():
+    """Handle weather queries for specific dates"""
+    form = None  # DateWeatherForm()
+    unit = Helpers.get_normalized_unit()
+
+    if form.validate_on_submit():
+        try:
+            # Get location coordinates
+            location = form.location.data
+            location_name = Helpers.normalize_location_input(location)
+            coords = location_manager.get_coordinates(location_name)
+            if not coords:
+                flash(f"Could not find location: {location}", "error")
+                return redirect(url_for("index"))
+
+            # Get weather data
+            weather_data = weather_api.get_weather(coords)
+            if not weather_data:
+                flash("Failed to get weather data", "error")
+                return redirect(url_for("index"))
+
+            # Find or create location and update from API data
+            location_obj, _ = Helpers.get_location_by_coordinates(coords[0], coords[1])
+            location_obj = Helpers.update_location_from_api_data(
+                location_obj, weather_data
+            )
+
+            # Format data for template
+            formatted_data = format_weather_data(weather_data, unit)
+
+            # Save record to database
+            Helpers.save_weather_record(location_obj, weather_data)
+
+            return render_template(
+                "date_weather.html",
+                weather=formatted_data,
+                location=location_obj,
+                unit=unit,
+                date=form.date.data,
+                lat=coords[0],
+                lon=coords[1],
+            )
+
+        except Exception as e:
+            flash(f"Error getting weather: {e}", "error")
+            return redirect(url_for("index"))
+
+    return render_template("date_weather_form.html", form=form, unit=unit)
+
+
+@app.route("/nl-date-weather", methods=["POST"])
+def nl_date_weather():
+    """Handle natural language weather queries"""
+    start_time = time.time()  # Start timing
+    query = request.form.get("query", "").strip()
+    unit = Helpers.get_normalized_unit()
+
+    try:
+        # Extract date using dateutil
+        date = date_parser.parse(query, fuzzy=True)
+        print(f"Date parsing took: {time.time() - start_time:.2f} seconds")
+
+        # Extract location using regex
+        location_match = re.search(
+            r"(?:in|for)\s+([A-Za-z\s,]+?)(?:\s+(?:on|at|for|,)|$)",
+            query,
+            re.IGNORECASE,
+        )
+        if not location_match:
+            flash(
+                "Could not find a location in your query. Please include a location (e.g., 'in London')",
+                "error",
+            )
+            return redirect(url_for("index"))
+
+        location_name = location_match.group(1).strip()
+        print(f"Location extraction took: {time.time() - start_time:.2f} seconds")
+
+        # Try direct API search first
+        try:
+            api_start = time.time()
+            results = weather_api.search_city(location_name)
+            print(f"API search took: {time.time() - api_start:.2f} seconds")
+
+            if results and len(results) > 0:
+                # Use the first result
+                lat = float(results[0]["lat"])
+                lon = float(results[0]["lon"])
+                coords = (lat, lon)
+                print(f"Found coordinates via API: {coords}")
+            else:
+                # If API search fails, try normalized input
+                location_name = Helpers.normalize_location_input(location_name)
+                print(f"Trying normalized location: {location_name}")
+                coords = location_manager.get_coordinates(location_name)
+        except Exception as api_error:
+            print(f"API search failed: {api_error}")
+            # Fall back to normalized input
+            location_name = Helpers.normalize_location_input(location_name)
+            coords = location_manager.get_coordinates(location_name)
+
+        if not coords:
+            flash(f"Could not find location: {location_name}", "error")
+            return redirect(url_for("index"))
+
+        # Get weather data
+        weather_start = time.time()
+        weather_data = weather_api.get_weather(coords)
+        print(f"Weather data fetch took: {time.time() - weather_start:.2f} seconds")
+
+        if not weather_data:
+            flash("Failed to get weather data", "error")
+            return redirect(url_for("index"))
+
+        # Find or create location and update from API data
+        location_obj, _ = Helpers.get_location_by_coordinates(coords[0], coords[1])
+        location_obj = Helpers.update_location_from_api_data(location_obj, weather_data)
+
+        # Format data for template
+        formatted_data = format_weather_data(weather_data, unit)
+
+        # Save record to database
+        Helpers.save_weather_record(location_obj, weather_data)
+
+        print(f"Total request time: {time.time() - start_time:.2f} seconds")
+
+        return render_template(
+            "date_weather.html",
+            weather=formatted_data,
+            location=location_obj,
+            unit=unit,
+            date=date,
+            lat=coords[0],
+            lon=coords[1],
+        )
+
+    except Exception as e:
+        print(f"Error in nl_date_weather: {str(e)}")  # Debug log
+        flash(f"Error processing your query: {str(e)}", "error")
+        return redirect(url_for("index"))
+
+
+# Run the app
 def run():
     """Run the Flask application"""
     app.run(host="0.0.0.0", port=PORT)
