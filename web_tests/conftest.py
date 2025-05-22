@@ -45,7 +45,7 @@ def server():
 def browser():
     """Create a browser instance for all tests."""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=False)
         yield browser
         browser.close()
 
