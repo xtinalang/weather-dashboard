@@ -1,5 +1,6 @@
 """Tests for the WeatherApp class."""
 
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -161,8 +162,6 @@ def test_show_forecast_for_date(app, sample_location):
     app.location_repo.get_by_id.return_value = sample_location
 
     # Mock date
-    from datetime import datetime
-
     test_date = datetime(2023, 5, 7)
 
     # Call the method

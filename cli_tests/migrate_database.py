@@ -4,10 +4,16 @@ Database migration script to update the schema with new fields.
 Specifically adds the forecast_days column to the UserSettings table.
 """
 
+import datetime
 import logging
 import os
+import shutil
 import sys
 from pathlib import Path
+
+from sqlalchemy import text
+
+from weather_app.database import Database
 
 # Add parent directory to path to import weather_app modules
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -26,11 +32,6 @@ logger = logging.getLogger("database_migration")
 def migrate_database():
     """Add missing columns to existing tables"""
     try:
-        # Import necessary modules
-        from sqlalchemy import text
-
-        from weather_app.database import Database
-
         logger.info("Starting database migration...")
 
         # Get database connection
@@ -113,18 +114,12 @@ def migrate_database():
 def create_backup():
     """Create a backup of the database before migration"""
     try:
-        import shutil
-
-        from weather_app.database import Database
-
         db_path = Path(Database.get_database_path())
         if not db_path.exists():
             logger.error(f"Database not found at {db_path}")
             return False
 
         # Create backup with timestamp
-        import datetime
-
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_path = db_path.with_name(f"weather_backup_{timestamp}.db")
 
