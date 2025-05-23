@@ -319,7 +319,7 @@ def toggle_favorite(location_id: int) -> bool:
         return False
 
 
-def get_coordinates(location_name: str) -> tuple[float, float] | None:
+def get_coordinates(location_name: str) -> Optional[tuple[float, float]]:
     """Get coordinates for a location"""
     try:
         location_repo = _get_location_repo()
@@ -413,5 +413,5 @@ class LocationManager:
     def toggle_favorite(self, location_id: int) -> bool:
         return toggle_favorite(location_id)
 
-    def get_coordinates(self, location_name: str) -> tuple[float, float] | None:
+    def get_coordinates(self, location_name: str) -> Optional[tuple[float, float]]:
         return get_coordinates(location_name)
