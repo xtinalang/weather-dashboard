@@ -1,9 +1,11 @@
 from playwright.sync_api import Page, expect
 
+HOST: str = "http://localhost:5001"
+
 
 def test_homepage_loads_correctly(page: Page):
     """Test that the homepage loads with search forms."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check the page title (actual title is "Weather Dashboard - Home")
     expect(page).to_have_title("Weather Dashboard - Home")
@@ -18,7 +20,7 @@ def test_homepage_loads_correctly(page: Page):
 
 def test_search_forms_present(page: Page):
     """Test that search input forms are present and visible."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for city search input - there are 2 city inputs based on error message
     city_inputs = page.locator("input[placeholder*='city']")
@@ -35,7 +37,7 @@ def test_search_forms_present(page: Page):
 
 def test_natural_language_query_form(page: Page):
     """Test the natural language weather query form."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for natural language form
     nl_form = page.locator("form[action='/nl-date-weather']")
@@ -50,7 +52,7 @@ def test_natural_language_query_form(page: Page):
 def test_forecast_endpoint_accessible(page: Page):
     """Test that forecast endpoint is accessible with coordinates."""
     # Test London coordinates
-    page.goto("http://localhost:5001/forecast/51.5074/-0.1278")
+    page.goto(f"{HOST}/forecast/51.5074/-0.1278")
 
     # Should not get a 404 error
     expect(page).not_to_have_title("404")
@@ -66,7 +68,7 @@ def test_forecast_endpoint_accessible(page: Page):
 def test_weather_endpoint_accessible(page: Page):
     """Test that weather endpoint is accessible with coordinates."""
     # Test London coordinates
-    page.goto("http://localhost:5001/weather/51.5074/-0.1278")
+    page.goto(f"{HOST}/weather/51.5074/-0.1278")
 
     # Should not get a 404 error
     expect(page).not_to_have_title("404")
@@ -80,7 +82,7 @@ def test_weather_endpoint_accessible(page: Page):
 
 def test_quick_access_cities_present(page: Page):
     """Test that quick access city buttons are present."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for quick access city forms (these create the hidden location inputs)
     quick_cities = ["London", "New York", "Tokyo", "Sydney"]

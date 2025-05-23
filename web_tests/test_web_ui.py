@@ -1,6 +1,8 @@
 import pytest
 from playwright.sync_api import Page, expect
 
+HOST: str = "http://localhost:5001"
+
 
 @pytest.fixture(scope="function")
 def page(browser):
@@ -11,7 +13,7 @@ def page(browser):
 
 def test_homepage_loads(page: Page):
     """Test that the homepage loads correctly"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check if the main elements are present
     expect(page.locator("h1")).to_contain_text("Weather Dashboard")
@@ -21,7 +23,7 @@ def test_homepage_loads(page: Page):
 
 def test_search_forms_visible(page: Page):
     """Test that search forms are visible on homepage"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for multiple forms (7 forms based on test results)
     forms = page.locator("form")
@@ -36,7 +38,7 @@ def test_search_forms_visible(page: Page):
 
 def test_natural_language_form_visible(page: Page):
     """Test that natural language weather form is visible"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for natural language form elements (using input instead of textarea)
     expect(page.locator("input[name='query']")).to_be_visible()
@@ -45,7 +47,7 @@ def test_natural_language_form_visible(page: Page):
 
 def test_quick_access_cities(page: Page):
     """Test that quick access cities are present"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Based on test output, there are 4 city forms (London, New York, Tokyo, Sydney)
     city_forms = page.locator("form[action='/forecast'][method='post']")
@@ -54,7 +56,7 @@ def test_quick_access_cities(page: Page):
 
 def test_navigation_elements(page: Page):
     """Test navigation elements are present"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for navigation
     expect(page.locator("nav, .navbar")).to_be_visible()
@@ -63,7 +65,7 @@ def test_navigation_elements(page: Page):
 
 def test_csrf_protection(page: Page):
     """Test that CSRF tokens are present in forms"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for CSRF token in forms (fix the expectation syntax)
     csrf_inputs = page.locator("input[name='csrf_token']")
@@ -72,15 +74,15 @@ def test_csrf_protection(page: Page):
 
 def test_invalid_coordinates_handling(page: Page):
     """Test how the app handles invalid coordinates"""
-    page.goto("http://localhost:5001/weather/999/999")
+    page.goto(f"{HOST}/weather/999/999")
 
     # Should redirect to home page with error message
-    expect(page).to_have_url("http://localhost:5001/")
+    expect(page).to_have_url(f"{HOST}/")
 
 
 def test_basic_form_elements(page: Page):
     """Test basic form elements are present and functional"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Test search form
     search_form = page.locator("form[action='/search']")
@@ -97,7 +99,7 @@ def test_basic_form_elements(page: Page):
 
 def test_form_submission_handling(page: Page):
     """Test form submission without breaking the app"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Try submitting search form with empty data (should not crash)
     search_form = page.locator("form[action='/search']")
@@ -114,7 +116,7 @@ def test_form_submission_handling(page: Page):
 
 def test_static_assets_load(page: Page):
     """Test that static assets like CSS are accessible"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check if CSS is linked
     css_links = page.locator("link[rel='stylesheet']")
@@ -123,7 +125,7 @@ def test_static_assets_load(page: Page):
 
 def test_popular_cities_links(page: Page):
     """Test that popular cities quick links are present"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for popular cities section
     expect(page.locator("h3:has-text('Popular Cities')")).to_be_visible()
@@ -136,7 +138,7 @@ def test_popular_cities_links(page: Page):
 def test_api_endpoint_weather(page: Page):
     """Test the API endpoint returns JSON"""
     response = page.request.get(
-        "http://localhost:5001/api/weather/51.5074/-0.1278"
+        f"{HOST}/api/weather/51.5074/-0.1278"
     )  # London coordinates
 
     # Should return JSON
@@ -149,7 +151,7 @@ def test_api_endpoint_weather(page: Page):
 
 def test_valid_weather_coordinates(page: Page):
     """Test accessing weather with valid coordinates"""
-    page.goto("http://localhost:5001/weather/51.5074/-0.1278")  # London
+    page.goto(f"{HOST}/weather/51.5074/-0.1278")  # London
 
     # Should display weather information
     expect(page.locator("h1")).to_contain_text("Weather for")
@@ -158,7 +160,7 @@ def test_valid_weather_coordinates(page: Page):
 
 def test_forecast_page_loads(page: Page):
     """Test accessing forecast with valid coordinates"""
-    page.goto("http://localhost:5001/forecast/51.5074/-0.1278")  # London
+    page.goto(f"{HOST}/forecast/51.5074/-0.1278")  # London
 
     # Should display forecast information
     expect(page.locator("h1")).to_contain_text("Forecast")

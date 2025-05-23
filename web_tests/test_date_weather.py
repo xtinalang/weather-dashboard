@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import pytest
 from playwright.sync_api import Page, expect
 
+HOST: str = "http://localhost:5001"
+
 
 @pytest.fixture(scope="function")
 def page(browser):
@@ -16,7 +18,7 @@ def page(browser):
 
 def test_homepage_loads(page: Page):
     """Test that the homepage loads correctly."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check if the main elements are present
     expect(page.locator("h1")).to_contain_text("Weather Dashboard")
@@ -27,7 +29,7 @@ def test_homepage_loads(page: Page):
 
 def test_search_form_visible(page: Page):
     """Test that search forms are visible on homepage."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for location search form
     expect(page.locator("input[placeholder*='city']")).to_be_visible()
@@ -41,7 +43,7 @@ def test_search_form_visible(page: Page):
 
 def test_natural_language_form_visible(page: Page):
     """Test that natural language weather form is visible."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for natural language form elements
     expect(page.locator("textarea[name='query']")).to_be_visible()
@@ -50,7 +52,7 @@ def test_natural_language_form_visible(page: Page):
 
 def test_location_search_form_validation(page: Page):
     """Test location search form validation."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Find the location search form specifically
     search_form = page.locator("form").filter(has=page.locator("input[name='query']"))
@@ -60,12 +62,12 @@ def test_location_search_form_validation(page: Page):
     search_button.click()
 
     # Should stay on the same page or show validation
-    expect(page).to_have_url("http://localhost:5001/")
+    expect(page).to_have_url(f"{HOST}/")
 
 
 def test_popular_cities_links(page: Page):
     """Test that popular cities quick links are present."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for popular cities section
     expect(page.locator("h3:has-text('Popular Cities')")).to_be_visible()
@@ -79,7 +81,7 @@ def test_popular_cities_links(page: Page):
 def test_api_endpoint_weather(page: Page):
     """Test the API endpoint returns JSON."""
     response = page.request.get(
-        "http://localhost:5001/api/weather/51.5074/-0.1278"
+        f"{HOST}/api/weather/51.5074/-0.1278"
     )  # London coordinates
 
     # Should return JSON
@@ -92,10 +94,10 @@ def test_api_endpoint_weather(page: Page):
 
 def test_invalid_coordinates_handling(page: Page):
     """Test how the app handles invalid coordinates."""
-    page.goto("http://localhost:5001/weather/invalid/coordinates")
+    page.goto(f"{HOST}/weather/invalid/coordinates")
 
     # Should redirect to home page with error message
-    expect(page).to_have_url("http://localhost:5001/")
+    expect(page).to_have_url(f"{HOST}/")
 
     # Check for flash message (if visible)
     flash_message = page.locator(".flash-message, .alert")
@@ -105,7 +107,7 @@ def test_invalid_coordinates_handling(page: Page):
 
 def test_navigation_elements(page: Page):
     """Test navigation elements are present."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for navigation
     expect(page.locator("nav, .navbar")).to_be_visible()
@@ -114,7 +116,7 @@ def test_navigation_elements(page: Page):
 
 def test_csrf_protection(page: Page):
     """Test that CSRF tokens are present in forms."""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for CSRF token in forms
     csrf_input = page.locator("input[name='csrf_token']")
@@ -123,7 +125,7 @@ def test_csrf_protection(page: Page):
 
 def test_date_weather_form_loads(page: Page):
     """Test that the date weather form loads correctly."""
-    page.goto("http://localhost:5001/date-weather")
+    page.goto(f"{HOST}/date-weather")
 
     # Check if the form elements are present
     expect(page.locator("h1")).to_contain_text("Check Weather for a Specific Date")
@@ -135,7 +137,7 @@ def test_date_weather_form_loads(page: Page):
 
 def test_date_weather_submission(page: Page):
     """Test submitting the date weather form."""
-    page.goto("http://localhost:5001/date-weather")
+    page.goto(f"{HOST}/date-weather")
 
     # Fill in the form
     tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -147,7 +149,7 @@ def test_date_weather_submission(page: Page):
     page.click("button[type='submit']")
 
     # Check if we get redirected to the results page
-    expect(page).to_have_url("http://localhost:5001/date-weather")
+    expect(page).to_have_url(f"{HOST}/date-weather")
     expect(page.locator("h1")).to_contain_text("Weather for London")
 
     # Check if weather data is displayed
@@ -158,7 +160,7 @@ def test_date_weather_submission(page: Page):
 
 def test_date_weather_validation(page: Page):
     """Test form validation."""
-    page.goto("http://localhost:5001/date-weather")
+    page.goto(f"{HOST}/date-weather")
 
     # Try to submit without filling required fields
     page.click("button[type='submit']")

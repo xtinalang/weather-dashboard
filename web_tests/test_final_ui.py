@@ -1,6 +1,8 @@
 import pytest
 from playwright.sync_api import Page, expect
 
+HOST: str = "http://localhost:5001"
+
 
 @pytest.fixture(scope="function")
 def page(browser):
@@ -11,7 +13,7 @@ def page(browser):
 
 def test_homepage_loads(page: Page):
     """Test that the homepage loads correctly"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check if the main elements are present
     expect(page.locator("h1")).to_contain_text("Weather Dashboard")
@@ -20,7 +22,7 @@ def test_homepage_loads(page: Page):
 
 def test_form_count_correct(page: Page):
     """Test that all expected forms are present"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # There should be 7 forms total
     forms = page.locator("form")
@@ -29,7 +31,7 @@ def test_form_count_correct(page: Page):
 
 def test_essential_form_elements(page: Page):
     """Test that essential form elements are present"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Test search form
     search_form = page.locator("form[action='/search']")
@@ -46,7 +48,7 @@ def test_essential_form_elements(page: Page):
 
 def test_quick_access_cities(page: Page):
     """Test that quick access city forms are present"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # There are actually 5 city forms (corrected based on test results)
     city_forms = page.locator("form[action='/forecast'][method='post']")
@@ -55,7 +57,7 @@ def test_quick_access_cities(page: Page):
 
 def test_navigation_present(page: Page):
     """Test navigation elements are present"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for navigation
     expect(page.locator("nav, .navbar")).to_be_visible()
@@ -64,7 +66,7 @@ def test_navigation_present(page: Page):
 
 def test_natural_language_input_visible(page: Page):
     """Test that natural language input is visible"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for natural language input (be more specific)
     expect(page.locator("input[name='query']").first).to_be_visible()
@@ -72,7 +74,7 @@ def test_natural_language_input_visible(page: Page):
 
 def test_csrf_tokens_present(page: Page):
     """Test that CSRF tokens are present in forms"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check for CSRF token in forms
     csrf_inputs = page.locator("input[name='csrf_token']")
@@ -81,15 +83,15 @@ def test_csrf_tokens_present(page: Page):
 
 def test_invalid_coordinates_redirect(page: Page):
     """Test how the app handles invalid coordinates"""
-    page.goto("http://localhost:5001/weather/999/999")
+    page.goto(f"{HOST}/weather/999/999")
 
     # Should redirect to home page
-    expect(page).to_have_url("http://localhost:5001/")
+    expect(page).to_have_url(f"{HOST}/")
 
 
 def test_css_exists(page: Page):
     """Test that CSS links exist"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Check if CSS is linked (fixed expectation)
     css_links = page.locator("link[rel='stylesheet']")
@@ -98,7 +100,7 @@ def test_css_exists(page: Page):
 
 def test_page_structure_basic(page: Page):
     """Test that basic page structure is intact"""
-    page.goto("http://localhost:5001/")
+    page.goto(f"{HOST}/")
 
     # Should have doctype html
     page_content = page.content()
