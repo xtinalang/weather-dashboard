@@ -1,6 +1,5 @@
 import os
 import re
-import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Tuple, cast
 
@@ -92,10 +91,6 @@ def get_weather_data(
     location_obj, _ = Helpers.get_location_by_coordinates(coords[0], coords[1])
     location_obj = Helpers.update_location_from_api_data(location_obj, weather_data)
 
-    # Debug logging
-    print("\nDEBUG: Raw Weather API Response:")
-    print(f"Raw weather data structure: {weather_data}")
-
     # Format the weather data
     formatted_data = {
         "current": {
@@ -115,10 +110,6 @@ def get_weather_data(
         }
     }
 
-    # Debug logging
-    print("\nDEBUG: Formatted Weather Data:")
-    print(f"Formatted data structure: {formatted_data}")
-
     return formatted_data, location_obj
 
 
@@ -129,10 +120,6 @@ def get_forecast_data(
     forecast_data = weather_api.get_forecast(coords)
     if not forecast_data:
         raise ValueError("Failed to get forecast data")
-
-    # Debug logging
-    print("\nDEBUG: Raw Forecast API Response:")
-    print(f"Raw forecast data structure: {forecast_data}")
 
     # Format the forecast data
     formatted_forecast = []
@@ -156,12 +143,6 @@ def get_forecast_data(
             "uv": day["day"]["uv"],
         }
         formatted_forecast.append(formatted_day)
-
-    # Debug logging
-    print("\nDEBUG: Formatted Forecast Data:")
-    print(f"Formatted forecast structure: {formatted_forecast}")
-    if formatted_forecast:
-        print(f"First forecast day structure: {formatted_forecast[0]}")
 
     return formatted_forecast
 
@@ -533,7 +514,6 @@ def forecast_path(coordinates: str) -> Any:
 @app.route("/nl-date-weather", methods=["POST"])
 def nl_date_weather() -> Any:
     """Handle natural language weather queries."""
-    start_time = time.time()
     query = request.form.get("query", "").strip()
     unit = Helpers.get_normalized_unit()
 
@@ -552,7 +532,6 @@ def nl_date_weather() -> Any:
             return redirect(url_for("index"))
 
         location_name = location_match.group(1).strip()
-        print(f"Location extraction took: {time.time() - start_time:.2f} seconds")
     except (re.error, AttributeError) as e:
         flash(f"Error parsing query format: {str(e)}", "error")
         return redirect(url_for("index"))
@@ -560,36 +539,26 @@ def nl_date_weather() -> Any:
     # Try direct API search first
     coords = None
     try:
-        api_start = time.time()
         results = weather_api.search_city(location_name)
-        print(f"API search took: {time.time() - api_start:.2f} seconds")
 
         if results and len(results) > 0:
             # Extract coordinates from the first result
             first_result = results[0]
-            print(f"First API result: {first_result}")  # Debug log
             try:
                 lat = float(first_result.get("lat", 0))
                 lon = float(first_result.get("lon", 0))
                 if lat == 0 or lon == 0:
                     raise ValueError("Invalid coordinates")
                 coords = (lat, lon)
-                print(f"Found coordinates via API: {coords}")
-            except (ValueError, TypeError) as e:
-                print(f"Error parsing coordinates: {e}")
-                print(f"Raw lat value: {first_result.get('lat')}")
-                print(f"Raw lon value: {first_result.get('lon')}")
+            except (ValueError, TypeError):
                 coords = None
         else:
             location_name = Helpers.normalize_location_input(location_name)
-            print(f"Trying normalized location: {location_name}")
             coords = location_manager.get_coordinates(location_name)
-    except (ConnectionError, TimeoutError) as e:
-        print(f"API connection failed: {e}")
+    except (ConnectionError, TimeoutError):
         location_name = Helpers.normalize_location_input(location_name)
         coords = location_manager.get_coordinates(location_name)
-    except Exception as api_error:
-        print(f"API search failed: {api_error}")
+    except Exception:
         location_name = Helpers.normalize_location_input(location_name)
         coords = location_manager.get_coordinates(location_name)
 
@@ -611,15 +580,6 @@ def nl_date_weather() -> Any:
         flash(f"Weather data format error: missing {str(e)}", "error")
         return redirect(url_for("index"))
 
-    # Debug logging
-    print("\nDEBUG: Current Weather Data:")
-    print(f"Current weather data structure: {current_weather_data}")
-    print("\nDEBUG: Forecast Data:")
-    print(f"Forecast data structure: {forecast_data}")
-    print(f"Number of forecast days: {len(forecast_data)}")
-    if forecast_data:
-        print(f"First forecast day structure: {forecast_data[0]}")
-
     try:
         Helpers.save_weather_record(location_obj, current_weather_data)
     except (OSError, IOError):
@@ -628,8 +588,6 @@ def nl_date_weather() -> Any:
     except Exception:
         # Non-critical error - don't fail the request
         pass
-
-    print(f"Total request time: {time.time() - start_time:.2f} seconds")
 
     # Enhanced natural language date parsing
     query_lower = query.lower()
@@ -709,7 +667,6 @@ def nl_date_weather() -> Any:
     target_dates = get_date_range_for_query(query_lower, today)
 
     if target_dates:
-        print(f"Filtering forecast for dates: {target_dates}")
         # Filter forecast data for target dates
         try:
             for day in forecast_data:
@@ -719,21 +676,15 @@ def nl_date_weather() -> Any:
 
             if filtered_forecast:
                 forecast_data = filtered_forecast
-                print(f"Filtered forecast to {len(forecast_data)} days")
-            else:
-                print("No forecast data found for the requested dates")
-        except (ValueError, KeyError) as e:
-            print(f"Error filtering forecast data: {e}")
+        except (ValueError, KeyError):
             # Continue with original forecast data
-        except Exception as e:
-            print(f"Unexpected error filtering forecast: {e}")
+            pass
+        except Exception:
             # Continue with original forecast data
-    else:
-        print("No specific date filtering applied - showing full forecast")
+            pass
 
     # Ensure we have valid coordinates for the template
     lat, lon = coords
-    print(f"Final coordinates for template: lat={lat}, lon={lon}")  # Debug log
     if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)):
         flash("Invalid coordinates format", "error")
         return redirect(url_for("index"))
@@ -757,7 +708,6 @@ def nl_date_weather() -> Any:
             lon=lon,
         )
     except Exception as e:
-        print(f"Error rendering template: {str(e)}")
         flash(f"Error displaying weather results: {str(e)}", "error")
         return redirect(url_for("index"))
 
