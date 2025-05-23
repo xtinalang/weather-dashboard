@@ -52,7 +52,7 @@
         <div class="forecast-container">
             {% for day in forecast_data %}
             <div class="forecast-day">
-                <h3>{{ day.date | strftime('%A, %B %d') if day.date is string else dates[loop.index0].strftime('%A, %B %d') }}</h3>
+                <h3>{{ dates[loop.index0].strftime('%A, %B %d') }}</h3>
                 <div class="forecast-icon">
                     <img src="{{ day.condition.icon }}" alt="{{ day.condition.text }}">
                 </div>

@@ -12,6 +12,15 @@ from weather_app.repository import LocationRepository, SettingsRepository
 
 from .utils import DEFAULT_TEMP_UNIT, VALID_TEMP_UNITS
 
+# Location abbreviation mapping constant
+LOCATION_ABBREVIATION_MAPPING = {
+    "UK": "United Kingdom",
+    "U.S.": "United States",
+    "USA": "United States",
+    "UAE": "United Arab Emirates",
+    # Add more as needed
+}
+
 
 class Helpers:
     # Initialize shared resources as class variables
@@ -111,14 +120,7 @@ class Helpers:
     @staticmethod
     def normalize_location_input(location: str) -> str:
         """Normalize location input by handling common abbreviations"""
-        mapping = {
-            "UK": "United Kingdom",
-            "U.S.": "United States",
-            "USA": "United States",
-            "UAE": "United Arab Emirates",
-            # Add more as needed
-        }
-        for abbr, full in mapping.items():
+        for abbr, full in LOCATION_ABBREVIATION_MAPPING.items():
             if location.strip().upper().endswith(abbr):
                 return location.strip()[: -(len(abbr))].strip() + " " + full
         return location.strip()
