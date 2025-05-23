@@ -1,7 +1,7 @@
 import os
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Tuple, cast
 
 from decouple import config
@@ -553,28 +553,119 @@ def nl_date_weather() -> Any:
 
         print(f"Total request time: {time.time() - start_time:.2f} seconds")
 
-        # Check if the query mentions weekend or next week
+        # Enhanced natural language date parsing
         query_lower = query.lower()
-        if "weekend" in query_lower or "next week" in query_lower:
-            # Filter forecast data for weekend or next week
-            filtered_forecast = []
-            today = datetime.now().date()
+        filtered_forecast = []
+        today = datetime.now().date()
 
-            if "weekend" in query_lower:
-                # Get this weekend's forecast
-                for day in forecast_data:
-                    day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
-                    if day_date.weekday() >= 5:  # Saturday (5) or Sunday (6)
-                        filtered_forecast.append(day)
-            elif "next week" in query_lower:
-                # Get next week's forecast
-                for day in forecast_data:
-                    day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
-                    days_ahead = (day_date - today).days
-                    if 1 <= days_ahead <= 7:  # Next 7 days
-                        filtered_forecast.append(day)
+        # Helper function to get date range for filtering
+        def get_date_range_for_query(query_text: str, today_date):
+            """Parse natural language date queries and return date range."""
+            target_dates = []
 
-            forecast_data = filtered_forecast
+            # Tomorrow
+            if "tomorrow" in query_text:
+                tomorrow = today_date + timedelta(days=1)
+                target_dates = [tomorrow]
+
+            # This weekend (upcoming Saturday and Sunday)
+            elif "this weekend" in query_text:
+                days_until_saturday = (5 - today_date.weekday()) % 7
+                if (
+                    days_until_saturday == 0 and today_date.weekday() == 5
+                ):  # Today is Saturday
+                    saturday = today_date
+                else:
+                    saturday = today_date + timedelta(days=days_until_saturday)
+                sunday = saturday + timedelta(days=1)
+                target_dates = [saturday, sunday]
+
+            # Next weekend
+            elif "next weekend" in query_text:
+                days_until_next_saturday = ((5 - today_date.weekday()) % 7) + 7
+                saturday = today_date + timedelta(days=days_until_next_saturday)
+                sunday = saturday + timedelta(days=1)
+                target_dates = [saturday, sunday]
+
+            # This week (Monday to Sunday of current week)
+            elif "this week" in query_text:
+                days_since_monday = today_date.weekday()
+                monday = today_date - timedelta(days=days_since_monday)
+                target_dates = [monday + timedelta(days=i) for i in range(7)]
+
+            # Next week (Monday to Sunday of next week)
+            elif "next week" in query_text:
+                days_since_monday = today_date.weekday()
+                next_monday = today_date + timedelta(days=(7 - days_since_monday))
+                target_dates = [next_monday + timedelta(days=i) for i in range(7)]
+
+            # Specific weekdays
+            elif any(
+                day in query_text
+                for day in [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                ]
+            ):
+                weekdays = {
+                    "monday": 0,
+                    "tuesday": 1,
+                    "wednesday": 2,
+                    "thursday": 3,
+                    "friday": 4,
+                    "saturday": 5,
+                    "sunday": 6,
+                }
+
+                for day_name, day_num in weekdays.items():
+                    if day_name in query_text:
+                        days_ahead = (day_num - today_date.weekday()) % 7
+                        if days_ahead == 0:  # Today is the requested day
+                            if "next" in query_text:
+                                days_ahead = 7  # Next occurrence
+                            else:
+                                days_ahead = 0  # Today
+                        target_date = today_date + timedelta(days=days_ahead)
+                        target_dates = [target_date]
+                        break
+
+            # General weekend (any weekend days in forecast)
+            elif (
+                "weekend" in query_text
+                and "this" not in query_text
+                and "next" not in query_text
+            ):
+                # Find all weekend days in the forecast period
+                for i in range(7):  # Check next 7 days
+                    check_date = today_date + timedelta(days=i)
+                    if check_date.weekday() >= 5:  # Saturday (5) or Sunday (6)
+                        target_dates.append(check_date)
+
+            return target_dates
+
+        # Get target dates based on the query
+        target_dates = get_date_range_for_query(query_lower, today)
+
+        if target_dates:
+            print(f"Filtering forecast for dates: {target_dates}")
+            # Filter forecast data for target dates
+            for day in forecast_data:
+                day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
+                if day_date in target_dates:
+                    filtered_forecast.append(day)
+
+            if filtered_forecast:
+                forecast_data = filtered_forecast
+                print(f"Filtered forecast to {len(forecast_data)} days")
+            else:
+                print("No forecast data found for the requested dates")
+        else:
+            print("No specific date filtering applied - showing full forecast")
 
         # Ensure we have valid coordinates for the template
         lat, lon = coords

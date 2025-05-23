@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Weather for {{ location.name }}{% endblock %}
+
+{% block content %}
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="weather-display">
+    <h1>Weather for {{ location.name }}</h1>
+    <p>{{ location.region }}, {{ location.country }}</p>
+
+    <!-- Current Weather -->
+    <div class="current-weather">
+        <h2>Current Conditions</h2>
+        <div class="weather-main">
+            <div class="temperature">{{ current_weather.current.temp_c }}°C / {{ current_weather.current.temp_f }}°F</div>
+            <div class="condition">
+                <img src="{{ current_weather.current.condition.icon }}" alt="{{ current_weather.current.condition.text }}">
+                {{ current_weather.current.condition.text }}
+            </div>
+            <div class="feels-like">Feels like {{ current_weather.current.feelslike_c }}°C / {{ current_weather.current.feelslike_f }}°F</div>
+        </div>
+        <div class="weather-details">
+            <p><strong>Humidity:</strong> {{ current_weather.current.humidity }}%</p>
+            <p><strong>Wind:</strong> {{ current_weather.current.wind_kph }} km/h {{ current_weather.current.wind_dir }}</p>
+            <p><strong>Pressure:</strong> {{ current_weather.current.pressure_mb }} mb</p>
+            <p><strong>UV Index:</strong> {{ current_weather.current.uv }}</p>
+            <p><strong>Last Updated:</strong> {{ current_weather.current.last_updated }}</p>
+        </div>
+    </div>
+
+    <!-- Forecast -->
+    {% if forecast_data %}
+    <div class="forecast-section">
+        <h2>
+            {% if forecast_data|length == 1 %}
+                Forecast for {{ dates[0].strftime('%A, %B %d') }}
+            {% else %}
+                Forecast ({{ forecast_data|length }} days)
+            {% endif %}
+        </h2>
+
+        <div class="forecast-container">
+            {% for day in forecast_data %}
+            <div class="forecast-day">
+                <h3>{{ day.date | strftime('%A, %B %d') if day.date is string else dates[loop.index0].strftime('%A, %B %d') }}</h3>
+                <div class="forecast-icon">
+                    <img src="{{ day.condition.icon }}" alt="{{ day.condition.text }}">
+                </div>
+                <div class="condition">{{ day.condition.text }}</div>
+                <div class="temperature">
+                    <span class="max">{{ day.max_temp }}°</span> /
+                    <span class="min">{{ day.min_temp }}°</span>
+                </div>
+                <div class="forecast-details">
+                    <p><strong>Rain Chance:</strong> {{ day.chance_of_rain }}%</p>
+                    <p><strong>Snow Chance:</strong> {{ day.chance_of_snow }}%</p>
+                    <p><strong>Humidity:</strong> {{ day.avghumidity }}%</p>
+                    <p><strong>Wind:</strong> {{ day.maxwind_kph }} km/h</p>
+                    <p><strong>UV Index:</strong> {{ day.uv }}</p>
+                    {% if day.totalprecip_mm > 0 %}
+                    <p><strong>Precipitation:</strong> {{ day.totalprecip_mm }} mm</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="nav">
+    <a href="{{ url_for('index') }}">Back to Home</a>
+    <a href="{{ url_for('weather_path', coordinates=lat ~ '/' ~ lon, unit=unit) }}">Current Weather</a>
+    <a href="{{ url_for('forecast_path', coordinates=lat ~ '/' ~ lon, unit=unit, days=7) }}">Full 7-Day Forecast</a>
+
+    {% if location.id %}
+    <form action="{{ url_for('toggle_favorite', location_id=location.id, next=request.path) }}" method="post" style="display: inline-block; margin-top: 10px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn">
+            {% if location.is_favorite %}
+            ★ Remove from Favorites
+            {% else %}
+            ☆ Add to Favorites
+            {% endif %}
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
