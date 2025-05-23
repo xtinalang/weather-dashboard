@@ -15,10 +15,12 @@ from .weather_types import WeatherResponse
 
 logger = logging.getLogger("weather_app")
 
-WEATHER_URL = "https://api.weatherapi.com/v1/"
+WEATHER_URL: str = "https://api.weatherapi.com/v1/"
 
 # Request timeout configuration (in seconds)
-REQUEST_TIMEOUT = (5, 15)  # (connection timeout, read timeout)
+CONNECTION_TIMEOUT: int = 5  # Maximum time to wait for connection establishment
+READ_TIMEOUT: int = 15  # Maximum time to wait for server response
+REQUEST_TIMEOUT: tuple[int, int] = (CONNECTION_TIMEOUT, READ_TIMEOUT)
 
 # Define typed dictionaries for API responses
 
@@ -38,7 +40,7 @@ class WeatherAPI:
         try:
             self.api_key: str = api_key or config("WEATHER_API_KEY")
             if not self.api_key:
-                err_msg = (
+                err_msg: str = (
                     "Weather API key not found. Please set WEATHER_API_KEY in .env file"
                 )
                 raise ValueError(err_msg)
