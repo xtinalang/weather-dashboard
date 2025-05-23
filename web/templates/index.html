@@ -14,111 +14,113 @@
     {% endif %}
 {% endwith %}
 
-<div class="section">
-    <h2>Search for Weather Location</h2>
+<div class="container mt-5">
+    <h1>Weather Dashboard</h1>
 
-    <!-- Search Form -->
-    <form action="{{ url_for('search') }}" method="post">
-        {{ search_form.csrf_token }}
-        <div>
-            {{ search_form.query.label }}
-            {{ search_form.query(placeholder="Enter city name") }}
+    <!-- Natural Language Query Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Ask About Weather</h2>
+            <form method="POST" action="{{ url_for('nl_date_weather') }}" class="mt-3">
+                {{ nl_form.csrf_token }}
+                <div class="form-group">
+                    {{ nl_form.query.label(class="form-label") }}
+                    {{ nl_form.query(class="form-control", placeholder="e.g., What's the weather like in London tomorrow? Weather for Paris this weekend? How's Tokyo next Monday?") }}
+                </div>
+                {{ nl_form.submit(class="btn btn-primary mt-2") }}
+            </form>
         </div>
-        <div>
-            {{ forecast_days_form.forecast_days.label }}
-            {{ forecast_days_form.forecast_days(default="7")}}
-            <p>Default is 7 days</p>
+    </div>
+
+    <!-- Existing Search Forms -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Search Location</h2>
+                    <form method="POST" action="{{ url_for('search') }}">
+                        {{ search_form.csrf_token }}
+                        <div class="form-group">
+                            {{ search_form.query.label(class="form-label") }}
+                            {{ search_form.query(class="form-control", placeholder="Enter city name") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Search</button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div>
-            <p>Temperature Unit:</p>
-            <label>
-                <input type="radio" name="unit" value="C" {% if unit_form.unit.default == 'C' %}checked{% endif %}> Celsius (°C)
-            </label>
-            <label>
-                <input type="radio" name="unit" value="F" {% if unit_form.unit.default == 'F' %}checked{% endif %}> Fahrenheit (°F)
-            </label>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title">Weather Forecast</h2>
+                    <form method="POST" action="{{ url_for('forecast_form') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="form-group mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" name="location" id="location" class="form-control"
+                                   placeholder="Enter city name (e.g., London, New York)" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="forecast_days" class="form-label">Forecast Days</label>
+                            <select name="forecast_days" id="forecast_days" class="form-control">
+                                <option value="1">1 Day</option>
+                                <option value="3">3 Days</option>
+                                <option value="5">5 Days</option>
+                                <option value="7" selected>7 Days</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Get Forecast</button>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div>
-            {{ search_form.submit(class="btn") }}
+    </div>
+
+    <!-- Favorites Section -->
+    {% if favorites %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h2 class="card-title">Favorite Locations</h2>
+            <div class="list-group">
+                {% for location in favorites %}
+                <a href="{{ url_for('weather_path', coordinates=location.latitude ~ '/' ~ location.longitude) }}"
+                   class="list-group-item list-group-item-action">
+                    {{ location.name }}, {{ location.region }}, {{ location.country }}
+                </a>
+                {% endfor %}
+            </div>
         </div>
-    </form>
+    </div>
+    {% endif %}
 </div>
-
-<div class="section">
-    <h2>Weather Location Entry</h2>
-
-    <!-- Location Form -->
-    <form action="{{ url_for('ui_location') }}" method="post">
-        {{ ui_form.csrf_token }}
-        <div>
-            {{ ui_form.location.label }}
-            {{ ui_form.location(placeholder="e.g., London, Tokyo, New York") }}
-        </div>
-        <div>
-            {{ forecast_days_form.forecast_days.label }}
-            {{ forecast_days_form.forecast_days(default="7")}}
-            <p>Default is 7 days</p>
-        </div>
-        <div>
-            <p>Temperature Unit:</p>
-            <label>
-                <input type="radio" name="unit" value="C" {% if unit_form.unit.default == 'C' %}checked{% endif %}> Celsius (°C)
-            </label>
-            <label>
-                <input type="radio" name="unit" value="F" {% if unit_form.unit.default == 'F' %}checked{% endif %}> Fahrenheit (°F)
-            </label>
-        </div>
-
-        <div>
-            {{ ui_form.submit(class="btn") }}
-        </div>
-    </form>
-</div>
-
-
-<!-- Favorite Locations -->
-{% if favorites %}
-<div class="favorites">
-    <h2>Favorite Locations</h2>
-    {% for location in favorites %}
-        <div class="favorite-item">
-            <a href="{{ url_for('weather_path', coordinates=location.latitude ~ '/' ~ location.longitude) }}">
-                {{ location.name }}{% if location.region %}, {{ location.region }}{% endif %} ({{ location.country }}) - Weather
-            </a>
-            <a href="{{ url_for('forecast_path', coordinates=location.latitude ~ '/' ~ location.longitude) }}">
-                Forecast
-            </a>
-        </div>
-    {% endfor %}
-</div>
-{% endif %}
 
 <!-- Quick Links -->
 <div class="section">
-    <h2>Popular Cities</h2>
+    <h2>Popular Cities - 7 Day Forecast</h2>
     <div class="quick-links">
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="London">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">London</button>
         </form>
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="New York">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">New York</button>
         </form>
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="Tokyo">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">Tokyo</button>
         </form>
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="Sydney">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">Sydney</button>
         </form>
     </div>

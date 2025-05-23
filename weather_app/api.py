@@ -15,7 +15,12 @@ from .weather_types import WeatherResponse
 
 logger = logging.getLogger("weather_app")
 
-WEATHER_URL = "https://api.weatherapi.com/v1/"
+WEATHER_URL: str = "https://api.weatherapi.com/v1/"
+
+# Request timeout configuration (in seconds)
+CONNECTION_TIMEOUT: int = 5  # Maximum time to wait for connection establishment
+READ_TIMEOUT: int = 15  # Maximum time to wait for server response
+REQUEST_TIMEOUT: tuple[int, int] = (CONNECTION_TIMEOUT, READ_TIMEOUT)
 
 # Define typed dictionaries for API responses
 
@@ -35,7 +40,7 @@ class WeatherAPI:
         try:
             self.api_key: str = api_key or config("WEATHER_API_KEY")
             if not self.api_key:
-                err_msg = (
+                err_msg: str = (
                     "Weather API key not found. Please set WEATHER_API_KEY in .env file"
                 )
                 raise ValueError(err_msg)
@@ -61,10 +66,16 @@ class WeatherAPI:
                 params["dt"] = date
 
             request_url: str = f"{WEATHER_URL}{endpoint}"
-            response: requests.Response = requests.get(request_url, params=params)
+            response: requests.Response = requests.get(
+                request_url, params=params, timeout=REQUEST_TIMEOUT
+            )
             response.raise_for_status()
 
             return cast(WeatherResponse, response.json())
+        except requests.exceptions.Timeout:
+            logger.error("Weather API request timed out")
+            print("Weather service is taking too long to respond. Please try again.")
+            return None
         except requests.exceptions.RequestException as e:
             logger.error(f"Weather fetch error: {e}", exc_info=True)
             print(f"Error getting weather data: {str(e)}")
@@ -87,10 +98,16 @@ class WeatherAPI:
             }
 
             request_url: str = f"{WEATHER_URL}forecast.json"
-            response: requests.Response = requests.get(request_url, params=params)
+            response: requests.Response = requests.get(
+                request_url, params=params, timeout=REQUEST_TIMEOUT
+            )
             response.raise_for_status()
 
             return cast(WeatherResponse, response.json())
+        except requests.exceptions.Timeout:
+            logger.error("Forecast API request timed out")
+            print("Forecast service is taking too long to respond. Please try again.")
+            return None
         except requests.exceptions.RequestException as e:
             logger.error(f"Forecast fetch error: {e}", exc_info=True)
             print(f"Error getting forecast data: {str(e)}")
@@ -105,10 +122,16 @@ class WeatherAPI:
             params: Dict[str, str] = {"q": query, "key": self.api_key}
             request_url: str = f"{WEATHER_URL}search.json"
 
-            response: requests.Response = requests.get(request_url, params=params)
+            response: requests.Response = requests.get(
+                request_url, params=params, timeout=REQUEST_TIMEOUT
+            )
             response.raise_for_status()
 
             return cast(List[CitySearchResult], response.json())
+        except requests.exceptions.Timeout:
+            logger.error("City search API request timed out")
+            print("City search is taking too long to respond. Please try again.")
+            return None
         except requests.exceptions.RequestException as e:
             logger.error(f"City search error: {e}", exc_info=True)
             print(f"Error searching for city: {str(e)}")

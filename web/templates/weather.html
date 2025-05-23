@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Weather for {{ weather.location.name }}{% endblock %}
+{% block title %}Weather for {{ location.name }}{% endblock %}
 
 {% block content %}
 <!-- Flash Messages -->
@@ -15,39 +15,56 @@
 {% endwith %}
 
 <div class="weather-display">
-    <h2>Weather for {{ weather.location.name }}</h2>
-    <p>{{ weather.location.region }}, {{ weather.location.country }}</p>
+    <h2>Weather for {{ location.name }}</h2>
+    <p>{{ location.region }}, {{ location.country }}</p>
     <p>Last updated: {{ weather.current.last_updated }}</p>
 
     <div class="card">
-        {% if weather.current.icon %}
+        {% if weather.current.condition and weather.current.condition.icon %}
         <div class="weather-icon">
-            <img src="{{ weather.current.icon }}" alt="{{ weather.current.condition }}">
+            <img src="{{ weather.current.condition.icon }}" alt="{{ weather.current.condition.text }}">
         </div>
         {% endif %}
 
-        <div class="condition">{{ weather.current.condition }}</div>
+        <div class="condition">{{ weather.current.condition.text if weather.current.condition else 'N/A' }}</div>
 
         <div class="temperature">
-            {{ weather.current.temp }}°{{ weather.unit }}
+            {% if unit == 'C' %}
+                {{ weather.current.temp_c }}°C
+            {% else %}
+                {{ weather.current.temp_f }}°F
+            {% endif %}
         </div>
 
-        <div>Feels like: {{ weather.current.feelslike }}°{{ weather.unit }}</div>
+        <div>Feels like:
+            {% if unit == 'C' %}
+                {{ weather.current.feelslike_c }}°C
+            {% else %}
+                {{ weather.current.feelslike_f }}°F
+            {% endif %}
+        </div>
     </div>
 
     <div class="weather-details">
         <p><strong>Humidity:</strong> {{ weather.current.humidity }}%</p>
-        <p><strong>Wind:</strong> {{ weather.current.wind_kph }} km/h {{ weather.current.wind_dir }}</p>
+        <p><strong>Wind:</strong>
+            {% if unit == 'C' %}
+                {{ weather.current.wind_kph }} km/h {{ weather.current.wind_dir }}
+            {% else %}
+                {{ weather.current.wind_mph }} mph {{ weather.current.wind_dir }}
+            {% endif %}
+        </p>
         <p><strong>Pressure:</strong> {{ weather.current.pressure_mb }} mb</p>
         <p><strong>Precipitation:</strong> {{ weather.current.precip_mm }} mm</p>
+        <p><strong>UV Index:</strong> {{ weather.current.uv }}</p>
     </div>
 </div>
 
 <div class="nav">
     <a href="{{ url_for('index') }}">Back to Home</a>
     <a href="{{ url_for('forecast_path', coordinates=lat ~ '/' ~ lon, unit=unit) }}">View Forecast</a>
-    <a href="{{ url_for('weather', lat=lat, lon=lon, unit='C' if weather.unit == 'F' else 'F') }}">
-        Switch to °{{ 'C' if weather.unit == 'F' else 'F' }}
+    <a href="{{ url_for('weather', lat=lat, lon=lon, unit='C' if unit == 'F' else 'F') }}">
+        Switch to °{{ 'C' if unit == 'F' else 'F' }}
     </a>
     {% if location.id %}
     <form action="{{ url_for('toggle_favorite', location_id=location.id, next=request.path) }}" method="post" style="display: inline-block; margin-top: 10px;">

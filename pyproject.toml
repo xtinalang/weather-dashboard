@@ -18,6 +18,7 @@ dependencies = [
     "playwright>=1.52.0",
     "pytest-playwright>=0.7.0",
     "python-dateutil>=2.9.0.post0",
+    "make>=0.1.6.post2",
 ]
 
 [project.scripts]
