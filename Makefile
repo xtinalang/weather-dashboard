@@ -6,13 +6,15 @@
 PYTHON = python
 PIP = pip
 PORT = 5001
+FLASK_APP = web.app
 
 # Default target
 all: install run-flask
 
 # Run the Flask application using uv
 run-flask:
-	uv run flask run --port=$(PORT)
+	uv run python -m flask --app $(FLASK_APP) run --debug --port=$(PORT)
+
 
 # Run the Typer CLI
 run-typer:
@@ -20,7 +22,7 @@ run-typer:
 
 # Install dependencies
 install:
-	$(PIP) install -r requirements.txt
+	uv pip install -e .
 
 # Clean up Python cache files
 clean:

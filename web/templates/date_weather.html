@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Weather for {{ location.name }} on {{ date.strftime('%B %d, %Y') }}</h1>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h2 class="card-title">Current Weather</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Temperature:</strong> {{ weather.temperature }}°{{ unit }}</p>
+                    <p><strong>Feels Like:</strong> {{ weather.feels_like }}°{{ unit }}</p>
+                    <p><strong>Humidity:</strong> {{ weather.humidity }}%</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Conditions:</strong> {{ weather.conditions }}</p>
+                    <p><strong>Wind Speed:</strong> {{ weather.wind_speed }} m/s</p>
+                    <p><strong>Wind Direction:</strong> {{ weather.wind_direction }}°</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('date_weather') }}" class="btn btn-primary">Check Another Date</a>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

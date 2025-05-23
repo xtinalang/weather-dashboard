@@ -10,7 +10,7 @@ from rich.console import Console
 
 from . import logger
 from .api import WeatherAPI
-from .app import WeatherApp
+from .cli_app import WeatherApp
 from .database import DATABASE_URL
 from .database import init_db as initialize_database
 from .display import WeatherDisplay

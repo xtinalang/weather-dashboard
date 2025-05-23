@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Check Weather for a Specific Date</h1>
+
+    <form method="POST" action="{{ url_for('date_weather') }}" class="mt-4">
+        {{ form.csrf_token }}
+
+        <div class="form-group mb-3">
+            {{ form.date.label(class="form-label") }}
+            {{ form.date(class="form-control", type="date") }}
+            {% if form.date.errors %}
+                {% for error in form.date.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.location.label(class="form-label") }}
+            {{ form.location(class="form-control", placeholder="Enter city name") }}
+            {% if form.location.errors %}
+                {% for error in form.location.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.unit.label(class="form-label") }}
+            {{ form.unit(class="form-select") }}
+        </div>
+
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+</div>
+{% endblock %}

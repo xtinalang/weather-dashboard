@@ -3,17 +3,44 @@ from typing import Any, Dict, Optional, Tuple
 from flask import flash, redirect, render_template, request, url_for
 
 from weather_app.api import WeatherAPI
-from weather_app.app import WeatherApp
+from weather_app.cli_app import WeatherApp
 from weather_app.current import CurrentWeatherManager
 from weather_app.display import WeatherDisplay
 from weather_app.forecast import ForecastManager
 from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
 
-# Constants
-VALID_TEMP_UNITS = ["F", "C"]
-DEFAULT_TEMP_UNIT = "C"
-DEFAULT_FORECAST_DAYS = 7
+from .utils import DEFAULT_TEMP_UNIT, VALID_TEMP_UNITS
+
+# Location abbreviation mapping constant
+LOCATION_ABBREVIATION_MAPPING = {
+    "UK": "United Kingdom",
+    "U.S.": "United States",
+    "USA": "United States",
+    "UAE": "United Arab Emirates",
+    # Add more as needed
+}
+
+# Weekday constants for natural language date parsing
+WEEKDAY_NAMES = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
+
+WEEKDAY_TO_NUMBER = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
 
 
 class Helpers:
@@ -32,7 +59,10 @@ class Helpers:
     @classmethod
     def search_location_and_handle_results(cls, query: str, unit: str) -> Any:
         try:
-            results = cls.weather_api.search_city(query)
+            location_name = cls.normalize_location_input(query)
+            print(f"Searching API for: {location_name}")
+            results = cls.weather_api.search_city(location_name)
+            print(f"API results: {results}")
             if not results or len(results) == 0:
                 flash(f"No cities found matching '{query}'", "warning")
                 return redirect(url_for("index"))
@@ -49,6 +79,8 @@ class Helpers:
                 )
 
             # If multiple results, show them
+            print(f"Searching API for: {location_name}")
+            print(f"API results: {results}")
             return render_template(
                 "search_results.html", results=results, query=query, unit=unit
             )
@@ -105,3 +137,11 @@ class Helpers:
             raise ValueError("Invalid coordinates format")
 
         return float(parts[0]), float(parts[1])
+
+    @staticmethod
+    def normalize_location_input(location: str) -> str:
+        """Normalize location input by handling common abbreviations"""
+        for abbr, full in LOCATION_ABBREVIATION_MAPPING.items():
+            if location.strip().upper().endswith(abbr):
+                return location.strip()[: -(len(abbr))].strip() + " " + full
+        return location.strip()
