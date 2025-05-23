@@ -1,4 +1,24 @@
-from typing import Any
+from typing import Any, Literal
+
+CELSIUS = "C"
+FAHRENHEIT = "F"
+VALID_UNITS = {CELSIUS, FAHRENHEIT}
+TemperatureUnit = Literal[CELSIUS, FAHRENHEIT]
+VALID_TEMP_UNITS = ["F", "C"]
+DEFAULT_TEMP_UNIT = "C"
+DEFAULT_FORECAST_DAYS = 7
+
+# Form choices constants
+TEMPERATURE_UNIT_CHOICES = [(CELSIUS, "Celsius (°C)"), (FAHRENHEIT, "Fahrenheit (°F)")]
+
+FORECAST_DAYS_CHOICES = [
+    ("1", "1 Day"),
+    ("3", "3 Days"),
+    ("5", "5 Days"),
+    ("7", "7 Days"),
+]
+
+DEFAULT_FORECAST_DAYS_STR = "7"
 
 
 class Utility:

@@ -13,7 +13,8 @@ all: install run-flask
 
 # Run the Flask application using uv
 run-flask:
-	uv run $(PYTHON) -c "from web.app import app; app.run(port=$(PORT), debug=True)"
+	uv run python -m flask --app web.app run --debug --port=5001
+
 
 # Run the Typer CLI
 run-typer:

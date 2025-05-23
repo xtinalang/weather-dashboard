@@ -16,6 +16,8 @@ dependencies = [
     "flask-wtf>=1.2.1", # Flask form handling
     "python-dateutil>=2.9.0.post0",
     "flask>=3.1.0",
+    "pytest-playwright>=0.7.0",
+    "make>=0.1.6.post2",
 ]
 
 [project.scripts]

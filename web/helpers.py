@@ -10,10 +10,7 @@ from weather_app.forecast import ForecastManager
 from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
 
-# Constants
-VALID_TEMP_UNITS = ["F", "C"]
-DEFAULT_TEMP_UNIT = "C"
-DEFAULT_FORECAST_DAYS = 7
+from .utils import DEFAULT_TEMP_UNIT, VALID_TEMP_UNITS
 
 
 class Helpers:

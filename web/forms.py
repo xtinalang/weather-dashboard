@@ -7,6 +7,13 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired
 
+from .utils import (
+    CELSIUS,
+    DEFAULT_FORECAST_DAYS_STR,
+    FORECAST_DAYS_CHOICES,
+    TEMPERATURE_UNIT_CHOICES,
+)
+
 
 class LocationSearchForm(FlaskForm):
     """Form for searching locations"""
@@ -27,8 +34,8 @@ class UnitSelectionForm(FlaskForm):
 
     unit = RadioField(
         "Temperature Unit",
-        choices=[("C", "Celsius (°C)"), ("F", "Fahrenheit (°F)")],
-        default="C",
+        choices=TEMPERATURE_UNIT_CHOICES,
+        default=CELSIUS,
     )
     submit = SubmitField("Update")
 
@@ -38,8 +45,8 @@ class ForecastDaysForm(FlaskForm):
 
     forecast_days = SelectField(
         "Forecast Days",
-        choices=[("1", "1 Day"), ("3", "3 Days"), ("5", "5 Days"), ("7", "7 Days")],
-        default="7",
+        choices=FORECAST_DAYS_CHOICES,
+        default=DEFAULT_FORECAST_DAYS_STR,
     )
     submit = SubmitField("Update")
 

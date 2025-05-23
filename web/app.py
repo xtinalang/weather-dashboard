@@ -16,10 +16,6 @@ from weather_app.forecast import ForecastManager
 from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
 from weather_app.weather_types import (
-    CELSIUS,
-    DEFAULT_FORECAST_DAYS,
-    DEFAULT_TEMP_UNIT,
-    FAHRENHEIT,
     LocationData,
     TemperatureUnit,
     WeatherData,
@@ -33,7 +29,13 @@ from .forms import (
     UserInputLocationForm,
 )
 from .helpers import Helpers
-from .utils import Utility
+from .utils import (
+    CELSIUS,
+    DEFAULT_FORECAST_DAYS,
+    DEFAULT_TEMP_UNIT,
+    VALID_UNITS,
+    Utility,
+)
 
 # Configure port from environment variables with fallbacks
 PORT = config(
@@ -132,10 +134,10 @@ def get_forecast_data(coords: Tuple[float, float], unit: TemperatureUnit) -> Lis
         formatted_day = {
             "date": day["date"],
             "max_temp": day["day"]["maxtemp_c"]
-            if unit == TemperatureUnit.CELSIUS
+            if unit == CELSIUS
             else day["day"]["maxtemp_f"],
             "min_temp": day["day"]["mintemp_c"]
-            if unit == TemperatureUnit.CELSIUS
+            if unit == CELSIUS
             else day["day"]["mintemp_f"],
             "condition": day["day"]["condition"],
             "chance_of_rain": day["day"]["daily_chance_of_rain"],
@@ -355,7 +357,7 @@ def update_unit() -> Any:
     form = UnitSelectionForm()
     if form.validate_on_submit():
         unit = cast(TemperatureUnit, form.unit.data.upper())
-        if unit in [CELSIUS, FAHRENHEIT]:
+        if unit in VALID_UNITS:
             try:
                 unit_value = "celsius" if unit == CELSIUS else "fahrenheit"
                 settings_repo.update_temperature_unit(unit_value)

@@ -54,14 +54,24 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h2 class="card-title">Enter Coordinates</h2>
-                    <form method="POST" action="{{ url_for('ui_location') }}">
-                        {{ ui_form.csrf_token }}
-                        <div class="form-group">
-                            {{ ui_form.location.label(class="form-label") }}
-                            {{ ui_form.location(class="form-control", placeholder="Enter coordinates (e.g., 51.5074, -0.1278)") }}
+                    <h2 class="card-title">Weather Forecast</h2>
+                    <form method="POST" action="{{ url_for('forecast_form') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="form-group mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" name="location" id="location" class="form-control"
+                                   placeholder="Enter city name (e.g., London, New York)" required>
                         </div>
-                        <button type="submit" class="btn btn-primary mt-2">Get Weather</button>
+                        <div class="form-group mb-3">
+                            <label for="forecast_days" class="form-label">Forecast Days</label>
+                            <select name="forecast_days" id="forecast_days" class="form-control">
+                                <option value="1">1 Day</option>
+                                <option value="3">3 Days</option>
+                                <option value="5">5 Days</option>
+                                <option value="7" selected>7 Days</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Get Forecast</button>
                     </form>
                 </div>
             </div>
@@ -88,30 +98,30 @@
 
 <!-- Quick Links -->
 <div class="section">
-    <h2>Popular Cities</h2>
+    <h2>Popular Cities - 7 Day Forecast</h2>
     <div class="quick-links">
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="London">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">London</button>
         </form>
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="New York">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">New York</button>
         </form>
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="Tokyo">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">Tokyo</button>
         </form>
-        <form action="{{ url_for('ui_location') }}" method="post" style="display: inline-block; margin: 5px;">
-            {{ ui_form.csrf_token }}
+        <form action="{{ url_for('forecast_form') }}" method="post" style="display: inline-block; margin: 5px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <input type="hidden" name="location" value="Sydney">
-            <input type="hidden" name="unit" value="C">
+            <input type="hidden" name="forecast_days" value="7">
             <button type="submit" class="btn">Sydney</button>
         </form>
     </div>
