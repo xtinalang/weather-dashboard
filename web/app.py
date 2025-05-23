@@ -28,7 +28,7 @@ from .forms import (
     UnitSelectionForm,
     UserInputLocationForm,
 )
-from .helpers import Helpers
+from .helpers import WEEKDAY_NAMES, WEEKDAY_TO_NUMBER, Helpers
 from .utils import (
     CELSIUS,
     DEFAULT_FORECAST_DAYS,
@@ -678,29 +678,8 @@ def nl_date_weather() -> Any:
             target_dates = [next_monday + timedelta(days=i) for i in range(7)]
 
         # Specific weekdays
-        elif any(
-            day in query_text
-            for day in [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ]
-        ):
-            weekdays = {
-                "monday": 0,
-                "tuesday": 1,
-                "wednesday": 2,
-                "thursday": 3,
-                "friday": 4,
-                "saturday": 5,
-                "sunday": 6,
-            }
-
-            for day_name, day_num in weekdays.items():
+        elif any(day in query_text for day in WEEKDAY_NAMES):
+            for day_name, day_num in WEEKDAY_TO_NUMBER.items():
                 if day_name in query_text:
                     days_ahead = (day_num - today_date.weekday()) % 7
                     if days_ahead == 0:  # Today is the requested day
