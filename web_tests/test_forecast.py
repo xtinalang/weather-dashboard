@@ -263,7 +263,8 @@ class TestForecastPage:
 
         # Check if favorites button exists
         favorites_button = page.locator(
-            "button:has-text('Add to Favorites'), button:has-text('Remove from Favorites')"
+            "button:has-text('Add to Favorites'), "
+            "button:has-text('Remove from Favorites')"
         )
         favorites_form = page.locator("form[action*='toggle_favorite']")
 

@@ -48,7 +48,8 @@ class TestIndexPage:
         expect(query_input).to_be_visible()
         expect(query_input).to_have_attribute(
             "placeholder",
-            "e.g., What's the weather like in London tomorrow? Weather for Paris this weekend? How's Tokyo next Monday?",
+            "e.g., What's the weather like in London tomorrow? "
+            "Weather for Paris this weekend? How's Tokyo next Monday?",
         )
         expect(submit_button).to_be_visible()
 
@@ -193,7 +194,7 @@ class TestIndexPage:
         assert HOST in current_url
 
     def test_favorites_section_visibility(self, page: Page):
-        """Test favorites section behavior (may or may not be visible depending on data)."""
+        """Test favorites section behavior when it may or may not be visible."""
         page.goto(HOST)
 
         # Check if favorites section exists (it may not if no favorites are saved)
