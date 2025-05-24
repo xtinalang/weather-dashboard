@@ -1,6 +1,5 @@
+from conftest import HOST
 from playwright.sync_api import Page, expect
-
-HOST: str = "http://localhost:5001"
 
 
 def test_homepage_loads_correctly(page: Page):

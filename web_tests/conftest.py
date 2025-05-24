@@ -1,6 +1,9 @@
 import pytest
 from playwright.sync_api import sync_playwright
 
+# Test configuration constants
+HOST: str = "http://localhost:5001"
+
 
 @pytest.fixture(scope="session")
 def browser():

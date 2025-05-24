@@ -3,9 +3,8 @@
 from datetime import datetime, timedelta
 
 import pytest
+from conftest import HOST
 from playwright.sync_api import Page, expect
-
-HOST: str = "http://localhost:5001"
 
 
 @pytest.fixture(scope="function")
