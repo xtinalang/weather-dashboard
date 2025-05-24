@@ -6,6 +6,11 @@ Tests search results display and natural language query functionality.
 import pytest
 from conftest import HOST
 from playwright.sync_api import Page, expect
+from test_constants import (
+    FORM_SEARCH,
+    INPUT_QUERY,
+    SEARCH_QUERY_LONDON,
+)
 
 
 class TestSearchTemplates:
@@ -24,10 +29,10 @@ class TestSearchTemplates:
         page.wait_for_load_state("networkidle")
 
         # Perform a search
-        search_input = page.locator("form[action*='search'] input[name='query']")
-        search_button = page.locator("form[action*='search'] button[type='submit']")
+        search_input = page.locator(f"{FORM_SEARCH} {INPUT_QUERY}")
+        search_button = page.locator(f"{FORM_SEARCH} button[type='submit']")
 
-        search_input.fill("London")
+        search_input.fill(SEARCH_QUERY_LONDON)
         search_button.click()
 
         # Wait for results page

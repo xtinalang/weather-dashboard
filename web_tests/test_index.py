@@ -6,6 +6,15 @@ Tests all forms and functionality on the main page.
 import pytest
 from conftest import HOST
 from playwright.sync_api import Page, expect
+from test_constants import (
+    CARD_TITLE_ASK_WEATHER,
+    CARD_TITLE_SEARCH_LOCATION,
+    CARD_TITLE_WEATHER_FORECAST,
+    HEADING_WEATHER_DASHBOARD,
+    POPULAR_CITIES,
+    TEST_CITY_LONDON,
+    TITLE_HOME,
+)
 
 
 class TestIndexPage:
@@ -23,15 +32,15 @@ class TestIndexPage:
         page.goto(HOST)
 
         # Check page title
-        expect(page).to_have_title("Weather Dashboard - Home")
+        expect(page).to_have_title(TITLE_HOME)
 
         # Check main heading
-        expect(page.locator("h1")).to_contain_text("Weather Dashboard")
+        expect(page.locator("h1")).to_contain_text(HEADING_WEATHER_DASHBOARD)
 
         # Verify main sections are present
-        expect(page.locator(".card-title")).to_contain_text("Ask About Weather")
-        expect(page.locator(".card-title")).to_contain_text("Search Location")
-        expect(page.locator(".card-title")).to_contain_text("Weather Forecast")
+        expect(page.locator(".card-title")).to_contain_text(CARD_TITLE_ASK_WEATHER)
+        expect(page.locator(".card-title")).to_contain_text(CARD_TITLE_SEARCH_LOCATION)
+        expect(page.locator(".card-title")).to_contain_text(CARD_TITLE_WEATHER_FORECAST)
 
     def test_natural_language_query_form_present(self, page: Page):
         """Test that the natural language query form is present and functional."""
@@ -173,8 +182,7 @@ class TestIndexPage:
         expect(quick_links_section).to_be_visible()
 
         # Check for popular city buttons
-        cities = ["London", "New York", "Tokyo", "Sydney"]
-        for city in cities:
+        for city in POPULAR_CITIES:
             city_button = page.locator(f"button:has-text('{city}')")
             expect(city_button).to_be_visible()
 
@@ -183,7 +191,7 @@ class TestIndexPage:
         page.goto(HOST)
 
         # Click on London quick link
-        london_button = page.locator("button:has-text('London')")
+        london_button = page.locator(f"button:has-text('{TEST_CITY_LONDON}')")
         london_button.click()
 
         # Wait for navigation

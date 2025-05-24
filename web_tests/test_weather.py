@@ -6,6 +6,35 @@ Tests weather data display, unit conversion, and favorites functionality.
 import pytest
 from conftest import HOST
 from playwright.sync_api import Page, expect
+from test_constants import (
+    BUTTON_ADD_TO_FAVORITES,
+    BUTTON_REMOVE_FROM_FAVORITES,
+    CSS_CLASS_NAV,
+    CSS_CLASS_TEMPERATURE,
+    CSS_CLASS_WEATHER_DETAILS,
+    DEGREE_CELSIUS,
+    DEGREE_FAHRENHEIT,
+    FORM_TOGGLE_FAVORITE,
+    HEADING_WEATHER_FOR_PREFIX,
+    HUMIDITY_UNIT,
+    INPUT_CSRF_TOKEN,
+    LABEL_FEELS_LIKE,
+    LABEL_HUMIDITY,
+    LABEL_LAST_UPDATED,
+    LABEL_PRECIPITATION,
+    LABEL_PRESSURE,
+    LABEL_UV_INDEX,
+    LABEL_WIND,
+    LINK_BACK_TO_HOME,
+    LINK_SWITCH_TO_CELSIUS,
+    LINK_SWITCH_TO_FAHRENHEIT,
+    LINK_VIEW_FORECAST,
+    LONDON_COORDINATES,
+    PRECIPITATION_UNIT,
+    PRESSURE_UNIT,
+    WIND_DIRECTIONS,
+    WIND_SPEED_UNITS,
+)
 
 
 class TestWeatherPage:
@@ -21,17 +50,17 @@ class TestWeatherPage:
     def test_weather_page_loads_with_valid_coordinates(self, page: Page):
         """Test that weather page loads with valid coordinates."""
         # Using London coordinates as an example
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
 
         # Wait for page to load
         page.wait_for_load_state("networkidle")
 
         # Check that we're on a weather page
-        expect(page.locator("h2")).to_contain_text("Weather for")
+        expect(page.locator("h2")).to_contain_text(HEADING_WEATHER_FOR_PREFIX)
 
         # Check that basic weather info is displayed
         expect(page.locator(".weather-display")).to_be_visible()
-        expect(page.locator(".temperature")).to_be_visible()
+        expect(page.locator(CSS_CLASS_TEMPERATURE)).to_be_visible()
 
     def test_weather_page_title_format(self, page: Page):
         """Test that the page title follows the correct format."""
@@ -90,50 +119,50 @@ class TestWeatherPage:
 
     def test_feels_like_temperature_display(self, page: Page):
         """Test that 'feels like' temperature is displayed."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Check feels like temperature
-        feels_like = page.locator("text=/Feels like:/")
+        feels_like = page.locator(f"text=/{LABEL_FEELS_LIKE}/")
         expect(feels_like).to_be_visible()
 
     def test_weather_details_section(self, page: Page):
         """Test that detailed weather information is displayed."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Check weather details section
-        details_section = page.locator(".weather-details")
+        details_section = page.locator(CSS_CLASS_WEATHER_DETAILS)
         expect(details_section).to_be_visible()
 
         # Check individual weather metrics
-        expect(page.locator("text=/Humidity:/")).to_be_visible()
-        expect(page.locator("text=/Wind:/")).to_be_visible()
-        expect(page.locator("text=/Pressure:/")).to_be_visible()
-        expect(page.locator("text=/Precipitation:/")).to_be_visible()
-        expect(page.locator("text=/UV Index:/")).to_be_visible()
+        expect(page.locator(f"text=/{LABEL_HUMIDITY}/")).to_be_visible()
+        expect(page.locator(f"text=/{LABEL_WIND}/")).to_be_visible()
+        expect(page.locator(f"text=/{LABEL_PRESSURE}/")).to_be_visible()
+        expect(page.locator(f"text=/{LABEL_PRECIPITATION}/")).to_be_visible()
+        expect(page.locator(f"text=/{LABEL_UV_INDEX}/")).to_be_visible()
 
     def test_weather_navigation_links_present(self, page: Page):
         """Test that navigation links are present and functional."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Check navigation section
-        nav_section = page.locator(".nav")
+        nav_section = page.locator(CSS_CLASS_NAV)
         expect(nav_section).to_be_visible()
 
         # Check individual navigation links
-        expect(page.locator("a:has-text('Back to Home')")).to_be_visible()
-        expect(page.locator("a:has-text('View Forecast')")).to_be_visible()
+        expect(page.locator(f"a:has-text('{LINK_BACK_TO_HOME}')")).to_be_visible()
+        expect(page.locator(f"a:has-text('{LINK_VIEW_FORECAST}')")).to_be_visible()
         expect(page.locator("a")).to_contain_text("Switch to °")
 
     def test_back_to_home_link(self, page: Page):
         """Test that the 'Back to Home' link works."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Click back to home link
-        home_link = page.locator("a:has-text('Back to Home')")
+        home_link = page.locator(f"a:has-text('{LINK_BACK_TO_HOME}')")
         home_link.click()
 
         # Should navigate to homepage
@@ -142,11 +171,11 @@ class TestWeatherPage:
 
     def test_view_forecast_link(self, page: Page):
         """Test that the 'View Forecast' link works."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Click view forecast link
-        forecast_link = page.locator("a:has-text('View Forecast')")
+        forecast_link = page.locator(f"a:has-text('{LINK_VIEW_FORECAST}')")
         forecast_link.click()
 
         # Should navigate to forecast page
@@ -156,119 +185,101 @@ class TestWeatherPage:
 
     def test_weather_unit_switching_celsius_to_fahrenheit(self, page: Page):
         """Test switching from Celsius to Fahrenheit."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278?unit=C")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}?unit=C")
         page.wait_for_load_state("networkidle")
 
         # Check current unit is Celsius
-        temperature = page.locator(".temperature")
+        temperature = page.locator(CSS_CLASS_TEMPERATURE)
         temp_text = temperature.text_content()
-        if "°C" in temp_text:
+        if DEGREE_CELSIUS in temp_text:
             # Click switch to Fahrenheit link
-            switch_link = page.locator("a:has-text('Switch to °F')")
+            switch_link = page.locator(f"a:has-text('{LINK_SWITCH_TO_FAHRENHEIT}')")
             switch_link.click()
 
             page.wait_for_load_state("networkidle")
 
             # Check that temperature now shows Fahrenheit
             new_temp_text = temperature.text_content()
-            assert "°F" in new_temp_text
+            assert DEGREE_FAHRENHEIT in new_temp_text
 
     def test_weather_unit_switching_fahrenheit_to_celsius(self, page: Page):
         """Test switching from Fahrenheit to Celsius."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278?unit=F")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}?unit=F")
         page.wait_for_load_state("networkidle")
 
         # Check current unit is Fahrenheit
-        temperature = page.locator(".temperature")
+        temperature = page.locator(CSS_CLASS_TEMPERATURE)
         temp_text = temperature.text_content()
-        if "°F" in temp_text:
+        if DEGREE_FAHRENHEIT in temp_text:
             # Click switch to Celsius link
-            switch_link = page.locator("a:has-text('Switch to °C')")
+            switch_link = page.locator(f"a:has-text('{LINK_SWITCH_TO_CELSIUS}')")
             switch_link.click()
 
             page.wait_for_load_state("networkidle")
 
             # Check that temperature now shows Celsius
             new_temp_text = temperature.text_content()
-            assert "°C" in new_temp_text
+            assert DEGREE_CELSIUS in new_temp_text
 
     def test_weather_favorites_button_presence(self, page: Page):
         """Test that favorites button is present when location has an ID."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Check if favorites button exists (it may not if location doesn't have an ID)
         favorites_button = page.locator(
-            "button:has-text('Add to Favorites'), "
-            "button:has-text('Remove from Favorites')"
+            f"button:has-text('{BUTTON_ADD_TO_FAVORITES}'), "
+            f"button:has-text('{BUTTON_REMOVE_FROM_FAVORITES}')"
         )
-        favorites_form = page.locator("form[action*='toggle_favorite']")
+        favorites_form = page.locator(FORM_TOGGLE_FAVORITE)
 
         # If the form exists, check its structure
         if favorites_form.is_visible():
             expect(favorites_button).to_be_visible()
 
             # Check CSRF token in favorites form
-            csrf_token = favorites_form.locator("input[name='csrf_token']")
+            csrf_token = favorites_form.locator(INPUT_CSRF_TOKEN)
             expect(csrf_token).to_be_visible()
 
     def test_last_updated_timestamp(self, page: Page):
         """Test that last updated timestamp is displayed."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Check last updated information
-        last_updated = page.locator("text=/Last updated:/")
+        last_updated = page.locator(f"text=/{LABEL_LAST_UPDATED}/")
         expect(last_updated).to_be_visible()
 
     def test_weather_data_format_validation(self, page: Page):
         """Test that weather data is displayed in proper format."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Check humidity format (should be percentage)
-        humidity_text = page.locator("text=/Humidity:/").text_content()
-        assert "%" in humidity_text
+        humidity_text = page.locator(f"text=/{LABEL_HUMIDITY}/").text_content()
+        assert HUMIDITY_UNIT in humidity_text
 
         # Check pressure format (should have mb units)
-        pressure_text = page.locator("text=/Pressure:/").text_content()
-        assert "mb" in pressure_text
+        pressure_text = page.locator(f"text=/{LABEL_PRESSURE}/").text_content()
+        assert PRESSURE_UNIT in pressure_text
 
         # Check precipitation format (should have mm units)
-        precip_text = page.locator("text=/Precipitation:/").text_content()
-        assert "mm" in precip_text
+        precip_text = page.locator(f"text=/{LABEL_PRECIPITATION}/").text_content()
+        assert PRECIPITATION_UNIT in precip_text
 
     def test_wind_information_display(self, page: Page):
         """Test that wind information is properly displayed with direction."""
-        page.goto(f"{HOST}/weather/51.5074/-0.1278")
+        page.goto(f"{HOST}/weather/{LONDON_COORDINATES}")
         page.wait_for_load_state("networkidle")
 
         # Check wind information
-        wind_text = page.locator("text=/Wind:/").text_content()
+        wind_text = page.locator(f"text=/{LABEL_WIND}/").text_content()
 
         # Wind should contain speed and direction
-        assert any(unit in wind_text for unit in ["km/h", "mph"])
+        assert any(unit in wind_text for unit in WIND_SPEED_UNITS)
 
         # Wind direction should be present (like N, S, E, W, NE, etc.)
-        wind_directions = [
-            "N",
-            "S",
-            "E",
-            "W",
-            "NE",
-            "NW",
-            "SE",
-            "SW",
-            "NNE",
-            "NNW",
-            "ENE",
-            "ESE",
-            "SSE",
-            "SSW",
-            "WSW",
-            "WNW",
-        ]
-        assert any(direction in wind_text for direction in wind_directions)
+        assert any(direction in wind_text for direction in WIND_DIRECTIONS)
 
     def test_weather_error_handling_invalid_coordinates(self, page: Page):
         """Test error handling for invalid coordinates."""
