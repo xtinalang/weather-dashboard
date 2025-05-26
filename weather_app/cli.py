@@ -36,7 +36,7 @@ def current(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Show current weather for a location"""
     configure_logging(verbose)
     weather_app = get_app()
@@ -55,7 +55,7 @@ def forecast(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Show weather forecast"""
     configure_logging(verbose)
     weather_app = get_app()
@@ -80,7 +80,7 @@ def set_forecast_days(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Set default number of forecast days"""
     configure_logging(verbose)
     weather_app = get_app()
@@ -92,7 +92,7 @@ def interactive(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Start interactive weather app"""
     configure_logging(verbose)
     weather_app = get_app()
@@ -110,7 +110,7 @@ def get_weather(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Get current weather and forecast for a specific location."""
     configure_logging(verbose)
     try:
@@ -125,7 +125,8 @@ def get_weather(
             display.show_forecast(data, unit_choice)
         else:
             console.print(
-                "[bold red]❌ Failed to retrieve weather information. Check your input or API key.[/bold red]"
+                "[bold red]❌ Failed to retrieve weather information. "
+                "Check your input or API key.[/bold red]"
             )
     except APIError as e:
         console.print(f"[bold red]❌ API Error: {e.message}[/bold red]")
@@ -137,7 +138,7 @@ def get_weather(
 
 
 @app.command(name="version")
-def version():
+def version() -> None:
     """Display the current version of the weather app."""
     console.print("[blue]Weather Dashboard v0.1.0[/blue]")
 
@@ -151,7 +152,7 @@ def date_forecast(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Get forecast for a specific date."""
     configure_logging(verbose)
     try:
@@ -161,7 +162,8 @@ def date_forecast(
         weather_app.show_forecast_for_date(target_date)
     except ValueError:
         console.print(
-            f"[bold red]Error: Invalid date format '{date}'. Use YYYY-MM-DD[/bold red]"
+            f"[bold red]Error: Invalid date format '{date}'. "
+            f"Use YYYY-MM-DD[/bold red]"
         )
 
 
@@ -170,7 +172,7 @@ def init_database(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Initialize or reset the database."""
     configure_logging(verbose)
     try:
@@ -194,7 +196,7 @@ def settings(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Update application settings."""
     configure_logging(verbose)
     weather_app = get_app()
@@ -203,7 +205,7 @@ def settings(
         try:
             weather_app.set_default_forecast_days(forecast_days)
             console.print(
-                f"[green]Default forecast days updated to {forecast_days}[/green]"
+                f"[green]Default forecast days updated to " f"{forecast_days}[/green]"
             )
         except Exception as e:
             console.print(f"[red]Error updating forecast days: {e}[/red]")
@@ -224,7 +226,7 @@ def refresh_location(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Refresh location data in the database."""
     configure_logging(verbose)
     weather_app = get_app()
@@ -236,7 +238,9 @@ def refresh_location(
                 fresh_location = weather_app.refresh_location(location)
                 if fresh_location:
                     console.print(
-                        f"[green]Successfully refreshed location: {fresh_location.name}, {fresh_location.country}[/green]"
+                        f"[green]Successfully refreshed location: "
+                        f"{fresh_location.name}, "
+                        f"{fresh_location.country}[/green]"
                     )
                 else:
                     console.print(f"[red]Failed to refresh location with ID {id}[/red]")
@@ -251,22 +255,26 @@ def refresh_location(
                 return
 
             console.print(
-                f"[blue]Found {len(locations)} matching locations. Refreshing...[/blue]"
+                f"[blue]Found {len(locations)} matching locations. "
+                f"Refreshing...[/blue]"
             )
             for loc in locations:
                 fresh_loc = weather_app.refresh_location(loc)
                 if fresh_loc:
                     console.print(
-                        f"[green]Refreshed: {fresh_loc.name}, {fresh_loc.country} (ID: {fresh_loc.id})[/green]"
+                        f"[green]Refreshed: {fresh_loc.name}, "
+                        f"{fresh_loc.country} (ID: {fresh_loc.id})[/green]"
                     )
                 else:
                     console.print(
-                        f"[red]Failed to refresh: {loc.name}, {loc.country} (ID: {loc.id})[/red]"
+                        f"[red]Failed to refresh: {loc.name}, "
+                        f"{loc.country} (ID: {loc.id})[/red]"
                     )
 
         else:
             console.print(
-                "[yellow]Please specify either --city or --id to refresh a location[/yellow]"
+                "[yellow]Please specify either --city or --id to refresh a "
+                "location[/yellow]"
             )
 
     except Exception as e:
@@ -279,7 +287,7 @@ def run_diagnostics(
     verbose: bool = typer.Option(
         True, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
+) -> None:
     """Run diagnostics on database and location data."""
     configure_logging(verbose)
     console.print("[blue]Running Weather App diagnostics...[/blue]")
@@ -296,11 +304,12 @@ def run_diagnostics(
             if os.path.exists(db_path):
                 size = os.path.getsize(db_path)
                 console.print(
-                    f"SQLite database file: {db_path} (Size: {size/1024:.1f} KB)"
+                    f"SQLite database file: {db_path} " f"(Size: {size / 1024:.1f} KB)"
                 )
             else:
                 console.print(
-                    f"[yellow]Warning: SQLite database file does not exist: {db_path}[/yellow]"
+                    f"[yellow]Warning: SQLite database file does not exist: "
+                    f"{db_path}[/yellow]"
                 )
     except Exception as e:
         console.print(f"[red]✗ Database connection failed: {e}[/red]")
@@ -322,69 +331,57 @@ def run_diagnostics(
                 initialize_database()
                 console.print("[green]Database initialized successfully[/green]")
             except Exception as init_err:
-                console.print(f"[red]Failed to initialize database: {init_err}[/red]")
-    except Exception as e:
-        console.print(f"[red]✗ Schema test failed: {e}[/red]")
+                console.print(
+                    f"[red]✗ Database initialization failed: {init_err}[/red]"
+                )
 
-    # 3. Check location data
+    except Exception as e:
+        console.print(f"[red]✗ Database schema test failed: {e}[/red]")
+
+    # 3. Location Manager Test
     try:
-        console.print("\n[bold]3. Location Data Test[/bold]")
-        location_repo = LocationRepository()
+        console.print("\n[bold]3. Location Manager Test[/bold]")
+        location_manager = LocationManager()
 
-        # Check if any locations exist
-        try:
-            locations = location_repo.get_all(limit=5)
-            if locations:
-                console.print(
-                    f"[green]✓ Found {len(locations)} locations in database[/green]"
-                )
-                console.print("[bold]Sample locations:[/bold]")
-                for loc in locations:
-                    console.print(f"  - {loc.name}, {loc.country} (ID: {loc.id})")
-                    console.print(f"    Coordinates: {loc.latitude}, {loc.longitude}")
-            else:
-                console.print("[yellow]No locations found in database[/yellow]")
-                console.print(
-                    "[yellow]You need to search for and save locations first[/yellow]"
-                )
-        except Exception as e:
-            console.print(f"[red]✗ Error retrieving locations: {e}[/red]")
+        # Test location search
+        test_location = location_manager.get_location("Paris")
+        if test_location:
+            console.print(
+                f"[green]✓ Location manager working. Found: "
+                f"{test_location.name}, {test_location.country}[/green]"
+            )
+        else:
+            console.print(
+                "[yellow]⚠ Location manager returned no results for 'Paris'" "[/yellow]"
+            )
+
     except Exception as e:
-        console.print(f"[red]✗ Location data test failed: {e}[/red]")
+        console.print(f"[red]✗ Location manager test failed: {e}[/red]")
 
-    # 4. Test coordinate lookup
+    # 4. Weather API Test
     try:
-        console.print("\n[bold]4. Coordinate Lookup Test[/bold]")
-        location_repo = LocationRepository()
+        console.print("\n[bold]4. Weather API Test[/bold]")
+        api = WeatherAPI()
 
-        test_locations = [
-            {"name": "New York", "lat": 40.7128, "lon": -74.0060},
-            {"name": "London", "lat": 51.5074, "lon": -0.1278},
-            {"name": "Tokyo", "lat": 35.6762, "lon": 139.6503},
-            {"name": "Sydney", "lat": -33.8688, "lon": 151.2093},
-        ]
+        # Test a simple weather request
+        console.print("[blue]Testing API with London...[/blue]")
+        weather_data = api.get_weather("London")
 
-        for test_loc in test_locations:
-            try:
-                result = location_repo.find_by_coordinates(
-                    test_loc["lat"], test_loc["lon"]
-                )
-                if result:
-                    console.print(
-                        f"[green]✓ Found location near {test_loc['name']}: {result.name} (ID: {result.id})[/green]"
-                    )
-                else:
-                    console.print(
-                        f"[yellow]No location found near {test_loc['name']} coordinates[/yellow]"
-                    )
-            except Exception as e:
-                console.print(
-                    f"[red]✗ Error looking up {test_loc['name']} coordinates: {e}[/red]"
-                )
+        if weather_data and "location" in weather_data:
+            location_name = weather_data["location"].get("name", "Unknown")
+            console.print(
+                f"[green]✓ Weather API working. Retrieved data for: "
+                f"{location_name}[/green]"
+            )
+        else:
+            console.print("[yellow]⚠ Weather API returned no/invalid data[/yellow]")
+
+    except APIError as e:
+        console.print(f"[red]✗ Weather API test failed: {e.message}[/red]")
     except Exception as e:
-        console.print(f"[red]✗ Coordinate lookup test failed: {e}[/red]")
+        console.print(f"[red]✗ Weather API test failed: {e}[/red]")
 
-    console.print("\n[blue]Diagnostics complete[/blue]")
+    console.print("\n[bold blue]Diagnostics complete![/bold blue]")
 
 
 @app.command("add-location")
@@ -400,37 +397,41 @@ def add_location(
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
-    """Add a new location to the database manually."""
+) -> None:
+    """Add a new location to the database."""
     configure_logging(verbose)
 
     try:
-        # Create location object
-        location = Location(
+        location_repo = LocationRepository()
+
+        # Create new location
+        new_location = Location(
             name=name,
             latitude=latitude,
             longitude=longitude,
             country=country,
             region=region,
-            is_favorite=favorite,
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
         )
 
         # Save to database
-        repo = LocationRepository()
-        result = repo.create(location)
+        saved_location = location_repo.create(new_location)
 
-        console.print("[green]✓ Added location successfully:[/green]")
-        console.print(f"  Name: {result.name}")
-        console.print(f"  Country: {result.country}")
-        console.print(f"  Region: {result.region or 'N/A'}")
-        console.print(f"  Coordinates: {result.latitude}, {result.longitude}")
-        console.print(f"  ID: {result.id}")
+        console.print(
+            f"[green]Added location successfully: {saved_location.name}, "
+            f"{saved_location.country}[/green]"
+        )
+        console.print(
+            f"[blue]Location ID: {saved_location.id}, "
+            f"Coordinates: ({saved_location.latitude}, "
+            f"{saved_location.longitude})[/blue]"
+        )
+
+        if favorite:
+            console.print("[green]Location marked as favorite[/green]")
 
     except Exception as e:
-        console.print(f"[red]✗ Failed to add location: {e}[/red]")
-        logger.error(f"Error adding location: {e}", exc_info=True)
+        logger.error(f"Failed to add location: {e}")
+        console.print(f"[bold red]Error adding location: {e}[/bold red]")
 
 
 @app.command("test-location")
@@ -444,137 +445,96 @@ def test_location_saving(
     verbose: bool = typer.Option(
         True, "--verbose", "-v", help="Enable verbose logging"
     ),
-):
-    """Test location saving and session handling."""
+) -> None:
+    """Test location saving functionality."""
     configure_logging(verbose)
     console.print(f"[blue]Testing location saving with {city}, {country}[/blue]")
 
     try:
-        # 1. Try direct repository creation
-        console.print("\n[bold]1. Testing direct repository creation[/bold]")
-        repo = LocationRepository()
+        # Create repository
+        location_repo = LocationRepository()
 
         # Create test location
         test_location = Location(
             name=city,
-            country=country,
             latitude=lat,
             longitude=lon,
-            region="Test Region",
-            is_favorite=False,
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
+            country=country,
         )
 
-        try:
-            # Save to database
-            saved = repo.create(test_location)
+        # Try to save
+        saved_location = location_repo.create(test_location)
+
+        if saved_location:
             console.print(
-                f"[green]✓ Created location: {saved.name} (ID: {saved.id})[/green]"
+                f"[green]✓ Successfully saved location: {saved_location.name}, "
+                f"{saved_location.country}[/green]"
+            )
+            console.print(
+                f"[blue]Location ID: {saved_location.id}, "
+                f"Coordinates: ({saved_location.latitude}, "
+                f"{saved_location.longitude})[/blue]"
             )
 
-            # Try to refresh from database
-            refreshed = repo.get_by_id(saved.id)
-            if refreshed:
+            # Try to retrieve it back
+            retrieved = location_repo.get_by_id(saved_location.id)
+            if retrieved:
                 console.print(
-                    f"[green]✓ Retrieved location by ID: {refreshed.name} (ID: {refreshed.id})[/green]"
+                    f"[green]✓ Successfully retrieved location: "
+                    f"{retrieved.name}[/green]"
                 )
             else:
-                console.print("[red]✗ Failed to retrieve location by ID[/red]")
+                console.print("[red]✗ Failed to retrieve saved location[/red]")
 
-            # Try coordinates lookup
-            by_coords = repo.find_by_coordinates(lat, lon)
-            if by_coords:
+            # Clean up - delete the test location
+            try:
+                location_repo.delete(saved_location.id)
+                console.print("[green]✓ Test location cleaned up[/green]")
+            except Exception as e:
                 console.print(
-                    f"[green]✓ Found by coordinates: {by_coords.name} (ID: {by_coords.id})[/green]"
+                    f"[yellow]Warning: Could not clean up test location: "
+                    f"{e}[/yellow]"
                 )
-            else:
-                console.print("[red]✗ Failed to find location by coordinates[/red]")
-        except Exception as e:
-            console.print(f"[red]✗ Repository test failed: {e}[/red]")
 
-        # 2. Test through the app's refresh mechanism
-        console.print("\n[bold]2. Testing app refresh mechanism[/bold]")
-        app = WeatherApp()
-
-        try:
-            # Create a detached location
-            detached_location = Location(
-                id=saved.id if "saved" in locals() else None,
-                name=city,
-                country=country,
-                latitude=lat,
-                longitude=lon,
-                region="Test Region",
-                is_favorite=False,
-            )
-
-            # Try to refresh it
-            refreshed_location = app.refresh_location(detached_location)
-            if refreshed_location:
-                console.print(
-                    f"[green]✓ Successfully refreshed location: {refreshed_location.name} (ID: {refreshed_location.id})[/green]"
-                )
-            else:
-                console.print("[red]✗ Failed to refresh location[/red]")
-        except Exception as e:
-            console.print(f"[red]✗ App refresh test failed: {e}[/red]")
-
-        # 3. Test the location manager functionality
-        console.print("\n[bold]3. Testing location manager[/bold]")
-        try:
-            api = WeatherAPI()
-            display = WeatherDisplay()
-            manager = LocationManager(api, display)
-
-            # Test saving location from API-like data
-            location_data = {
-                "name": f"{city}-Test",
-                "lat": lat + 0.001,  # Slightly different to avoid collision
-                "lon": lon + 0.001,
-                "country": country,
-                "region": "Test Region",
-            }
-
-            result = manager._save_location_to_db(location_data)
-            if result and "id" in result:
-                console.print(
-                    f"[green]✓ Location manager saved location successfully (ID: {result['id']})[/green]"
-                )
-            else:
-                console.print("[red]✗ Location manager failed to save location[/red]")
-
-        except Exception as e:
-            console.print(f"[red]✗ Location manager test failed: {e}[/red]")
-
-        console.print("\n[blue]Location tests completed[/blue]")
+        else:
+            console.print("[red]✗ Failed to save location[/red]")
 
     except Exception as e:
-        console.print(f"[bold red]Test failed with error: {e}[/bold red]")
+        logger.error(f"Location saving test failed: {e}")
+        console.print(f"[bold red]Test failed: {e}[/bold red]")
 
-        console.print(traceback.format_exc())
+        # Print traceback for debugging
+        console.print(f"[red]Traceback: {traceback.format_exc()}[/red]")
 
 
-def configure_logging(verbose=False):
-    """Configure application logging."""
-    log_level = logging.DEBUG if verbose else logging.INFO
+def configure_logging(verbose: bool = False) -> None:
+    """Configure logging based on verbosity."""
+    # Avoid reconfiguring if already configured
+    if logger.handlers:
+        return
 
-    # Log format with timestamp, level and message
-    log_format = "%(asctime)s - %(name)s - %(module)s - %(levelname)s - %(message)s"
-
-    # Configure root logger with console handler
-    logging.basicConfig(
-        level=log_level,
-        format=log_format,
-        handlers=[
-            logging.FileHandler("weather_app.log"),
-            logging.StreamHandler(sys.stdout),
-        ],
+    level = logging.DEBUG if verbose else logging.INFO
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    # Set SQLAlchemy logging to WARNING unless in verbose mode
-    if not verbose:
-        logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
+    # Console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(level)
+    console_handler.setFormatter(formatter)
+
+    # File handler
+    file_handler = logging.FileHandler("weather_app.log")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(formatter)
+
+    # Configure logger
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    # Prevent duplicate logs
+    logger.propagate = False
 
 
 if __name__ == "__main__":
