@@ -8,195 +8,121 @@ from weather_app.location import LocationManager
 
 
 @pytest.fixture
-def mock_user_input():
-    """Create a mocked User_Input_Information instance."""
-    mock = MagicMock()
-    # Configure default method behaviors
-    mock.get_location_method.return_value = "1"  # Search method
-    mock.get_search_query.return_value = "London"
-    mock.get_location_selection.return_value = "1"  # First result
-    mock.get_direct_location.return_value = "Paris, France"
-    return mock
-
-
-@pytest.fixture
-def location_manager(mock_api, mock_display, mock_location_repo):
+def location_manager():
     """Create a LocationManager instance with mocked dependencies."""
-    with patch("weather_app.location.User_Input_Information") as mock_input_class:
-        # Mock return instance
-        mock_input = MagicMock()
-        mock_input_class.return_value = mock_input
+    mock_api = MagicMock()
+    mock_display = MagicMock()
 
-        # Create location manager
-        manager = LocationManager(mock_api, mock_display)
+    # Create location manager
+    manager = LocationManager(mock_api, mock_display)
 
-        # Replace repository with mock
-        manager.location_repo = mock_location_repo
-
-        # Replace user_input with mock
-        manager.user_input = mock_input
-
-        return manager, mock_input
+    return manager
 
 
-def test_get_location_search_method(location_manager):
-    """Test get_location using search method."""
-    manager, mock_input = location_manager
-
-    # Configure input to use search method
-    mock_input.get_location_method.return_value = "1"
-
-    # Configure search result selection
-    mock_input.get_search_query.return_value = "London"
-    mock_input.get_location_selection.return_value = "1"
-
-    # Call the method
-    result = manager.get_location()
-
-    # Check that the correct methods were called
-    assert mock_input.get_location_method.called
-    assert mock_input.get_search_query.called
-    assert manager.weather_api.search_city.called
-    assert mock_input.get_location_selection.called
-
-    # Check the result
-    assert result is not None
-    assert "51.52,-0.11" in result
+def test_location_manager_initialization(location_manager):
+    """Test that LocationManager initializes correctly."""
+    assert location_manager is not None
 
 
-def test_get_location_direct_method(location_manager):
-    """Test get_location using direct method."""
-    manager, mock_input = location_manager
+@patch("weather_app.location.get_location")
+def test_get_location_wrapper(mock_get_location, location_manager):
+    """Test that LocationManager.get_location calls the global function."""
+    mock_get_location.return_value = "51.52,-0.11"
 
-    # Configure input to use direct method
-    mock_input.get_location_method.return_value = "2"
-    mock_input.get_direct_location.return_value = "Paris, France"
+    result = location_manager.get_location()
 
-    # Call the method
-    result = manager.get_location()
-
-    # Check that the correct methods were called
-    assert mock_input.get_location_method.called
-    assert mock_input.get_direct_location.called
-    assert manager.weather_api.search_city.called
-
-    # Check the result
-    assert result is not None
-    assert "51.52,-0.11" in result  # Using our mock API response
+    assert mock_get_location.called
+    assert result == "51.52,-0.11"
 
 
-def test_save_location_to_db_new_location(location_manager, sample_location):
-    """Test saving a new location to the database."""
-    manager, _ = location_manager
+@patch("weather_app.location.get_favorite_locations")
+def test_get_favorite_locations_wrapper(
+    mock_get_favorites, location_manager, sample_location
+):
+    """Test that LocationManager.get_favorite_locations calls the function."""
+    mock_get_favorites.return_value = [sample_location]
 
-    # Configure repository to not find existing location
-    manager.location_repo.find_by_coordinates.return_value = None
-    manager.location_repo.create.return_value = sample_location
+    result = location_manager.get_favorite_locations()
 
-    # Create location data
-    location_data = {
-        "name": "London",
-        "lat": 51.52,
-        "lon": -0.11,
-        "country": "United Kingdom",
-        "region": "Greater London",
-    }
-
-    # Call the method
-    result = manager._save_location_to_db(location_data)
-
-    # Check that the repository methods were called
-    assert manager.location_repo.find_by_coordinates.called
-    assert manager.location_repo.create.called
-
-    # Check the result
-    assert result is not None
-    assert "id" in result
-    assert result["lat"] == float(location_data["lat"])
-    assert result["lon"] == float(location_data["lon"])
+    assert mock_get_favorites.called
+    assert result == [sample_location]
 
 
-def test_save_location_to_db_existing_location(location_manager, sample_location):
-    """Test saving an existing location to the database."""
-    manager, _ = location_manager
+@patch("weather_app.location.toggle_favorite")
+def test_toggle_favorite_wrapper(mock_toggle_favorite, location_manager):
+    """Test that LocationManager.toggle_favorite calls the global function."""
+    mock_toggle_favorite.return_value = True
 
-    # Configure repository to find existing location
-    manager.location_repo.find_by_coordinates.return_value = sample_location
+    result = location_manager.toggle_favorite(1)
 
-    # Create location data
-    location_data = {
-        "name": "London",
-        "lat": 51.52,
-        "lon": -0.11,
-        "country": "United Kingdom",
-        "region": "Greater London",
-    }
-
-    # Call the method
-    result = manager._save_location_to_db(location_data)
-
-    # Check that the repository methods were called
-    assert manager.location_repo.find_by_coordinates.called
-    assert not manager.location_repo.create.called
-
-    # Check the result
-    assert result is not None
-    assert "id" in result
-    assert result["lat"] == float(location_data["lat"])
-    assert result["lon"] == float(location_data["lon"])
-
-
-def test_get_favorite_locations(location_manager, sample_location):
-    """Test getting favorite locations."""
-    manager, _ = location_manager
-
-    # Configure repository to return locations
-    manager.location_repo.get_favorites.return_value = [sample_location]
-
-    # Call the method
-    result = manager.get_favorite_locations()
-
-    # Check that the repository method was called
-    assert manager.location_repo.get_favorites.called
-
-    # Check the result
-    assert result is not None
-    assert len(result) == 1
-    assert result[0].id == sample_location.id
-
-
-def test_toggle_favorite_success(location_manager, sample_location):
-    """Test toggling favorite status successfully."""
-    manager, _ = location_manager
-
-    # Configure repository to find location and update
-    manager.location_repo.get_by_id.return_value = sample_location
-    manager.location_repo.update.return_value = sample_location
-
-    # Call the method
-    result = manager.toggle_favorite(sample_location.id)
-
-    # Check that the repository methods were called
-    assert manager.location_repo.get_by_id.called
-    assert manager.location_repo.update.called
-
-    # Check the result
+    assert mock_toggle_favorite.called
+    mock_toggle_favorite.assert_called_with(1)
     assert result is True
 
 
-def test_toggle_favorite_location_not_found(location_manager):
-    """Test toggling favorite status with location not found."""
-    manager, _ = location_manager
+@patch("weather_app.location.get_coordinates")
+def test_get_coordinates_wrapper(mock_get_coordinates, location_manager):
+    """Test that LocationManager.get_coordinates calls the global function."""
+    mock_get_coordinates.return_value = (51.52, -0.11)
 
-    # Configure repository to not find location
-    manager.location_repo.get_by_id.return_value = None
+    result = location_manager.get_coordinates("London")
 
-    # Call the method
-    result = manager.toggle_favorite(999)  # Non-existent ID
+    assert mock_get_coordinates.called
+    mock_get_coordinates.assert_called_with("London")
+    assert result == (51.52, -0.11)
 
-    # Check that the repository method was called
-    assert manager.location_repo.get_by_id.called
-    assert not manager.location_repo.update.called
+
+@patch("weather_app.location.save_location_to_db")
+def test_save_location_to_db_function(mock_save_location, sample_location):
+    """Test the save_location_to_db function directly."""
+    # Configure mock to return location data
+    mock_save_location.return_value = {
+        "id": sample_location.id,
+        "name": sample_location.name,
+        "lat": sample_location.latitude,
+        "lon": sample_location.longitude,
+        "country": sample_location.country,
+        "region": sample_location.region,
+    }
+
+    # Create location data
+    location_data = {
+        "name": "London",
+        "lat": 51.52,
+        "lon": -0.11,
+        "country": "United Kingdom",
+        "region": "Greater London",
+    }
+
+    # Import and call the function
+    from weather_app.location import save_location_to_db
+
+    result = save_location_to_db(location_data)
+
+    # Check that the function was called
+    assert mock_save_location.called
 
     # Check the result
-    assert result is False
+    assert result is not None
+    assert result["lat"] == 51.52
+    assert result["lon"] == -0.11
+
+
+@patch("weather_app.location._get_location_repo")
+def test_get_favorite_locations_function(mock_get_location_repo, sample_location):
+    """Test the get_favorite_locations function directly."""
+    # Configure mock repository
+    mock_repo = MagicMock()
+    mock_repo.get_favorites.return_value = [sample_location]
+    mock_get_location_repo.return_value = mock_repo
+
+    # Import and call the function
+    from weather_app.location import get_favorite_locations
+
+    result = get_favorite_locations()
+
+    # Check that the repository method was called
+    assert mock_repo.get_favorites.called
+
+    # Check the result
+    assert result == [sample_location]

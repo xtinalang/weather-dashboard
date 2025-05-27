@@ -1,20 +1,20 @@
 """
 Configuration file for pytest.
-This file contains shared fixtures and configurations that can be used by all test files.
+
+This file contains shared fixtures and configurations that can be used by
+all test files.
 """
 
 import os
 import sys
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
-
-# Add the project root to the Python path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from weather_app.api import WeatherAPI
 from weather_app.display import WeatherDisplay
@@ -24,6 +24,9 @@ from weather_app.repository import (
     SettingsRepository,
     WeatherRepository,
 )
+
+# Add the project root to the Python path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 @pytest.fixture
@@ -47,43 +50,93 @@ def test_db_session(test_db_engine):
 
 @pytest.fixture
 def mock_database(test_db_engine):
-    """Create a mocked Database instance with the test engine."""
-    with patch("weather_app.database.Database") as MockDatabase:
-        db_instance = MockDatabase.return_value
-        db_instance.get_engine.return_value = test_db_engine
+    """Create a properly mocked Database instance."""
 
-        # Create context manager for database sessions
+    # Create a real Database-like object instead of mocking the class
+    class MockDatabase:
+        def __init__(self):
+            self._engine = test_db_engine
+
+        def get_engine(self):
+            return self._engine
+
         @contextmanager
-        def get_session():
-            with Session(test_db_engine) as session:
+        def get_session(self):
+            with Session(self._engine) as session:
                 yield session
 
-        db_instance.get_session = get_session
-        yield db_instance
+        @classmethod
+        def create_tables(cls):
+            pass
+
+        @classmethod
+        def get_database_path(cls):
+            return "sqlite:///:memory:"
+
+    return MockDatabase()
 
 
 @pytest.fixture
-def mock_location_repo(mock_database):
-    """Create a LocationRepository with a mocked database."""
-    repo = LocationRepository()
-    repo.db = mock_database
-    return repo
+def mock_location_repo(test_db_session, test_db_engine):
+    """Create a LocationRepository with a mocked database.
+
+    Uses the test session.
+    """
+    # Create a mock database that uses the test session
+    mock_db = MagicMock()
+    mock_db.get_session.return_value.__enter__.return_value = test_db_session
+    mock_db.get_session.return_value.__exit__.return_value = None
+
+    with patch("weather_app.repository.Database") as MockDatabaseClass:
+        with patch("weather_app.repository.Database.get_engine") as get_engine:
+            MockDatabaseClass.return_value = mock_db
+            get_engine.return_value = test_db_engine
+
+            repo = LocationRepository()
+            repo.db = mock_db
+            return repo
 
 
 @pytest.fixture
-def mock_settings_repo(mock_database):
-    """Create a SettingsRepository with a mocked database."""
-    repo = SettingsRepository()
-    repo.db = mock_database
-    return repo
+def mock_settings_repo(test_db_session, test_db_engine):
+    """Create a SettingsRepository with a mocked database.
+
+    Uses the test session.
+    """
+    # Create a mock database that uses the test session
+    mock_db = MagicMock()
+    mock_db.get_session.return_value.__enter__.return_value = test_db_session
+    mock_db.get_session.return_value.__exit__.return_value = None
+
+    with patch("weather_app.repository.Database") as MockDatabaseClass:
+        with patch("weather_app.repository.Database.get_engine") as get_engine:
+            MockDatabaseClass.return_value = mock_db
+            get_engine.return_value = test_db_engine
+
+            repo = SettingsRepository()
+            repo.db = mock_db
+            return repo
 
 
 @pytest.fixture
-def mock_weather_repo(mock_database):
-    """Create a WeatherRepository with a mocked database."""
-    repo = WeatherRepository()
-    repo.db = mock_database
-    return repo
+def mock_weather_repo(test_db_session, test_db_engine):
+    """Create a WeatherRepository with a mocked database.
+
+    Uses the test session.
+    """
+    # Create a mock database that uses the test session
+    mock_db = MagicMock()
+    mock_db.get_session.return_value.__enter__.return_value = test_db_session
+    mock_db.get_session.return_value.__exit__.return_value = None
+
+    with patch("weather_app.repository.Database") as MockDatabaseClass:
+        with patch("weather_app.repository.Database.get_engine") as get_engine:
+            MockDatabaseClass.return_value = mock_db
+            get_engine.return_value = test_db_engine
+
+            repo = WeatherRepository()
+            repo.db = mock_db
+            return repo
 
 
 @pytest.fixture
@@ -105,7 +158,7 @@ def mock_api():
             "temp_f": 64.4,
             "condition": {
                 "text": "Partly cloudy",
-                "icon": "//cdn.weatherapi.com/weather/64x64/day/116.png",
+                "icon": ("//cdn.weatherapi.com/weather/64x64/" "day/116.png"),
             },
             "wind_kph": 14.4,
             "wind_mph": 8.9,
@@ -124,7 +177,9 @@ def mock_api():
                         "mintemp_f": 52.2,
                         "condition": {
                             "text": "Partly cloudy",
-                            "icon": "//cdn.weatherapi.com/weather/64x64/day/116.png",
+                            "icon": (
+                                "//cdn.weatherapi.com/weather/" "64x64/day/116.png"
+                            ),
                         },
                     },
                 },
@@ -137,7 +192,9 @@ def mock_api():
                         "mintemp_f": 54.5,
                         "condition": {
                             "text": "Sunny",
-                            "icon": "//cdn.weatherapi.com/weather/64x64/day/113.png",
+                            "icon": (
+                                "//cdn.weatherapi.com/weather/" "64x64/day/113.png"
+                            ),
                         },
                     },
                 },
@@ -201,7 +258,7 @@ def sample_weather_record(sample_location):
     return WeatherRecord(
         id=1,
         location_id=sample_location.id,
-        timestamp="2023-05-07T12:00:00",
+        timestamp=datetime(2023, 5, 7, 12, 0, 0),
         temperature=18.0,
         feels_like=17.5,
         humidity=68,

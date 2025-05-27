@@ -11,8 +11,11 @@ from weather_app.api import WeatherAPI
 
 @pytest.fixture
 def mock_requests():
-    """Mock the requests library."""
+    """Create a mock requests module for testing."""
     with patch("weather_app.api.requests") as mock_req:
+        # Mock exceptions properly
+        mock_req.exceptions.RequestException = requests.exceptions.RequestException
+        mock_req.exceptions.Timeout = requests.exceptions.Timeout
         yield mock_req
 
 
@@ -81,36 +84,40 @@ def test_get_weather_success(api, mock_requests):
     assert kwargs["params"]["key"] == api.api_key
 
 
-def test_get_weather_request_exception(api, mock_requests):
+def test_get_weather_request_exception(api):
     """Test weather retrieval with request exception."""
-    # Mock request exception
-    mock_requests.get.side_effect = requests.exceptions.RequestException(
-        "Connection error"
-    )
+    with patch("weather_app.api.requests") as mock_requests:
+        # Mock request exception with the real exception class
+        mock_requests.get.side_effect = requests.exceptions.RequestException(
+            "Connection error"
+        )
+        mock_requests.exceptions = requests.exceptions
 
-    # Call the method
-    result = api.get_weather("London")
+        # Call the method
+        result = api.get_weather("London")
 
-    # Check the result
-    assert result is None
+        # Check the result
+        assert result is None
 
-    # Check that the API was called
-    mock_requests.get.assert_called_once()
+        # Check that the API was called
+        mock_requests.get.assert_called_once()
 
 
-def test_get_weather_other_exception(api, mock_requests):
+def test_get_weather_other_exception(api):
     """Test weather retrieval with other exception."""
-    # Mock other exception
-    mock_requests.get.side_effect = Exception("Unexpected error")
+    with patch("weather_app.api.requests") as mock_requests:
+        # Mock other exception
+        mock_requests.get.side_effect = Exception("Unexpected error")
+        mock_requests.exceptions = requests.exceptions
 
-    # Call the method
-    result = api.get_weather("London")
+        # Call the method
+        result = api.get_weather("London")
 
-    # Check the result
-    assert result is None
+        # Check the result
+        assert result is None
 
-    # Check that the API was called
-    mock_requests.get.assert_called_once()
+        # Check that the API was called
+        mock_requests.get.assert_called_once()
 
 
 def test_search_city_success(api, mock_requests):
@@ -157,33 +164,37 @@ def test_search_city_no_results(api, mock_requests):
     mock_requests.get.assert_called_once()
 
 
-def test_search_city_request_exception(api, mock_requests):
+def test_search_city_request_exception(api):
     """Test city search with request exception."""
-    # Mock request exception
-    mock_requests.get.side_effect = requests.exceptions.RequestException(
-        "Connection error"
-    )
+    with patch("weather_app.api.requests") as mock_requests:
+        # Mock request exception with the real exception class
+        mock_requests.get.side_effect = requests.exceptions.RequestException(
+            "Connection error"
+        )
+        mock_requests.exceptions = requests.exceptions
 
-    # Call the method
-    result = api.search_city("London")
+        # Call the method
+        result = api.search_city("London")
 
-    # Check the result
-    assert result is None
+        # Check the result
+        assert result is None
 
-    # Check that the API was called
-    mock_requests.get.assert_called_once()
+        # Check that the API was called
+        mock_requests.get.assert_called_once()
 
 
-def test_search_city_other_exception(api, mock_requests):
+def test_search_city_other_exception(api):
     """Test city search with other exception."""
-    # Mock other exception
-    mock_requests.get.side_effect = Exception("Unexpected error")
+    with patch("weather_app.api.requests") as mock_requests:
+        # Mock other exception
+        mock_requests.get.side_effect = Exception("Unexpected error")
+        mock_requests.exceptions = requests.exceptions
 
-    # Call the method
-    result = api.search_city("London")
+        # Call the method
+        result = api.search_city("London")
 
-    # Check the result
-    assert result is None
+        # Check the result
+        assert result is None
 
-    # Check that the API was called
-    mock_requests.get.assert_called_once()
+        # Check that the API was called
+        mock_requests.get.assert_called_once()

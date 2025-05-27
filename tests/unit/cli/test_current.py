@@ -1,7 +1,7 @@
 """Tests for the CurrentWeatherManager class."""
 
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -10,23 +10,42 @@ from weather_app.models import WeatherRecord
 
 
 @pytest.fixture
-def current_manager(
-    mock_api, mock_display, mock_location_repo, mock_weather_repo, mock_settings_repo
-):
+def current_manager():
     """Create a CurrentWeatherManager instance with mocked dependencies."""
-    manager = CurrentWeatherManager(mock_api, mock_display)
+    with patch("weather_app.current.LocationRepository") as MockLocationRepo:
+        with patch("weather_app.current.WeatherRepository") as MockWeatherRepo:
+            with patch("weather_app.current.SettingsRepository") as MockSettingsRepo:
+                # Create mocked instances
+                mock_api = MagicMock()
+                mock_display = MagicMock()
+                mock_location_repo = MagicMock()
+                mock_weather_repo = MagicMock()
+                mock_settings_repo = MagicMock()
 
-    # Replace repositories with mocks
-    manager.location_repo = mock_location_repo
-    manager.weather_repo = mock_weather_repo
-    manager.settings_repo = mock_settings_repo
+                # Configure constructor return values
+                MockLocationRepo.return_value = mock_location_repo
+                MockWeatherRepo.return_value = mock_weather_repo
+                MockSettingsRepo.return_value = mock_settings_repo
 
-    # Configure settings repository
-    mock_settings = MagicMock()
-    mock_settings.temperature_unit = "celsius"
-    mock_settings_repo.get_settings.return_value = mock_settings
+                # Create manager
+                manager = CurrentWeatherManager(mock_api, mock_display)
 
-    return manager
+                # Store references for easy access
+                manager._test_mocks = {
+                    "api": mock_api,
+                    "display": mock_display,
+                    "location_repo": mock_location_repo,
+                    "weather_repo": mock_weather_repo,
+                    "settings_repo": mock_settings_repo,
+                }
+
+                # Configure settings repository with proper mock
+                mock_settings = MagicMock()
+                mock_settings.temperature_unit = "celsius"
+                mock_settings.id = 1
+                mock_settings_repo.get_settings.return_value = mock_settings
+
+                return manager
 
 
 def test_get_current_weather(current_manager, sample_location):
@@ -89,7 +108,9 @@ def test_get_historical_weather(current_manager, sample_location):
                         "avgtemp_c": 18.5,
                         "condition": {
                             "text": "Sunny",
-                            "icon": "//cdn.weatherapi.com/weather/64x64/day/113.png",
+                            "icon": (
+                                "//cdn.weatherapi.com/weather/" "64x64/day/113.png"
+                            ),
                         },
                     },
                 }
@@ -124,8 +145,8 @@ def test_update_display_preferences_valid(current_manager):
     current_manager.update_display_preferences("F")
 
     # Check that settings were updated
-    current_manager.settings_repo.update.assert_called_with(
-        1, {"temperature_unit": "fahrenheit"}
+    current_manager.settings_repo.update_temperature_unit.assert_called_with(
+        "fahrenheit"
     )
 
     # Check that message was displayed
@@ -141,7 +162,7 @@ def test_update_display_preferences_invalid(current_manager):
     current_manager.display.show_error.assert_called_once()
 
     # Check that settings were not updated
-    assert not current_manager.settings_repo.update.called
+    assert not current_manager.settings_repo.update_temperature_unit.called
 
 
 def test_save_weather_record(current_manager, sample_location):

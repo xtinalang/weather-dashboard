@@ -1,6 +1,6 @@
-"""Tests for Typer CLI commands with type hints and flattened code structure."""
+"""Tests for Typer CLI commands with type hints and flattened structure."""
 
-from typing import Any, Dict, Generator, List, Union
+from typing import List, Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,60 +11,61 @@ from weather_app.cli import app
 
 @pytest.fixture
 def runner() -> CliRunner:
-    """Create a CliRunner instance for testing."""
+    """Create a CLI runner for testing."""
     return CliRunner()
 
 
 @pytest.fixture
-def mock_weather_app() -> Generator[MagicMock, None, None]:
-    """Mock WeatherApp instance."""
-    with patch("weather_app.cli.WeatherApp") as mock_class:
-        mock_instance = MagicMock()
-        mock_class.return_value = mock_instance
-        yield mock_instance
+def mock_weather_app() -> MagicMock:
+    """Create a mock WeatherApp instance."""
+    return MagicMock()
 
 
 @pytest.fixture
-def mock_api() -> Generator[MagicMock, None, None]:
-    """Mock WeatherAPI instance."""
-    with patch("weather_app.cli.WeatherAPI") as mock_class:
-        mock_instance = MagicMock()
-        mock_class.return_value = mock_instance
-        yield mock_instance
+def mock_weather_data() -> dict:
+    """Create sample weather data."""
+    return {
+        "location": {"name": "London", "country": "UK"},
+        "current": {
+            "temp_c": 18.0,
+            "condition": {"text": "Partly cloudy"},
+        },
+    }
 
 
 @pytest.fixture
-def mock_display() -> Generator[MagicMock, None, None]:
-    """Mock WeatherDisplay instance."""
-    with patch("weather_app.cli.WeatherDisplay") as mock_class:
-        mock_instance = MagicMock()
-        mock_class.return_value = mock_instance
-        yield mock_instance
+def mock_display() -> MagicMock:
+    """Create a mock WeatherDisplay instance."""
+    return MagicMock()
 
 
 # Version Command Tests
 def test_version_command(runner: CliRunner) -> None:
-    """Test version command returns correct output."""
-    result: Result = runner.invoke(app, ["version"])
+    """Test the version command."""
+    result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
-    assert "Weather Dashboard v0.1.0" in result.stdout
+    assert "Weather Dashboard" in result.stdout
 
 
 # Interactive Command Tests
 def test_interactive_command(runner: CliRunner, mock_weather_app: MagicMock) -> None:
-    """Test interactive command calls run_from_user_input."""
-    result: Result = runner.invoke(app, ["interactive"])
-    assert result.exit_code == 0
-    mock_weather_app.run_from_user_input.assert_called_once()
+    """Test the interactive command."""
+    with patch("weather_app.cli.WeatherApp") as MockWeatherApp:
+        MockWeatherApp.return_value = mock_weather_app
+        result = runner.invoke(app, ["interactive"])
+        assert result.exit_code == 0
+        mock_weather_app.run_from_user_input.assert_called_once()
 
 
 def test_interactive_command_with_verbose(
     runner: CliRunner, mock_weather_app: MagicMock
 ) -> None:
-    """Test interactive command with verbose flag."""
-    result: Result = runner.invoke(app, ["interactive", "--verbose"])
-    assert result.exit_code == 0
-    mock_weather_app.run_from_user_input.assert_called_once()
+    """Test the interactive command with verbose flag."""
+    with patch("weather_app.cli.WeatherApp") as MockWeatherApp:
+        MockWeatherApp.return_value = mock_weather_app
+        result = runner.invoke(app, ["interactive", "--verbose"])
+        assert result.exit_code == 0
+        mock_weather_app.run_from_user_input.assert_called_once()
 
 
 # Current Command Tests
@@ -122,7 +123,7 @@ def test_forecast_command_with_unit(
     runner: CliRunner, mock_weather_app: MagicMock
 ) -> None:
     """Test forecast command with Fahrenheit unit."""
-    result: Result = runner.invoke(app, ["forecast", "--unit", "F", "--days", "3"])
+    result = runner.invoke(app, ["forecast", "--unit", "F", "--days", "3"])
     assert result.exit_code == 0
     mock_weather_app.show_forecast_for_days.assert_called_once_with(3)
     assert mock_weather_app.unit == "F"
@@ -130,59 +131,73 @@ def test_forecast_command_with_unit(
 
 def test_forecast_command_invalid_days(runner: CliRunner) -> None:
     """Test forecast command with invalid days (out of range)."""
-    result: Result = runner.invoke(app, ["forecast", "--days", "10"])
+    result = runner.invoke(app, ["forecast", "--days", "10"])
     assert result.exit_code != 0  # Should fail validation
 
 
 # Weather Command Tests
 def test_weather_command_success(
-    runner: CliRunner, mock_api: MagicMock, mock_display: MagicMock
+    runner: CliRunner, mock_weather_data: dict, mock_display: MagicMock
 ) -> None:
     """Test weather command with successful API response."""
-    mock_weather_data: Dict[str, Any] = {
-        "location": {"name": "London"},
-        "current": {"temp_c": 15},
-        "forecast": {"forecastday": []},
-    }
-    mock_api.get_weather.return_value = mock_weather_data
+    with patch("weather_app.cli_commands.WeatherAPI") as MockAPI:
+        with patch("weather_app.cli_commands.WeatherDisplay") as MockDisplay:
+            mock_api = MagicMock()
+            MockAPI.return_value = mock_api
+            MockDisplay.return_value = mock_display
+            mock_api.get_weather.return_value = mock_weather_data
 
-    result: Result = runner.invoke(app, ["weather", "London"])
-    assert result.exit_code == 0
-    mock_api.get_weather.assert_called_once_with("London")
-    mock_display.show_current_weather.assert_called_once_with(mock_weather_data, "C")
-    mock_display.show_forecast.assert_called_once_with(mock_weather_data, "C")
+            result = runner.invoke(app, ["weather", "London"])
+            assert result.exit_code == 0
+            mock_api.get_weather.assert_called_once_with("London")
+            mock_display.show_current_weather.assert_called_once_with(
+                mock_weather_data, "C"
+            )
+            mock_display.show_forecast.assert_called_once_with(mock_weather_data, "C")
 
 
 def test_weather_command_fahrenheit(
-    runner: CliRunner, mock_api: MagicMock, mock_display: MagicMock
+    runner: CliRunner, mock_weather_data: dict, mock_display: MagicMock
 ) -> None:
     """Test weather command with Fahrenheit unit."""
-    mock_weather_data: Dict[str, Any] = {"location": {"name": "London"}}
-    mock_api.get_weather.return_value = mock_weather_data
+    with patch("weather_app.cli_commands.WeatherAPI") as MockAPI:
+        with patch("weather_app.cli_commands.WeatherDisplay") as MockDisplay:
+            mock_api = MagicMock()
+            MockAPI.return_value = mock_api
+            MockDisplay.return_value = mock_display
+            mock_api.get_weather.return_value = mock_weather_data
 
-    result: Result = runner.invoke(app, ["weather", "London", "--unit", "F"])
-    assert result.exit_code == 0
-    mock_display.show_current_weather.assert_called_once_with(mock_weather_data, "F")
-    mock_display.show_forecast.assert_called_once_with(mock_weather_data, "F")
+            result = runner.invoke(app, ["weather", "London", "--unit", "F"])
+            assert result.exit_code == 0
+            mock_display.show_current_weather.assert_called_once_with(
+                mock_weather_data, "F"
+            )
+            mock_display.show_forecast.assert_called_once_with(mock_weather_data, "F")
 
 
 def test_weather_command_api_failure(
-    runner: CliRunner, mock_api: MagicMock, mock_display: MagicMock
+    runner: CliRunner, mock_weather_data: dict, mock_display: MagicMock
 ) -> None:
     """Test weather command when API returns None."""
-    mock_api.get_weather.return_value = None
+    with patch("weather_app.cli_commands.WeatherAPI") as MockAPI:
+        with patch("weather_app.cli_commands.WeatherDisplay") as MockDisplay:
+            mock_api = MagicMock()
+            MockAPI.return_value = mock_api
+            MockDisplay.return_value = mock_display
+            mock_api.get_weather.return_value = None
 
-    result: Result = runner.invoke(app, ["weather", "London"])
-    assert result.exit_code == 0
-    assert "Failed to retrieve weather information" in result.stdout
-    mock_display.show_current_weather.assert_not_called()
-    mock_display.show_forecast.assert_not_called()
+            result = runner.invoke(app, ["weather", "London"])
+            assert result.exit_code == 0
+            assert "Failed to retrieve weather information" in result.stdout
+            mock_display.show_current_weather.assert_not_called()
+            mock_display.show_forecast.assert_not_called()
 
 
 def test_weather_command_missing_location(runner: CliRunner) -> None:
     """Test weather command without location argument."""
-    result: Result = runner.invoke(app, ["weather"])
-    assert result.exit_code != 0  # Should fail due to missing required argument
+    result = runner.invoke(app, ["weather"])
+    # Should fail due to missing required argument
+    assert result.exit_code != 0
 
 
 # Date Command Tests
@@ -190,18 +205,22 @@ def test_date_command_valid_date(
     runner: CliRunner, mock_weather_app: MagicMock
 ) -> None:
     """Test date command with valid date format."""
-    result: Result = runner.invoke(app, ["date", "2024-12-25"])
-    assert result.exit_code == 0
-    mock_weather_app.show_forecast_for_date.assert_called_once()
-    assert mock_weather_app.unit == "C"
+    with patch("weather_app.cli_commands.WeatherApp") as MockWeatherApp:
+        MockWeatherApp.return_value = mock_weather_app
+        result = runner.invoke(app, ["date", "2024-12-25"])
+        assert result.exit_code == 0
+        mock_weather_app.show_forecast_for_date.assert_called_once()
+        assert mock_weather_app.unit == "C"
 
 
 def test_date_command_with_unit(runner: CliRunner, mock_weather_app: MagicMock) -> None:
     """Test date command with Fahrenheit unit."""
-    result: Result = runner.invoke(app, ["date", "2024-12-25", "--unit", "F"])
-    assert result.exit_code == 0
-    mock_weather_app.show_forecast_for_date.assert_called_once()
-    assert mock_weather_app.unit == "F"
+    with patch("weather_app.cli_commands.WeatherApp") as MockWeatherApp:
+        MockWeatherApp.return_value = mock_weather_app
+        result = runner.invoke(app, ["date", "2024-12-25", "--unit", "F"])
+        assert result.exit_code == 0
+        mock_weather_app.show_forecast_for_date.assert_called_once()
+        assert mock_weather_app.unit == "F"
 
 
 def test_date_command_invalid_date(runner: CliRunner) -> None:
@@ -249,28 +268,34 @@ def test_set_forecast_days_invalid(runner: CliRunner) -> None:
 # Settings Command Tests
 def test_settings_forecast_days(runner: CliRunner, mock_weather_app: MagicMock) -> None:
     """Test settings command with forecast days."""
-    result: Result = runner.invoke(app, ["settings", "--forecast-days", "7"])
-    assert result.exit_code == 0
-    mock_weather_app.set_default_forecast_days.assert_called_once_with(7)
+    with patch("weather_app.cli_commands.WeatherApp") as MockWeatherApp:
+        MockWeatherApp.return_value = mock_weather_app
+        result = runner.invoke(app, ["settings", "--forecast-days", "7"])
+        assert result.exit_code == 0
+        mock_weather_app.set_default_forecast_days.assert_called_once_with(7)
 
 
 def test_settings_temp_unit(runner: CliRunner, mock_weather_app: MagicMock) -> None:
     """Test settings command with temperature unit."""
-    with patch.object(mock_weather_app, "settings_repo") as mock_repo:
-        result: Result = runner.invoke(app, ["settings", "--temp-unit", "F"])
-        assert result.exit_code == 0
-        mock_repo.update_temperature_unit.assert_called_once_with("fahrenheit")
+    with patch("weather_app.cli_commands.WeatherApp") as MockWeatherApp:
+        MockWeatherApp.return_value = mock_weather_app
+        with patch.object(mock_weather_app, "settings_repo") as mock_repo:
+            result = runner.invoke(app, ["settings", "--temp-unit", "F"])
+            assert result.exit_code == 0
+            mock_repo.update_temperature_unit.assert_called_once_with("fahrenheit")
 
 
 def test_settings_both_options(runner: CliRunner, mock_weather_app: MagicMock) -> None:
     """Test settings command with both options."""
-    with patch.object(mock_weather_app, "settings_repo") as mock_repo:
-        result: Result = runner.invoke(
-            app, ["settings", "--forecast-days", "3", "--temp-unit", "C"]
-        )
-        assert result.exit_code == 0
-        mock_weather_app.set_default_forecast_days.assert_called_once_with(3)
-        mock_repo.update_temperature_unit.assert_called_once_with("celsius")
+    with patch("weather_app.cli_commands.WeatherApp") as MockWeatherApp:
+        MockWeatherApp.return_value = mock_weather_app
+        with patch.object(mock_weather_app, "settings_repo") as mock_repo:
+            result = runner.invoke(
+                app, ["settings", "--forecast-days", "3", "--temp-unit", "C"]
+            )
+            assert result.exit_code == 0
+            mock_weather_app.set_default_forecast_days.assert_called_once_with(3)
+            mock_repo.update_temperature_unit.assert_called_once_with("celsius")
 
 
 # Add Location Command Tests

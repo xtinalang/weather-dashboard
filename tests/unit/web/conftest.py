@@ -26,6 +26,22 @@ from weather_app.repository import (
 )
 
 # Import shared fixtures from test_utils
+from .test_utils import (
+    flask_app,
+    web_forms_module,
+    web_helpers_module,
+    web_modules_combined,
+    web_utils_module,
+)
+
+# Re-export fixtures to make them available
+__all__ = [
+    "flask_app",
+    "web_forms_module",
+    "web_helpers_module",
+    "web_utils_module",
+    "web_modules_combined",
+]
 
 
 @pytest.fixture
