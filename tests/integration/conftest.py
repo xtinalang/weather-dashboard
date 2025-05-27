@@ -5,6 +5,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from sqlalchemy import inspect, text
 
 from weather_app.database import Database
 
@@ -43,12 +44,12 @@ def clean_db(integration_test_db):
     db = Database()
     with db.get_session() as session:
         # Get all table names
-        inspector = db.engine.inspect(db.engine)
+        inspector = inspect(Database.get_engine())
         table_names = inspector.get_table_names()
 
         # Clear all tables (in reverse order to handle foreign keys)
         for table_name in reversed(table_names):
-            session.execute(f"DELETE FROM {table_name}")
+            session.execute(text(f"DELETE FROM {table_name}"))
         session.commit()
 
     yield integration_test_db
