@@ -25,6 +25,8 @@ from weather_app.repository import (
     WeatherRepository,
 )
 
+# Import shared fixtures from test_utils
+
 
 @pytest.fixture
 def test_db_engine():
