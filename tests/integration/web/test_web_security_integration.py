@@ -5,14 +5,10 @@ CSRF protection, input validation, SQL injection prevention, and XSS protection.
 """
 
 import json
-import os
-import tempfile
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from weather_app.database import Database
 from web.app import app as flask_app
 
 
@@ -54,28 +50,6 @@ def insecure_client(insecure_app):
     return insecure_app.test_client()
 
 
-@pytest.fixture
-def temp_db():
-    """Create a temporary database for testing."""
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
-        test_db_path = tmp.name
-
-    original_db_url = os.environ.get("DATABASE_URL")
-    os.environ["DATABASE_URL"] = f"sqlite:///{test_db_path}"
-
-    db = Database()
-    db.create_tables()
-
-    yield test_db_path
-
-    if original_db_url:
-        os.environ["DATABASE_URL"] = original_db_url
-    else:
-        os.environ.pop("DATABASE_URL", None)
-
-    Path(test_db_path).unlink(missing_ok=True)
-
-
 class TestCSRFProtection:
     """Test CSRF protection mechanisms."""
 
@@ -99,7 +73,7 @@ class TestCSRFProtection:
             # Simulate having a valid CSRF token in session
             sess["csrf_token"] = "valid-token"
 
-    def test_ajax_requests_with_csrf(self, secure_client, temp_db):
+    def test_ajax_requests_with_csrf(self, secure_client, clean_db):
         """Test AJAX requests with CSRF protection."""
         # Test favorite toggle endpoint
         response = secure_client.post(
@@ -174,7 +148,7 @@ class TestInputValidation:
 class TestSQLInjectionPrevention:
     """Test SQL injection prevention."""
 
-    def test_location_search_sql_injection(self, insecure_client, temp_db):
+    def test_location_search_sql_injection(self, insecure_client, clean_db):
         """Test SQL injection attempts in location search."""
         sql_injection_attempts = [
             "'; DROP TABLE locations; --",
@@ -238,7 +212,7 @@ class TestXSSPrevention:
             assert b"onload=" not in response.data
             assert b"onerror=" not in response.data
 
-    def test_json_response_escaping(self, insecure_client, temp_db):
+    def test_json_response_escaping(self, insecure_client, clean_db):
         """Test that JSON responses properly escape data."""
         # Test API endpoint that returns JSON if it exists
         response = insecure_client.get("/api/weather/51.52/-0.11")

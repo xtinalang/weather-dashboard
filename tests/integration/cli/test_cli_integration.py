@@ -5,168 +5,66 @@ application, including database operations, API interactions, and
 command flows.
 """
 
-import os
-import tempfile
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
-from typer.testing import CliRunner
-
+from tests.integration.conftest import assert_cli_success
 from weather_app.cli import app
-from weather_app.database import Database
-
-
-@pytest.fixture
-def runner():
-    """Create a CLI runner for integration testing."""
-    return CliRunner()
-
-
-@pytest.fixture
-def temp_db():
-    """Create a temporary database for integration testing."""
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
-        test_db_path = tmp.name
-
-    # Set up test database
-    original_db_url = os.environ.get("DATABASE_URL")
-    os.environ["DATABASE_URL"] = f"sqlite:///{test_db_path}"
-
-    # Initialize database
-    db = Database()
-    db.create_tables()
-
-    yield test_db_path
-
-    # Cleanup
-    if original_db_url:
-        os.environ["DATABASE_URL"] = original_db_url
-    else:
-        os.environ.pop("DATABASE_URL", None)
-
-    Path(test_db_path).unlink(missing_ok=True)
-
-
-@pytest.fixture
-def mock_weather_api_data():
-    """Mock weather API response data."""
-    return {
-        "location": {
-            "name": "London",
-            "region": "City of London, Greater London",
-            "country": "United Kingdom",
-            "lat": 51.52,
-            "lon": -0.11,
-            "tz_id": "Europe/London",
-            "localtime": "2024-01-15 14:30",
-        },
-        "current": {
-            "temp_c": 15.0,
-            "temp_f": 59.0,
-            "condition": {
-                "text": "Partly cloudy",
-                "icon": "//cdn.weatherapi.com/weather/64x64/day/116.png",
-            },
-            "wind_mph": 6.9,
-            "wind_kph": 11.2,
-            "wind_dir": "W",
-            "pressure_mb": 1020.0,
-            "humidity": 72,
-            "feelslike_c": 15.0,
-            "feelslike_f": 59.0,
-            "vis_km": 10.0,
-            "uv": 3.0,
-        },
-        "forecast": {
-            "forecastday": [
-                {
-                    "date": "2024-01-15",
-                    "day": {
-                        "maxtemp_c": 18.0,
-                        "maxtemp_f": 64.4,
-                        "mintemp_c": 12.0,
-                        "mintemp_f": 53.6,
-                        "condition": {
-                            "text": "Partly cloudy",
-                            "icon": "//cdn.weatherapi.com/weather/64x64/day/116.png",
-                        },
-                        "maxwind_mph": 8.7,
-                        "maxwind_kph": 14.0,
-                    },
-                }
-            ]
-        },
-    }
 
 
 class TestCLIIntegration:
     """Integration tests for CLI commands."""
 
-    def test_version_command_integration(self, runner):
+    def test_version_command_integration(self, cli_runner):
         """Test version command returns correct version."""
-        result = runner.invoke(app, ["version"])
+        result = cli_runner.invoke(app, ["version"])
+        assert_cli_success(result, "Weather Dashboard v0.1.0")
 
-        assert result.exit_code == 0
-        assert "Weather Dashboard v0.1.0" in result.stdout
-
-    def test_help_commands_integration(self, runner):
+    def test_help_commands_integration(self, cli_runner):
         """Test various help commands work correctly."""
         # Main help
-        result = runner.invoke(app, ["--help"])
-        assert result.exit_code == 0
-        assert "A Totally Awesome Command-line Weather App" in result.stdout
+        result = cli_runner.invoke(app, ["--help"])
+        assert_cli_success(result, "A Totally Awesome Command-line Weather App")
 
         # Command-specific help
         commands = ["current", "forecast", "weather", "settings", "add-location"]
         for command in commands:
-            result = runner.invoke(app, [command, "--help"])
+            result = cli_runner.invoke(app, [command, "--help"])
             assert result.exit_code == 0, f"Help for {command} failed"
 
-    def test_database_initialization_integration(self, runner, temp_db):
+    def test_database_initialization_integration(self, cli_runner, clean_db):
         """Test database initialization through CLI."""
-        result = runner.invoke(app, ["init-db"])
-
-        assert result.exit_code == 0
-        assert "Database initialized successfully" in result.stdout
+        result = cli_runner.invoke(app, ["init-db"])
+        assert_cli_success(result, "Database initialized successfully")
 
     @patch("weather_app.cli.WeatherAPI")
     def test_weather_command_integration(
-        self, mock_api_class, runner, mock_weather_api_data
+        self, mock_api_class, cli_runner, mock_weather_api
     ):
         """Test complete weather command flow."""
-        # Setup mock
-        mock_api = MagicMock()
-        mock_api_class.return_value = mock_api
-        mock_api.get_weather.return_value = mock_weather_api_data
+        mock_api_class.return_value = mock_weather_api
+        result = cli_runner.invoke(app, ["weather", "London"])
 
-        # Test weather command
-        result = runner.invoke(app, ["weather", "London"])
-
-        assert result.exit_code == 0
-        mock_api.get_weather.assert_called_once_with("London")
+        assert_cli_success(result)
+        mock_weather_api.get_weather.assert_called_once_with("London")
 
     @patch("weather_app.cli.WeatherAPI")
     def test_weather_command_with_units_integration(
-        self, mock_api_class, runner, mock_weather_api_data
+        self, mock_api_class, cli_runner, mock_weather_api
     ):
         """Test weather command with different temperature units."""
-        mock_api = MagicMock()
-        mock_api_class.return_value = mock_api
-        mock_api.get_weather.return_value = mock_weather_api_data
+        mock_api_class.return_value = mock_weather_api
 
         # Test Celsius
-        result = runner.invoke(app, ["weather", "London", "--unit", "C"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["weather", "London", "--unit", "C"])
+        assert_cli_success(result)
 
         # Test Fahrenheit
-        result = runner.invoke(app, ["weather", "London", "--unit", "F"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["weather", "London", "--unit", "F"])
+        assert_cli_success(result)
 
-    def test_location_management_integration(self, runner, temp_db):
+    def test_location_management_integration(self, cli_runner, clean_db):
         """Test adding and managing locations through CLI."""
-        # Add a location
-        result = runner.invoke(
+        result = cli_runner.invoke(
             app,
             [
                 "add-location",
@@ -182,60 +80,53 @@ class TestCLIIntegration:
                 "New York",
             ],
         )
+        assert_cli_success(result, "Added location successfully")
 
-        assert result.exit_code == 0
-        assert "Added location successfully" in result.stdout
-
-    def test_settings_management_integration(self, runner, temp_db):
+    def test_settings_management_integration(self, cli_runner, clean_db):
         """Test settings management through CLI."""
         # Set forecast days
-        result = runner.invoke(app, ["set-forecast-days", "--days", "5"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["set-forecast-days", "--days", "5"])
+        assert_cli_success(result)
 
         # Update settings
-        result = runner.invoke(app, ["settings", "--forecast-days", "7"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["settings", "--forecast-days", "7"])
+        assert_cli_success(result)
 
-        result = runner.invoke(app, ["settings", "--temp-unit", "F"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["settings", "--temp-unit", "F"])
+        assert_cli_success(result)
 
-    def test_date_command_integration(self, runner):
+    def test_date_command_integration(self, cli_runner):
         """Test date command with various date formats."""
         # Valid date
-        result = runner.invoke(app, ["date", "2024-12-25"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["date", "2024-12-25"])
+        assert_cli_success(result)
 
         # Invalid date format
-        result = runner.invoke(app, ["date", "invalid-date"])
-        assert result.exit_code == 0
-        assert "Invalid date format" in result.stdout
+        result = cli_runner.invoke(app, ["date", "invalid-date"])
+        assert_cli_success(result, "Invalid date format")
 
-    def test_command_validation_integration(self, runner):
+    def test_command_validation_integration(self, cli_runner):
         """Test command parameter validation."""
         # Invalid days range
-        result = runner.invoke(app, ["forecast", "--days", "10"])
+        result = cli_runner.invoke(app, ["forecast", "--days", "10"])
         assert result.exit_code != 0
 
-        result = runner.invoke(app, ["forecast", "--days", "0"])
+        result = cli_runner.invoke(app, ["forecast", "--days", "0"])
         assert result.exit_code != 0
 
         # Valid days range
-        result = runner.invoke(app, ["forecast", "--days", "3"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["forecast", "--days", "3"])
+        assert_cli_success(result)
 
     @patch("weather_app.cli.WeatherAPI")
-    def test_api_error_handling_integration(self, mock_api_class, runner):
+    def test_api_error_handling_integration(self, mock_api_class, cli_runner):
         """Test CLI handles API errors gracefully."""
-        mock_api = MagicMock()
-        mock_api_class.return_value = mock_api
-        mock_api.get_weather.return_value = None  # Simulate API failure
+        mock_api_class.return_value.get_weather.return_value = None
 
-        result = runner.invoke(app, ["weather", "NonexistentCity"])
+        result = cli_runner.invoke(app, ["weather", "NonexistentCity"])
+        assert_cli_success(result, "Failed to retrieve weather information")
 
-        assert result.exit_code == 0
-        assert "Failed to retrieve weather information" in result.stdout
-
-    def test_verbose_logging_integration(self, runner):
+    def test_verbose_logging_integration(self, cli_runner):
         """Test verbose logging works across commands."""
         commands_with_verbose = [
             ["current", "--verbose"],
@@ -245,26 +136,22 @@ class TestCLIIntegration:
         ]
 
         for command in commands_with_verbose:
-            result = runner.invoke(app, command)
+            result = cli_runner.invoke(app, command)
             # Should not crash with verbose flag, but some commands might not support it
-            assert result.exit_code in [
-                0,
-                1,
-                2,
-            ]  # Allow various exit codes for unsupported flags
+            assert result.exit_code in [0, 1, 2]
 
 
 class TestCLIDatabaseIntegration:
     """Integration tests for CLI database operations."""
 
-    def test_full_location_workflow(self, runner, temp_db):
+    def test_full_location_workflow(self, cli_runner, clean_db):
         """Test complete location management workflow."""
         # Initialize database
-        result = runner.invoke(app, ["init-db"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["init-db"])
+        assert_cli_success(result)
 
         # Add location
-        result = runner.invoke(
+        result = cli_runner.invoke(
             app,
             [
                 "add-location",
@@ -279,10 +166,10 @@ class TestCLIDatabaseIntegration:
                 "--favorite",
             ],
         )
-        assert result.exit_code == 0
+        assert_cli_success(result)
 
         # Add another location
-        result = runner.invoke(
+        result = cli_runner.invoke(
             app,
             [
                 "add-location",
@@ -296,50 +183,50 @@ class TestCLIDatabaseIntegration:
                 "Japan",
             ],
         )
-        assert result.exit_code == 0
+        assert_cli_success(result)
 
-    def test_settings_persistence(self, runner, temp_db):
+    def test_settings_persistence(self, cli_runner, clean_db):
         """Test settings are persisted in database."""
         # Initialize database
-        result = runner.invoke(app, ["init-db"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["init-db"])
+        assert_cli_success(result)
 
         # Set forecast days
-        result = runner.invoke(app, ["set-forecast-days", "--days", "5"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["set-forecast-days", "--days", "5"])
+        assert_cli_success(result)
 
         # Update temperature unit
-        result = runner.invoke(app, ["settings", "--temp-unit", "F"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["settings", "--temp-unit", "F"])
+        assert_cli_success(result)
 
         # Update both settings
-        result = runner.invoke(
+        result = cli_runner.invoke(
             app, ["settings", "--forecast-days", "7", "--temp-unit", "C"]
         )
-        assert result.exit_code == 0
+        assert_cli_success(result)
 
 
 class TestCLIErrorHandling:
     """Integration tests for CLI error handling."""
 
-    def test_missing_required_arguments(self, runner):
+    def test_missing_required_arguments(self, cli_runner):
         """Test CLI handles missing required arguments."""
         # Weather command without location
-        result = runner.invoke(app, ["weather"])
+        result = cli_runner.invoke(app, ["weather"])
         assert result.exit_code != 0
 
         # Add location without required parameters
-        result = runner.invoke(app, ["add-location", "--name", "Test"])
+        result = cli_runner.invoke(app, ["add-location", "--name", "Test"])
         assert result.exit_code != 0
 
-    def test_invalid_parameter_values(self, runner):
+    def test_invalid_parameter_values(self, cli_runner):
         """Test CLI handles invalid parameter values."""
         # Invalid forecast days
-        result = runner.invoke(app, ["set-forecast-days", "--days", "15"])
+        result = cli_runner.invoke(app, ["set-forecast-days", "--days", "15"])
         assert result.exit_code != 0
 
         # Invalid coordinates
-        result = runner.invoke(
+        result = cli_runner.invoke(
             app,
             [
                 "add-location",
@@ -355,16 +242,14 @@ class TestCLIErrorHandling:
         )
         assert result.exit_code != 0
 
-    def test_database_error_handling(self, runner):
+    def test_database_error_handling(self, cli_runner):
         """Test CLI handles database errors gracefully."""
         # Try to use CLI without database initialization
-        # This should handle the error gracefully
         with patch("weather_app.cli.initialize_database") as mock_init:
             mock_init.side_effect = Exception("Database connection failed")
 
-            result = runner.invoke(app, ["init-db"])
-            assert result.exit_code == 0
-            assert "Error initializing database" in result.stdout
+            result = cli_runner.invoke(app, ["init-db"])
+            assert_cli_success(result, "Error initializing database")
 
 
 class TestCLIEndToEnd:
@@ -372,23 +257,21 @@ class TestCLIEndToEnd:
 
     @patch("weather_app.cli.WeatherAPI")
     def test_complete_weather_workflow(
-        self, mock_api_class, runner, temp_db, mock_weather_api_data
+        self, mock_api_class, cli_runner, clean_db, mock_weather_api
     ):
         """Test complete weather application workflow."""
-        mock_api = MagicMock()
-        mock_api_class.return_value = mock_api
-        mock_api.get_weather.return_value = mock_weather_api_data
+        mock_api_class.return_value = mock_weather_api
 
         # 1. Initialize database
-        result = runner.invoke(app, ["init-db"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["init-db"])
+        assert_cli_success(result)
 
         # 2. Configure settings
-        result = runner.invoke(app, ["settings", "--forecast-days", "5"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["settings", "--forecast-days", "5"])
+        assert_cli_success(result)
 
         # 3. Add favorite location
-        result = runner.invoke(
+        result = cli_runner.invoke(
             app,
             [
                 "add-location",
@@ -403,31 +286,31 @@ class TestCLIEndToEnd:
                 "--favorite",
             ],
         )
-        assert result.exit_code == 0
+        assert_cli_success(result)
 
         # 4. Get weather for location
-        result = runner.invoke(app, ["weather", "London"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["weather", "London"])
+        assert_cli_success(result)
 
         # 5. Get forecast
-        result = runner.invoke(app, ["forecast", "--days", "3"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["forecast", "--days", "3"])
+        assert_cli_success(result)
 
         # 6. Get current weather
-        result = runner.invoke(app, ["current"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["current"])
+        assert_cli_success(result)
 
-    def test_configuration_and_usage_workflow(self, runner, temp_db):
+    def test_configuration_and_usage_workflow(self, cli_runner, clean_db):
         """Test configuration and usage workflow."""
         # Setup
-        result = runner.invoke(app, ["init-db"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["init-db"])
+        assert_cli_success(result)
 
         # Configure preferences
-        result = runner.invoke(
+        result = cli_runner.invoke(
             app, ["settings", "--forecast-days", "7", "--temp-unit", "F"]
         )
-        assert result.exit_code == 0
+        assert_cli_success(result)
 
         # Add multiple locations
         locations = [
@@ -437,7 +320,7 @@ class TestCLIEndToEnd:
         ]
 
         for name, lat, lon, country in locations:
-            result = runner.invoke(
+            result = cli_runner.invoke(
                 app,
                 [
                     "add-location",
@@ -451,8 +334,8 @@ class TestCLIEndToEnd:
                     country,
                 ],
             )
-            assert result.exit_code == 0
+            assert_cli_success(result)
 
         # Test date-specific forecasts
-        result = runner.invoke(app, ["date", "2024-12-25", "--unit", "F"])
-        assert result.exit_code == 0
+        result = cli_runner.invoke(app, ["date", "2024-12-25", "--unit", "F"])
+        assert_cli_success(result)
