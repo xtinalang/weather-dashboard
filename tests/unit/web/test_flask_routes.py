@@ -79,6 +79,9 @@ class TestSearchRoute:
         response = client.post("/search", data={"query": ""})
         assert response.status_code == 302  # Redirect back to index
 
+    def test_search_location_coordinates_format(self, client, mock_search):
+        """Test search with location coordinates format handling."""
+
 
 class TestWeatherRoute:
     """Test the weather route."""
@@ -207,7 +210,11 @@ class TestFavoriteRoute:
         """Test toggling favorite location successfully."""
         # The actual route is /favorite/<int:location_id>, not /favorite
         response = client.post("/favorite/1")
-        assert response.status_code in [200, 302, 404]  # 404 if location doesn't exist
+        assert response.status_code in [
+            200,
+            302,
+            404,
+        ]  # 404 if location doesn't exist
 
 
 class TestNaturalLanguageRoute:
@@ -250,7 +257,8 @@ class TestForecastFormRoute:
         """Test forecast form with coordinates."""
         # The actual route is /forecast (POST), not /forecast-form
         response = client.post(
-            "/forecast", data={"location": "51.5074,-0.1278", "forecast_days": "5"}
+            "/forecast",
+            data={"location": "51.5074,-0.1278", "forecast_days": "5"},
         )
         assert response.status_code in [200, 302]
 

@@ -26,7 +26,13 @@ class TestCLIIntegration:
         assert_cli_success(result, "A Totally Awesome Command-line Weather App")
 
         # Command-specific help
-        commands = ["current", "forecast", "weather", "settings", "add-location"]
+        commands = [
+            "current",
+            "forecast",
+            "weather",
+            "settings",
+            "add-location",
+        ]
         for command in commands:
             result = cli_runner.invoke(app, [command, "--help"])
             assert result.exit_code == 0, f"Help for {command} failed"

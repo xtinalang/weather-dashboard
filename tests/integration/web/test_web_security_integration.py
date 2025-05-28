@@ -83,7 +83,11 @@ class TestCSRFProtection:
         )
 
         # Should handle CSRF validation for AJAX requests
-        assert response.status_code in [400, 403, 200]  # Depends on implementation
+        assert response.status_code in [
+            400,
+            403,
+            200,
+        ]  # Depends on implementation
 
 
 class TestInputValidation:

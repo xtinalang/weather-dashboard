@@ -52,7 +52,10 @@ def test_get_current_weather(current_manager, sample_location):
     """Test getting current weather for a location."""
     # Configure API response
     weather_data = {
-        "location": {"name": sample_location.name, "country": sample_location.country},
+        "location": {
+            "name": sample_location.name,
+            "country": sample_location.country,
+        },
         "current": {
             "temp_c": 20.5,
             "feelslike_c": 21.0,
@@ -99,7 +102,10 @@ def test_get_historical_weather(current_manager, sample_location):
     """Test getting historical weather for a location."""
     # Configure API response
     weather_data = {
-        "location": {"name": sample_location.name, "country": sample_location.country},
+        "location": {
+            "name": sample_location.name,
+            "country": sample_location.country,
+        },
         "forecast": {
             "forecastday": [
                 {

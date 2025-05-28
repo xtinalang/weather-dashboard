@@ -107,9 +107,17 @@ def test_location_search(location_repo):
 
     # Create multiple locations
     locations = [
-        Location(name="New York", latitude=40.7128, longitude=-74.0060, country="USA"),
         Location(
-            name="Los Angeles", latitude=34.0522, longitude=-118.2437, country="USA"
+            name="New York",
+            latitude=40.7128,
+            longitude=-74.0060,
+            country="USA",
+        ),
+        Location(
+            name="Los Angeles",
+            latitude=34.0522,
+            longitude=-118.2437,
+            country="USA",
         ),
         Location(name="London", latitude=51.5074, longitude=-0.1278, country="UK"),
     ]
@@ -318,7 +326,11 @@ def test_location_repo_get_favorites(mock_location_repo, test_db_session):
     """Test getting favorite locations."""
     # Create favorite and non-favorite locations
     favorite = Location(
-        name="Paris", latitude=48.85, longitude=2.35, country="France", is_favorite=True
+        name="Paris",
+        latitude=48.85,
+        longitude=2.35,
+        country="France",
+        is_favorite=True,
     )
     not_favorite = Location(
         name="Berlin",

@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import (
+    HiddenField,
     RadioField,
     SelectField,
     StringField,
@@ -20,6 +21,16 @@ class LocationSearchForm(FlaskForm):
 
     query = StringField("City or Location", validators=[DataRequired()])
     submit = SubmitField("Search")
+
+
+class LocationSelectionForm(FlaskForm):
+    """Form for selecting a location from search results"""
+
+    selected_location = RadioField("Select Location", validators=[DataRequired()])
+    action = HiddenField("Action")  # 'weather' or 'forecast'
+    unit = HiddenField("Unit")
+    forecast_days = HiddenField("Forecast Days")
+    submit = SubmitField("Get Weather")
 
 
 class UserInputLocationForm(FlaskForm):

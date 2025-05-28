@@ -1147,8 +1147,11 @@ name = "weather-app"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "black" },
+    { name = "flake8" },
     { name = "flask" },
     { name = "flask-wtf" },
+    { name = "isort" },
     { name = "make" },
     { name = "playwright" },
     { name = "psycopg2-binary" },
@@ -1175,8 +1178,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "black", specifier = ">=25.1.0" },
+    { name = "flake8", specifier = ">=7.2.0" },
     { name = "flask", specifier = ">=3.1.0" },
     { name = "flask-wtf", specifier = ">=1.2.1" },
+    { name = "isort", specifier = ">=6.0.1" },
     { name = "make", specifier = ">=0.1.6.post2" },
     { name = "playwright", specifier = ">=1.52.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
