@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weather-dashboard
+  namespace: weather-dashboard
+  labels:
+    app: weather-dashboard
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: weather-dashboard
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: weather-dashboard
+        version: v1
+    spec:
+      containers:
+      - name: weather-dashboard
+        image: weather-dashboard:latest  # Replace with your image
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+          name: http
+          protocol: TCP
+
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: weather-dashboard-config
+
+        # Environment variables from Secret
+        env:
+        - name: WEATHER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: weather-dashboard-secrets
+              key: WEATHER_API_KEY
+
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        # Volume mounts
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/data
+        - name: logs-volume
+          mountPath: /app/logs
+
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+
+      # Volumes
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: weather-dashboard-data
+      - name: logs-volume
+        emptyDir: {}
+
+      # Security context for the pod
+      securityContext:
+        fsGroup: 1001
+
+      # Optional: Node selection
+      # nodeSelector:
+      #   kubernetes.io/os: linux
+
+      # Optional: Tolerations for specific node taints
+      # tolerations:
+      # - key: "app"
+      #   operator: "Equal"
+      #   value: "weather-dashboard"
+      #   effect: "NoSchedule"

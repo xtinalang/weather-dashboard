@@ -1,0 +1,74 @@
+# Multi-stage build using uv for better performance and smaller image size
+FROM ghcr.io/astral-sh/uv:python3.12-alpine AS builder
+
+# Set environment variables for uv
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never
+
+# Create application directory
+WORKDIR /app
+
+# Copy uv configuration files
+COPY uv.lock pyproject.toml ./
+
+# Install dependencies into a virtual environment
+RUN uv sync --frozen --no-dev --no-install-project
+
+# Copy the application source code
+COPY . .
+
+# Install the project itself
+RUN uv sync --frozen --no-dev
+
+# Production stage
+FROM python:3.12-alpine AS runtime
+
+# Install runtime dependencies
+RUN apk update && apk add --no-cache \
+    sqlite \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Create a non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Set working directory
+WORKDIR /app
+
+# Copy the virtual environment from builder stage
+COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
+
+# Copy application code
+COPY --chown=appuser:appgroup . .
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/data /app/logs && \
+    chown -R appuser:appgroup /app/data /app/logs
+
+# Make sure the virtual environment is in the PATH
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Set environment variables for production
+ENV FLASK_ENV=production \
+    FLASK_APP=web.app \
+    DATABASE_URL=sqlite:///app/data/weather.db \
+    PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1
+
+# Switch to non-root user
+USER appuser
+
+# Create the database on startup
+RUN python init_database.py || true
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:5000/', timeout=10)" || exit 1
+
+# Expose the port
+EXPOSE 5000
+
+# Start the web application
+CMD ["python", "-m", "web"]
