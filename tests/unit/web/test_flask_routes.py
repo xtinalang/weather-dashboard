@@ -81,6 +81,9 @@ class TestSearchRoute:
 
     def test_search_location_coordinates_format(self, client, mock_search):
         """Test search with location coordinates format handling."""
+        with patch("weather_app.api.WeatherAPI.search_city", mock_search):
+            response = client.post("/search", data={"query": "London"})
+            assert response.status_code in [200, 302]
 
 
 class TestWeatherRoute:

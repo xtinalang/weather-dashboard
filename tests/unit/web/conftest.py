@@ -9,6 +9,7 @@ import importlib.util
 import os
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -60,6 +61,22 @@ def client(flask_app):
 def runner(flask_app):
     """Create a test CLI runner."""
     return flask_app.test_cli_runner()
+
+
+@pytest.fixture
+def mock_search():
+    """Mock search function for testing."""
+    mock = MagicMock()
+    mock.return_value = [
+        {
+            "name": "London",
+            "region": "England",
+            "country": "United Kingdom",
+            "lat": 51.52,
+            "lon": -0.11,
+        }
+    ]
+    return mock
 
 
 @pytest.fixture
@@ -181,3 +198,45 @@ def web_utils_module(project_setup):
     spec.loader.exec_module(module)
 
     return module
+
+
+@pytest.fixture
+def web_modules_combined(project_setup):
+    """Get both web.helpers and web.utils modules for testing."""
+    project_root = project_setup
+
+    # Load web.helpers module
+    helpers_path = project_root / "web" / "helpers.py"
+    helpers_spec = importlib.util.spec_from_file_location("web.helpers", helpers_path)
+    helpers_module = importlib.util.module_from_spec(helpers_spec)
+    helpers_spec.loader.exec_module(helpers_module)
+
+    # Load web.utils module
+    utils_path = project_root / "web" / "utils.py"
+    utils_spec = importlib.util.spec_from_file_location("web.utils", utils_path)
+    utils_module = importlib.util.module_from_spec(utils_spec)
+    utils_spec.loader.exec_module(utils_module)
+
+    return helpers_module, utils_module
+
+
+# Mock objects for testing
+@pytest.fixture
+def mock_weather_api():
+    """Mock WeatherAPI for testing."""
+    mock = MagicMock()
+    return mock
+
+
+@pytest.fixture
+def mock_location_manager():
+    """Mock LocationManager for testing."""
+    mock = MagicMock()
+    return mock
+
+
+@pytest.fixture
+def mock_settings_repo():
+    """Mock SettingsRepository for testing."""
+    mock = MagicMock()
+    return mock

@@ -80,33 +80,63 @@ def validate_query_string(query: str, max_length: int = 200) -> bool:
 def register_error_handlers(app: Flask) -> None:
     """Register all error handlers with the Flask app."""
 
+    def create_index_context():
+        """Create context variables for index template."""
+        from .forms import (
+            DateWeatherNLForm,
+            ForecastDaysForm,
+            LocationSearchForm,
+            UnitSelectionForm,
+            UserInputLocationForm,
+        )
+
+        search_form = LocationSearchForm()
+        ui_form = UserInputLocationForm()
+        unit_form = UnitSelectionForm()
+        forecast_days_form = ForecastDaysForm()
+        nl_form = DateWeatherNLForm()
+        favorites = []
+
+        return {
+            "search_form": search_form,
+            "ui_form": ui_form,
+            "unit_form": unit_form,
+            "forecast_days_form": forecast_days_form,
+            "nl_form": nl_form,
+            "favorites": favorites,
+        }
+
     @app.errorhandler(404)
     def not_found_error(error):
         """Handle 404 errors."""
         logger.warning(f"404 error: {request.url}")
         flash("The page you're looking for doesn't exist.", "warning")
-        return render_template("index.html"), 404
+        context = create_index_context()
+        return render_template("index.html", **context), 404
 
     @app.errorhandler(500)
     def internal_error(error):
         """Handle 500 errors."""
         logger.error(f"500 error: {error}")
         flash("An internal server error occurred. Please try again later.", "error")
-        return render_template("index.html"), 500
+        context = create_index_context()
+        return render_template("index.html", **context), 500
 
     @app.errorhandler(400)
     def bad_request_error(error):
         """Handle 400 errors."""
         logger.warning(f"400 error: {error}")
         flash("Invalid request. Please check your input and try again.", "warning")
-        return render_template("index.html"), 400
+        context = create_index_context()
+        return render_template("index.html", **context), 400
 
     @app.errorhandler(403)
     def forbidden_error(error):
         """Handle 403 errors."""
         logger.warning(f"403 error: {error}")
         flash("Access forbidden.", "error")
-        return render_template("index.html"), 403
+        context = create_index_context()
+        return render_template("index.html", **context), 403
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
@@ -120,7 +150,8 @@ def register_error_handlers(app: Flask) -> None:
         """Handle general unhandled exceptions."""
         logger.error(f"Unhandled exception: {error}", exc_info=True)
         flash("An unexpected error occurred. Please try again.", "error")
-        return render_template("index.html"), 500
+        context = create_index_context()
+        return render_template("index.html", **context), 500
 
 
 # Database operation wrapper with error handling
