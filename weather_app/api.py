@@ -1,7 +1,5 @@
 import logging
 from typing import (
-    Dict,
-    List,
     Optional,
     TypedDict,
     Union,
@@ -53,7 +51,7 @@ class WeatherAPI:
     ) -> Optional[WeatherResponse]:
         try:
             endpoint: str = "forecast.json"
-            params: Dict[str, Union[str, int]] = {
+            params: dict[str, Union[str, int]] = {
                 "q": location,
                 "key": self.api_key,
                 "days": 7,
@@ -90,7 +88,7 @@ class WeatherAPI:
             # Ensure days is within valid range
             valid_days: int = max(1, min(days, 7))
 
-            params: Dict[str, Union[str, int]] = {
+            params: dict[str, Union[str, int]] = {
                 "q": location,
                 "key": self.api_key,
                 "days": valid_days,
@@ -117,9 +115,9 @@ class WeatherAPI:
             print("An unexpected error occurred while fetching forecast data.")
             return None
 
-    def search_city(self, query: str) -> Optional[List[CitySearchResult]]:
+    def search_city(self, query: str) -> Optional[list[CitySearchResult]]:
         try:
-            params: Dict[str, str] = {"q": query, "key": self.api_key}
+            params: dict[str, str] = {"q": query, "key": self.api_key}
             request_url: str = f"{WEATHER_URL}search.json"
 
             response: requests.Response = requests.get(
@@ -127,7 +125,7 @@ class WeatherAPI:
             )
             response.raise_for_status()
 
-            return cast(List[CitySearchResult], response.json())
+            return cast(list[CitySearchResult], response.json())
         except requests.exceptions.Timeout:
             logger.error("City search API request timed out")
             print("City search is taking too long to respond. Please try again.")

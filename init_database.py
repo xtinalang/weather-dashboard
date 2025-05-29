@@ -44,7 +44,7 @@ def init_database():
             path = Path(db_path)
             if path.exists():
                 size = path.stat().st_size
-                print(f"Database file size: {size/1024:.1f} KB")
+                print(f"Database file size: {size / 1024:.1f} KB")
             else:
                 print(f"Warning: Database file doesn't exist at {db_path}")
         else:

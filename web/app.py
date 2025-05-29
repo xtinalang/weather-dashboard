@@ -1,7 +1,7 @@
 import os
 import re
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, cast
 
 from decouple import config
 from flask import Flask, flash, jsonify, redirect, render_template, request, url_for
@@ -104,14 +104,14 @@ else:
 
 # Context processor to add current year to all templates
 @app.context_processor
-def inject_current_year() -> Dict[str, int]:
+def inject_current_year() -> dict[str, int]:
     return {"current_year": datetime.now().year}
 
 
 # Helper functions for route handlers
 def get_weather_data(
-    coords: Tuple[float, float], unit: TemperatureUnit
-) -> Tuple[WeatherData, LocationData]:
+    coords: tuple[float, float], unit: TemperatureUnit
+) -> tuple[WeatherData, LocationData]:
     """Get weather data for given coordinates."""
     weather_data = weather_api.get_weather(coords)
     if not weather_data:
@@ -143,8 +143,8 @@ def get_weather_data(
 
 
 def get_forecast_data(
-    coords: Tuple[float, float], unit: TemperatureUnit
-) -> List[Dict[str, Any]]:
+    coords: tuple[float, float], unit: TemperatureUnit
+) -> list[dict[str, Any]]:
     """Get forecast data for given coordinates."""
     forecast_data = weather_api.get_forecast(coords)
     if not forecast_data:
@@ -497,7 +497,7 @@ def toggle_favorite(location_id: int) -> Any:
             flash("Favorite status updated", "success")
         else:
             flash("Failed to update favorite status", "error")
-    except (OSError, IOError) as e:
+    except OSError as e:
         flash(f"Database access error: {str(e)}", "error")
     except ValueError as e:
         flash(f"Invalid location ID: {str(e)}", "error")
@@ -519,7 +519,7 @@ def update_unit() -> Any:
                 unit_value = "celsius" if unit == CELSIUS else "fahrenheit"
                 settings_repo.update_temperature_unit(unit_value)
                 flash(f"Temperature unit updated to {unit_value}", "success")
-            except (OSError, IOError) as e:
+            except OSError as e:
                 flash(f"Database access error: {str(e)}", "warning")
             except ValueError as e:
                 flash(f"Invalid unit value: {str(e)}", "warning")
@@ -754,7 +754,7 @@ def nl_date_weather() -> Any:
 
     try:
         Helpers.save_weather_record(location_obj, current_weather_data)
-    except (OSError, IOError):
+    except OSError:
         # Non-critical error - just log it
         pass
     except Exception:
@@ -911,7 +911,7 @@ def nl_result_with_coords(lat: float, lon: float) -> Any:
 
     try:
         Helpers.save_weather_record(location_obj, current_weather_data)
-    except (OSError, IOError):
+    except OSError:
         # Non-critical error - just log it
         pass
     except Exception:

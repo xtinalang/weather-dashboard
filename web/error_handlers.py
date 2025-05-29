@@ -159,7 +159,7 @@ def safe_database_operation(operation, *args, **kwargs):
     """Safely execute database operations with error handling."""
     try:
         return operation(*args, **kwargs)
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.error(f"Database access error: {e}")
         flash("Database access error. Please try again later.", "warning")
         return None
@@ -199,7 +199,7 @@ def initialize_database_safely(initialize_database_func):
         initialize_database_func()
         logger.info("Database initialized successfully")
         return True
-    except (OSError, IOError) as e:
+    except OSError as e:
         logger.error(f"Database file access error: {e}")
         flash("Database access error. Some features may be limited.", "warning")
         return False

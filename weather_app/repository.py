@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import DetachedInstanceError
@@ -19,7 +19,7 @@ T = TypeVar("T", bound=SQLModel)
 class BaseRepository(Generic[T]):
     """Base repository class with common CRUD operations"""
 
-    model_class: Type[T]
+    model_class: type[T]
 
     def __init__(self) -> None:
         self.db = Database()
@@ -41,7 +41,7 @@ class BaseRepository(Generic[T]):
             error_msg = f"Failed to get {self.model_class.__name__} by ID: {e}"
             raise DatabaseError(error_msg) from e
 
-    def get_all(self, limit: int = 100, offset: int = 0) -> List[T]:
+    def get_all(self, limit: int = 100, offset: int = 0) -> list[T]:
         """Get all records with pagination"""
         try:
             with self.db.get_session() as session:
@@ -52,7 +52,7 @@ class BaseRepository(Generic[T]):
             error_msg = f"Failed to get all {self.model_class.__name__}s: {e}"
             raise DatabaseError(error_msg) from e
 
-    def update(self, id: int, data: Dict[str, Any]) -> Optional[T]:
+    def update(self, id: int, data: dict[str, Any]) -> Optional[T]:
         """Update a record by ID with the provided data"""
         try:
             with self.db.get_session() as session:
@@ -107,7 +107,7 @@ class LocationRepository(BaseRepository[Location]):
 
     model_class = Location
 
-    def search(self, query: str, limit: int = 10) -> List[Location]:
+    def search(self, query: str, limit: int = 10) -> list[Location]:
         """Search locations by name, region, or country"""
         try:
             search_term = f"%{query}%"
@@ -129,7 +129,7 @@ class LocationRepository(BaseRepository[Location]):
             error_msg = f"Failed to search locations: {e}"
             raise DatabaseError(error_msg) from e
 
-    def get_favorites(self) -> List[Location]:
+    def get_favorites(self) -> list[Location]:
         """Get favorite locations"""
         try:
             with self.db.get_session() as session:
@@ -148,14 +148,16 @@ class LocationRepository(BaseRepository[Location]):
         logger = logging.getLogger("weather_app")
 
         logger.debug(
-            f"Searching for location with coordinates: {latitude}, {longitude} (threshold: {threshold})"
+            f"Searching for location with coordinates: {latitude}, {longitude} "
+            f"(threshold: {threshold})"
         )
 
         try:
             with self.db.get_session() as session:
                 # Log SQL parameters
                 logger.debug(
-                    f"SQL parameters: latitude={latitude}, longitude={longitude}, threshold={threshold}"
+                    f"SQL parameters: latitude={latitude}, longitude={longitude}, "
+                    f"threshold={threshold}"
                 )
 
                 # Try a more flexible search with progressive thresholds
@@ -187,14 +189,16 @@ class LocationRepository(BaseRepository[Location]):
                 # Log search results
                 if location:
                     logger.debug(
-                        f"Found location: {location.name} (ID: {location.id}) at {location.latitude}, {location.longitude}"
+                        f"Found location: {location.name} (ID: {location.id}) "
+                        f"at {location.latitude}, {location.longitude}"
                     )
 
                     # Create a copy with all required attributes to avoid session issues
                     return self._create_detached_location_copy(location)
                 else:
                     logger.debug(
-                        f"No location found with coordinates {latitude}, {longitude} (threshold: {threshold})"
+                        f"No location found with coordinates {latitude}, {longitude} "
+                        f"(threshold: {threshold})"
                     )
 
                     # If no match with threshold, log available locations for debugging
@@ -202,11 +206,13 @@ class LocationRepository(BaseRepository[Location]):
                     sample_locations = session.exec(all_locations_stmt).all()
                     if sample_locations:
                         logger.debug(
-                            f"Sample locations in database ({len(sample_locations)} shown):"
+                            f"Sample locations in database "
+                            f"({len(sample_locations)} shown):"
                         )
                         for loc in sample_locations:
                             logger.debug(
-                                f"  - {loc.name} (ID: {loc.id}): {loc.latitude}, {loc.longitude}"
+                                f"  - {loc.name} (ID: {loc.id}): "
+                                f"{loc.latitude}, {loc.longitude}"
                             )
                     else:
                         logger.debug("No locations exist in database")
@@ -320,7 +326,7 @@ class WeatherRepository(BaseRepository[WeatherRecord]):
 
     model_class = WeatherRecord
 
-    def get_by_location(self, location_id: int, limit: int = 10) -> List[WeatherRecord]:
+    def get_by_location(self, location_id: int, limit: int = 10) -> list[WeatherRecord]:
         """Get weather records for a specific location"""
         try:
             with self.db.get_session() as session:
@@ -336,7 +342,7 @@ class WeatherRepository(BaseRepository[WeatherRecord]):
             error_msg = f"Failed to get weather records by location: {e}"
             raise DatabaseError(error_msg) from e
 
-    def get_records_since(self, days: int = 7) -> List[WeatherRecord]:
+    def get_records_since(self, days: int = 7) -> list[WeatherRecord]:
         """Get weather records from the past X days"""
         cutoff_date = datetime.now() - timedelta(days=days)
         try:
@@ -402,7 +408,8 @@ class SettingsRepository(BaseRepository[UserSettings]):
                 # Create a detached copy to avoid session issues
                 detached_settings = self._create_detached_settings_copy(settings)
                 logger.debug(
-                    f"Retrieved settings: temp_unit={detached_settings.temperature_unit}, forecast_days={detached_settings.forecast_days}"
+                    f"Retrieved settings: temp={detached_settings.temperature_unit}, "
+                    f"forecast_days={detached_settings.forecast_days}"
                 )
                 return detached_settings
 

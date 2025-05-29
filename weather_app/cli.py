@@ -162,8 +162,7 @@ def date_forecast(
         weather_app.show_forecast_for_date(target_date)
     except ValueError:
         console.print(
-            f"[bold red]Error: Invalid date format '{date}'. "
-            f"Use YYYY-MM-DD[/bold red]"
+            f"[bold red]Error: Invalid date format '{date}'. Use YYYY-MM-DD[/bold red]"
         )
 
 
@@ -205,7 +204,7 @@ def settings(
         try:
             weather_app.set_default_forecast_days(forecast_days)
             console.print(
-                f"[green]Default forecast days updated to " f"{forecast_days}[/green]"
+                f"[green]Default forecast days updated to {forecast_days}[/green]"
             )
         except Exception as e:
             console.print(f"[red]Error updating forecast days: {e}[/red]")
@@ -255,8 +254,7 @@ def refresh_location(
                 return
 
             console.print(
-                f"[blue]Found {len(locations)} matching locations. "
-                f"Refreshing...[/blue]"
+                f"[blue]Found {len(locations)} matching locations. Refreshing...[/blue]"
             )
             for loc in locations:
                 fresh_loc = weather_app.refresh_location(loc)
@@ -304,7 +302,7 @@ def run_diagnostics(
             if os.path.exists(db_path):
                 size = os.path.getsize(db_path)
                 console.print(
-                    f"SQLite database file: {db_path} " f"(Size: {size / 1024:.1f} KB)"
+                    f"SQLite database file: {db_path} (Size: {size / 1024:.1f} KB)"
                 )
             else:
                 console.print(
@@ -352,7 +350,7 @@ def run_diagnostics(
             )
         else:
             console.print(
-                "[yellow]⚠ Location manager returned no results for 'Paris'" "[/yellow]"
+                "[yellow]⚠ Location manager returned no results for 'Paris'[/yellow]"
             )
 
     except Exception as e:
@@ -492,8 +490,7 @@ def test_location_saving(
                 console.print("[green]✓ Test location cleaned up[/green]")
             except Exception as e:
                 console.print(
-                    f"[yellow]Warning: Could not clean up test location: "
-                    f"{e}[/yellow]"
+                    f"[yellow]Warning: Could not clean up test location: {e}[/yellow]"
                 )
 
         else:
