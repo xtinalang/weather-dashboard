@@ -1,0 +1,1 @@
+# CLI functional tests package

@@ -1,0 +1,206 @@
+/* Minimal variables */
+:root {
+    --bg: #36454F;
+    --text: white;
+    --card-bg: #4A4A4A;
+    --accent: #007bff;
+    --success: #d4edda;
+    --error: #f8d7da;
+    --warning: #fff3cd;
+}
+
+/* Basic reset */
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* Simple container */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Basic heading */
+h1, h2, h3 {
+    text-align: center;
+    margin: 20px 0;
+}
+
+/* Basic form elements */
+input, button, select, textarea {
+    padding: 8px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+button, .btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+button:hover, .btn:hover {
+    opacity: 0.9;
+}
+
+/* For radio buttons */
+input[type="radio"] {
+    width: auto;
+    margin-right: 5px;
+}
+
+label {
+    display: block;
+    margin: 5px 0;
+}
+
+/* Card layouts */
+.card {
+    background: #333;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Section styling */
+.section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #333;
+    border-radius: 5px;
+}
+
+/* Simple navigation */
+.nav {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.nav a {
+    color: var(--text);
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 5px 10px;
+    background: var(--accent);
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Flash messages */
+.flash-messages {
+    margin-bottom: 20px;
+}
+
+.flash-message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+.flash-message.success {
+    background: var(--success);
+    color: #155724;
+}
+
+.flash-message.error {
+    background: var(--error);
+    color: #721c24;
+}
+
+.flash-message.warning {
+    background: var(--warning);
+    color: #856404;
+}
+
+/* Weather display */
+.weather-display {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.temperature {
+    font-size: 3em;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.condition {
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+.weather-details {
+    text-align: left;
+    margin-top: 20px;
+    background: #333;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.weather-details p {
+    margin: 5px 0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+/* Favorites */
+.favorites {
+    margin-top: 20px;
+}
+
+.favorite-item {
+    background: #333;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 4px;
+}
+
+.favorite-item a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+/* Quick links */
+.quick-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* Simple footer */
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.9em;
+    color: #999;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    .container {
+        padding: 10px;
+    }
+
+    input, button, select, textarea {
+        font-size: 16px; /* Prevents zoom on mobile */
+    }
+}

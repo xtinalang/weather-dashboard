@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results for "{{ query }}"{% endblock %}
+
+{% block content %}
+<h2>Search Results for "{{ query }}"</h2>
+
+{% if results %}
+    <p>Select a location to view weather:</p>
+
+    {% for location in results %}
+    <div class="card">
+        <h3>{{ location.name }}</h3>
+        <p>{{ location.region }}, {{ location.country }}</p>
+        <p>
+            <a href="{{ url_for('weather', lat=location.lat, lon=location.lon, unit=unit|default('C')) }}" class="btn">
+                View Weather
+            </a>
+            <a href="{{ url_for('forecast_path', coordinates=location.lat ~ '/' ~ location.lon, unit=unit|default('C')) }}" class="btn">
+                View Forecast
+            </a>
+        </p>
+    </div>
+    {% endfor %}
+{% else %}
+    <p>No locations found matching "{{ query }}".</p>
+{% endif %}
+
+<div class="nav">
+    <a href="{{ url_for('index') }}">Back to Search</a>
+</div>
+{% endblock %}

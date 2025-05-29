@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Weather Forecast for {{ location.name }}{% endblock %}
+
+{% block content %}
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="weather-display">
+    <h2>{{ forecast_days }}-Day Forecast for {{ location.name }}</h2>
+    <p>{{ location.region }}, {{ location.country }}</p>
+
+    <div class="forecast-days-form">
+        <form action="{{ url_for('forecast_path', coordinates=lat ~ '/' ~ lon) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="unit" value="{{ unit }}">
+
+            <div class="form-group">
+                <label>Forecast Days:</label>
+                <div class="radio-group">
+                    <div>
+                        <input type="radio" id="days1" name="forecast_days" value="1" {% if forecast_days == 1 %}checked{% endif %}>
+                        <label for="days1">1 Day</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="days3" name="forecast_days" value="3" {% if forecast_days == 3 %}checked{% endif %}>
+                        <label for="days3">3 Days</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="days5" name="forecast_days" value="5" {% if forecast_days == 5 %}checked{% endif %}>
+                        <label for="days5">5 Days</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="days7" name="forecast_days" value="7" {% if forecast_days == 7 %}checked{% endif %}>
+                        <label for="days7">7 Days</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn">Update Forecast</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="forecast-container">
+        {% for day in forecast %}
+            <div class="forecast-day">
+                <h3>{{ day.date }}</h3>
+                <div class="forecast-icon">
+                    <img src="{{ day.icon }}" alt="{{ day.condition }}">
+                </div>
+                <div class="condition">{{ day.condition }}</div>
+                <div class="temperature">
+                    <span class="max">{{ day.max_temp }}°{{ unit }}</span> /
+                    <span class="min">{{ day.min_temp }}°{{ unit }}</span>
+                </div>
+                <div class="forecast-details">
+                    <p><strong>Humidity:</strong> {{ day.humidity }}%</p>
+                    <p><strong>Wind:</strong> {{ day.wind_speed }} {{ day.wind_unit }}</p>
+                    <p><strong>Rain Chance:</strong> {{ day.chance_of_rain }}%</p>
+                    <p><strong>Snow Chance:</strong> {{ day.chance_of_snow }}%</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="nav">
+    <a href="{{ url_for('index') }}">Back to Home</a>
+    <a href="{{ url_for('weather_path', coordinates=lat ~ '/' ~ lon, unit=unit) }}">Current Weather</a>
+    <a href="{{ url_for('forecast_path', coordinates=lat ~ '/' ~ lon, unit='C' if unit == 'F' else 'F', days=forecast_days) }}">
+        Switch to °{{ 'C' if unit == 'F' else 'F' }}
+    </a>
+    {% if location.id %}
+    <form action="{{ url_for('toggle_favorite', location_id=location.id, next=request.path) }}" method="post" style="display: inline-block; margin-top: 10px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn">
+            {% if location.is_favorite %}
+            ★ Remove from Favorites
+            {% else %}
+            ☆ Add to Favorites
+            {% endif %}
+        </button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
