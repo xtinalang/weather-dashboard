@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Select Location - "{{ query }}"{% endblock %}
+
+{% block content %}
+<h2>Multiple locations found for "{{ query }}"</h2>
+<p>Please select the correct location from the list below:</p>
+
+{% if results %}
+    <form method="POST" action="{{ url_for('select_location') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <!-- Hidden fields to preserve form data -->
+        <input type="hidden" name="action" value="{{ action }}">
+        <input type="hidden" name="unit" value="{{ unit }}">
+        <input type="hidden" name="forecast_days" value="{{ forecast_days }}">
+        {% if nl_query %}
+        <input type="hidden" name="nl_query" value="{{ nl_query }}">
+        {% endif %}
+
+        <div class="location-list">
+            {% for result in results %}
+            <div class="location-item card mb-3">
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio"
+                               name="selected_location"
+                               id="location_{{ loop.index }}"
+                               value="{{ result.lat }},{{ result.lon }},{{ result.name }},{{ result.region or '' }},{{ result.country }}"
+                               {% if loop.first %}checked{% endif %}>
+                        <label class="form-check-label" for="location_{{ loop.index }}">
+                            <h3 class="h5 mb-1">{{ result.name }}</h3>
+                            <p class="text-muted mb-0">
+                                {% if result.region %}{{ result.region }}, {% endif %}{{ result.country }}
+                            </p>
+                            <small class="text-muted">
+                                Coordinates: {{ "%.2f"|format(result.lat) }}, {{ "%.2f"|format(result.lon) }}
+                            </small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            {% if action == "forecast" %}
+                <button type="submit" class="btn btn-primary">Get Forecast</button>
+            {% elif action == "nl" %}
+                <button type="submit" class="btn btn-primary">Get Weather Info</button>
+            {% else %}
+                <button type="submit" class="btn btn-primary">Get Weather</button>
+            {% endif %}
+            <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">Back to Search</a>
+        </div>
+    </form>
+{% else %}
+    <p>No locations found.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Search</a>
+{% endif %}
+
+<style>
+.location-list {
+    margin: 20px 0;
+}
+
+.location-item {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 0;
+    transition: background-color 0.2s;
+}
+
+.location-item:hover {
+    background-color: #f9f9f9;
+}
+
+.location-label {
+    display: block;
+    cursor: pointer;
+    padding: 15px;
+    margin: 0;
+}
+
+.location-details {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.location-number {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #666;
+    min-width: 30px;
+}
+
+.location-info h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.location-info p {
+    margin: 0 0 3px 0;
+    color: #666;
+}
+
+.coordinates {
+    font-size: 0.9em;
+    color: #999;
+}
+
+input[type="radio"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.form-actions {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+}
+</style>
+{% endblock %}

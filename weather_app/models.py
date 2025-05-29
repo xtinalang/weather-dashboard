@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -20,7 +20,7 @@ class Location(SQLModel, table=True):
     is_favorite: bool = Field(default=False, index=True)
 
     # Relationships
-    weather_records: List["WeatherRecord"] = Relationship(back_populates="location")
+    weather_records: list["WeatherRecord"] = Relationship(back_populates="location")
 
     def __repr__(self) -> str:
         return f"{self.name}, {self.region or ''} {self.country}"
@@ -28,7 +28,7 @@ class Location(SQLModel, table=True):
     def coordinates(self) -> tuple[float, float]:
         return (self.latitude, self.longitude)
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "name": self.name,
@@ -58,7 +58,7 @@ class WeatherRecord(SQLModel, table=True):
     # Relationships
     location: Location = Relationship(back_populates="weather_records")
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "location_id": self.location_id,
@@ -87,7 +87,7 @@ class UserSettings(SQLModel, table=True):
     # Relationship to default location
     default_location: Optional[Location] = Relationship()
 
-    def to_dict(self) -> Dict[str, object]:
+    def to_dict(self) -> dict[str, object]:
         return {
             "id": self.id,
             "temperature_unit": self.temperature_unit,

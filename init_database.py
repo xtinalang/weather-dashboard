@@ -8,6 +8,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from sqlmodel import select
+
 from weather_app.database import DATABASE_URL
 from weather_app.database import init_db as initialize_database
 from weather_app.models import Location
@@ -42,7 +44,7 @@ def init_database():
             path = Path(db_path)
             if path.exists():
                 size = path.stat().st_size
-                print(f"Database file size: {size/1024:.1f} KB")
+                print(f"Database file size: {size / 1024:.1f} KB")
             else:
                 print(f"Warning: Database file doesn't exist at {db_path}")
         else:
@@ -64,8 +66,6 @@ def create_sample_location():
 
         # Check if Paris already exists using direct SQL access
         with repo.db.get_session() as session:
-            from sqlmodel import select
-
             # Search for Paris
             query = select(Location).where(Location.name == "Paris")
             results = session.exec(query).all()

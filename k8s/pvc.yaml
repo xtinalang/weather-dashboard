@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weather-dashboard-data
+  namespace: weather-dashboard
+  labels:
+    app: weather-dashboard
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # Optional: specify storage class
+  # storageClassName: fast-ssd

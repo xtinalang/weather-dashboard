@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  weather-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: weather-dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=web.app
+      - DATABASE_URL=sqlite:///app/data/weather.db
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      # Load from .env file
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
+      - LOG_LEVEL=DEBUG
+    volumes:
+      # Persistent data volume for development
+      - weather_data:/app/data
+      - weather_logs:/app/logs
+      # Mount source code for development (optional)
+      # - .:/app:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/', timeout=10)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - weather_network
+
+  # Optional: Add a database for production-like testing
+  postgres:
+    image: postgres:15-alpine
+    container_name: weather-postgres
+    environment:
+      - POSTGRES_DB=weather_dashboard
+      - POSTGRES_USER=weather_user
+      - POSTGRES_PASSWORD=weather_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - weather_network
+    profiles:
+      - postgres
+
+  # Optional: Redis for caching (future enhancement)
+  redis:
+    image: redis:7-alpine
+    container_name: weather-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - weather_network
+    profiles:
+      - redis
+
+volumes:
+  weather_data:
+    driver: local
+  weather_logs:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  weather_network:
+    driver: bridge
