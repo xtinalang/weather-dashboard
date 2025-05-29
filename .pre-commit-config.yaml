@@ -8,10 +8,10 @@ repos:
     -   id: check-added-large-files
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.11.8
+  rev: v0.6.4
   hooks:
     - id: ruff
-      args: [ --fix ]
+      args: [ --fix, --extend-select=I]
     - id: ruff-format
 
 - repo: https://github.com/pycqa/flake8
