@@ -484,7 +484,7 @@ class TestErrorHandlers:
     ):
         """Test safe database operation with IO error."""
         with flask_app.test_request_context():
-            mock_operation = Mock(side_effect=IOError("Database locked"))
+            mock_operation = Mock(side_effect=OSError("Database locked"))
             result = web_error_handlers_module.safe_database_operation(mock_operation)
 
             assert result is None
@@ -540,8 +540,7 @@ class TestLocationSelectionIntegration:
                 "/select-location",
                 data={
                     "selected_location": (
-                        "39.7817,-89.6501,Springfield,Illinois,"
-                        "United States of America"
+                        "39.7817,-89.6501,Springfield,Illinois,United States of America"
                     ),
                     "action": "weather",
                     "unit": "C",

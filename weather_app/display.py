@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .emoji import get_weather_emoji
 
@@ -28,7 +28,7 @@ class WeatherDisplay:
         print(f"⚠️ {message}")
 
     @staticmethod
-    def show_city(city: Optional[List[Dict[str, Any]]]) -> None:
+    def show_city(city: Optional[list[dict[str, Any]]]) -> None:
         """Display list of matching cities for user to choose from."""
         logger.info("Displaying city information")
         if not city:
@@ -42,7 +42,8 @@ class WeatherDisplay:
         for i, location in enumerate(city, 1):
             logger.debug(f"City {i}: {location['name']}")
             print(
-                f"{i}. {location['name']}, {location.get('region', 'N/A')}, {location['country']}"
+                f"{i}. {location['name']}, {location.get('region', 'N/A')}, "
+                f"{location['country']}"
             )
             print(f"   Lat: {location['lat']}, Lon: {location['lon']}")
             print(f"   URL: {location.get('url', 'N/A')}")
@@ -50,7 +51,7 @@ class WeatherDisplay:
 
     @staticmethod
     def show_current_weather(
-        weather_data: Optional[Dict[str, Any]], unit: str = "C"
+        weather_data: Optional[dict[str, Any]], unit: str = "C"
     ) -> None:
         """Display current weather for a location."""
         logger.info("Displaying current weather")
@@ -65,7 +66,8 @@ class WeatherDisplay:
         emoji = get_weather_emoji(condition_text)
 
         print(
-            f"\nWeather in 📍 {location['name']}, {location['region']}, {location['country']}:"
+            f"\nWeather in 📍 {location['name']}, {location['region']}, "
+            f"{location['country']}:"
         )
         print(f"{emoji} {condition_text}")
 
@@ -79,7 +81,8 @@ class WeatherDisplay:
 
         print(f"💧 Humidity: {current['humidity']}%")
         print(
-            f"💨 Wind: {current['wind_kph']} kph / {current['wind_mph']} mph, {current['wind_dir']}"
+            f"💨 Wind: {current['wind_kph']} kph / {current['wind_mph']} mph, "
+            f"{current['wind_dir']}"
         )
         print(f"🌫️ Visibility: {current['vis_km']} km / {current['vis_miles']} miles")
         print(f"📊 Pressure: {current['pressure_mb']} mb / {current['pressure_in']} in")
@@ -90,7 +93,7 @@ class WeatherDisplay:
 
     @staticmethod
     def show_forecast(
-        weather_data: Optional[Dict[str, Any]], unit: str = "C", days: int = None
+        weather_data: Optional[dict[str, Any]], unit: str = "C", days: int = None
     ) -> None:
         logger.info("Displaying weather forecast")
         if not weather_data:
@@ -159,12 +162,13 @@ class WeatherDisplay:
             except Exception as e:
                 logger.error(f"Error displaying forecast day: {e}")
                 print(
-                    f"❌ Error displaying forecast for {day.get('date', 'unknown date')}"
+                    f"❌ Error displaying forecast for "
+                    f"{day.get('date', 'unknown date')}"
                 )
 
     @staticmethod
     def show_historical_weather(
-        weather_data: Optional[Dict[str, Any]], date_str: str
+        weather_data: Optional[dict[str, Any]], date_str: str
     ) -> None:
         logger.info(f"Displaying historical weather for {date_str}")
         if not weather_data:
@@ -198,7 +202,8 @@ class WeatherDisplay:
 
             print(f"\n📅 Historical Weather for {date_str}")
             print(
-                f"📍 {location['name']}, {location.get('region', '')}, {location['country']}"
+                f"📍 {location['name']}, {location.get('region', '')}, "
+                f"{location['country']}"
             )
             print("=" * 40)
 
@@ -207,13 +212,16 @@ class WeatherDisplay:
 
             print(f"{emoji} {condition_text}")
             print(
-                f"🌡️ Average: {day_data.get('avgtemp_c', 'N/A')}°C / {day_data.get('avgtemp_f', 'N/A')}°F"
+                f"🌡️ Average: {day_data.get('avgtemp_c', 'N/A')}°C / "
+                f"{day_data.get('avgtemp_f', 'N/A')}°F"
             )
             print(
-                f"🌡️ Max: {day_data.get('maxtemp_c', 'N/A')}°C / {day_data.get('maxtemp_f', 'N/A')}°F"
+                f"🌡️ Max: {day_data.get('maxtemp_c', 'N/A')}°C / "
+                f"{day_data.get('maxtemp_f', 'N/A')}°F"
             )
             print(
-                f"🌡️ Min: {day_data.get('mintemp_c', 'N/A')}°C / {day_data.get('mintemp_f', 'N/A')}°F"
+                f"🌡️ Min: {day_data.get('mintemp_c', 'N/A')}°C / "
+                f"{day_data.get('mintemp_f', 'N/A')}°F"
             )
             print(f"💧 Average Humidity: {day_data.get('avghumidity', 'N/A')}%")
             print(f"☔ Total Precipitation: {day_data.get('totalprecip_mm', 'N/A')} mm")

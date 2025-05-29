@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 
 class FunctionalTestRunner:
@@ -17,7 +17,7 @@ class FunctionalTestRunner:
     def __init__(self):
         self.project_root = Path(__file__).parent.parent.parent
         self.web_server_process: Optional[subprocess.Popen] = None
-        self.test_results: Dict[str, bool] = {}
+        self.test_results: dict[str, bool] = {}
 
     def setup_test_environment(self) -> bool:
         """Set up the test environment."""

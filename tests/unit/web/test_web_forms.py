@@ -176,8 +176,7 @@ class TestDateWeatherNLForm:
             form.csrf_token = MagicMock()
             form.csrf_token.validate.return_value = True
 
-            # Short query should actually be valid since it only has DataRequired validator
-            # The form itself doesn't have length validation
+            # Short query should actually be valid since it has DataRequired validator
             assert form.validate()
 
 
@@ -197,12 +196,13 @@ class TestFormIntegration:
 
             for form in forms:
                 # Check that forms inherit from FlaskForm which provides CSRF protection
-                # Note: CSRF token field is only added when CSRF is enabled (disabled in testing)
+                # Note: CSRF token field is only added when CSRF is enabled
+                # (disabled in testing)
                 from flask_wtf import FlaskForm
 
-                assert isinstance(
-                    form, FlaskForm
-                ), f"{form.__class__} should inherit from FlaskForm"
+                assert isinstance(form, FlaskForm), (
+                    f"{form.__class__} should inherit from FlaskForm"
+                )
 
     def test_forms_can_be_instantiated_without_data(self, flask_app, web_forms_module):
         """Test that forms can be created without data."""

@@ -158,7 +158,7 @@ def mock_api():
             "temp_f": 64.4,
             "condition": {
                 "text": "Partly cloudy",
-                "icon": ("//cdn.weatherapi.com/weather/64x64/" "day/116.png"),
+                "icon": ("//cdn.weatherapi.com/weather/64x64/day/116.png"),
             },
             "wind_kph": 14.4,
             "wind_mph": 8.9,
@@ -177,9 +177,7 @@ def mock_api():
                         "mintemp_f": 52.2,
                         "condition": {
                             "text": "Partly cloudy",
-                            "icon": (
-                                "//cdn.weatherapi.com/weather/" "64x64/day/116.png"
-                            ),
+                            "icon": ("//cdn.weatherapi.com/weather/64x64/day/116.png"),
                         },
                     },
                 },
@@ -192,9 +190,7 @@ def mock_api():
                         "mintemp_f": 54.5,
                         "condition": {
                             "text": "Sunny",
-                            "icon": (
-                                "//cdn.weatherapi.com/weather/" "64x64/day/113.png"
-                            ),
+                            "icon": ("//cdn.weatherapi.com/weather/64x64/day/113.png"),
                         },
                     },
                 },

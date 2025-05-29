@@ -3,8 +3,8 @@
 import os
 import subprocess
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator, List
 
 import pytest
 
@@ -80,6 +80,6 @@ def mock_env_with_api_key(monkeypatch) -> None:
 
 
 @pytest.fixture
-def cli_args_base() -> List[str]:
+def cli_args_base() -> list[str]:
     """Base CLI arguments for consistent testing."""
     return ["python", "-m", "weather_app.cli"]

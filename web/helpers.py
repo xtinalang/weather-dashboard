@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from flask import flash, redirect, render_template, request, url_for
 
@@ -98,7 +98,7 @@ class Helpers:
         return unit
 
     @classmethod
-    def get_location_by_coordinates(cls, lat: float, lon: float) -> Tuple[Any, str]:
+    def get_location_by_coordinates(cls, lat: float, lon: float) -> tuple[Any, str]:
         location = cls.location_repo.find_or_create_by_coordinates(
             name="Custom Location",  # Will be updated from API data
             latitude=lat,
@@ -110,7 +110,7 @@ class Helpers:
         return location, coords
 
     @classmethod
-    def update_location_from_api_data(cls, location: Any, api_data: Dict) -> Any:
+    def update_location_from_api_data(cls, location: Any, api_data: dict) -> Any:
         if location.name == "Custom Location" and "location" in api_data:
             api_location = api_data["location"]
             location = cls.location_repo.update(
@@ -124,14 +124,14 @@ class Helpers:
         return location
 
     @classmethod
-    def save_weather_record(cls, location: Any, weather_data: Dict) -> None:
+    def save_weather_record(cls, location: Any, weather_data: dict) -> None:
         try:
             cls.current_manager._save_weather_record(location, weather_data)
         except Exception as e:
             flash(f"Note: Failed to save weather data: {e}", "warning")
 
     @staticmethod
-    def parse_coordinates_from_path(coordinates: str) -> Tuple[float, float]:
+    def parse_coordinates_from_path(coordinates: str) -> tuple[float, float]:
         parts = coordinates.split("/")
         if len(parts) != 2:
             raise ValueError("Invalid coordinates format")

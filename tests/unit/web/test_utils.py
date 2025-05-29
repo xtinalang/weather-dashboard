@@ -4,7 +4,7 @@ import importlib.util
 import os
 import sys
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 import pytest
 
@@ -21,7 +21,7 @@ def dynamic_import_cleanup(original_cwd: str, project_root: Path) -> None:
         sys.path.remove(str(project_root))
 
 
-def load_web_module(module_name: str, file_path: str) -> Tuple[Any, str, Path]:
+def load_web_module(module_name: str, file_path: str) -> tuple[Any, str, Path]:
     """
     Dynamically load a web module.
 

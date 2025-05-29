@@ -114,9 +114,7 @@ def test_get_historical_weather(current_manager, sample_location):
                         "avgtemp_c": 18.5,
                         "condition": {
                             "text": "Sunny",
-                            "icon": (
-                                "//cdn.weatherapi.com/weather/" "64x64/day/113.png"
-                            ),
+                            "icon": ("//cdn.weatherapi.com/weather/64x64/day/113.png"),
                         },
                     },
                 }

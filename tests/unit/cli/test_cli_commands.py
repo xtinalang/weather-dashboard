@@ -1,6 +1,6 @@
 """Tests for Typer CLI commands with proper mocking."""
 
-from typing import List, Union
+from typing import Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -340,7 +340,7 @@ def test_add_location_success(runner: CliRunner) -> None:
         )
         mock_repo.create.return_value = mock_location
 
-        cmd_args: List[str] = [
+        cmd_args: list[str] = [
             "add-location",
             "--name",
             "Paris",
@@ -374,7 +374,7 @@ def test_add_location_with_favorite(runner: CliRunner) -> None:
         )
         mock_repo.create.return_value = mock_location
 
-        cmd_args: List[str] = [
+        cmd_args: list[str] = [
             "add-location",
             "--name",
             "Tokyo",

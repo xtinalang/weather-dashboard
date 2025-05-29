@@ -1,6 +1,7 @@
 import logging
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator, Optional, TypeVar
+from typing import Optional, TypeVar
 
 from decouple import config
 from sqlalchemy.engine import Engine
@@ -22,7 +23,7 @@ class Database:
     def __new__(cls) -> "Database":
         """Singleton pattern to ensure only one database instance exists."""
         if cls._instance is None:
-            cls._instance = super(Database, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             cls._initialize_db()
         return cls._instance
 
