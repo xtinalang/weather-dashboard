@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: weather-dashboard-config
+  namespace: weather-dashboard
+  labels:
+    app: weather-dashboard
+data:
+  FLASK_ENV: "production"
+  FLASK_APP: "web.app"
+  DATABASE_URL: "sqlite:///app/data/weather.db"
+  PYTHONPATH: "/app"
+  PYTHONUNBUFFERED: "1"
+  # Add other non-sensitive configuration here
+  LOG_LEVEL: "INFO"
