@@ -161,11 +161,17 @@ def get_forecast_data(
             "min_temp": (
                 day["day"]["mintemp_c"] if unit == CELSIUS else day["day"]["mintemp_f"]
             ),
-            "condition": day["day"]["condition"],
+            "condition": day["day"]["condition"]["text"],
+            "icon": day["day"]["condition"]["icon"],
             "chance_of_rain": day["day"]["daily_chance_of_rain"],
             "chance_of_snow": day["day"]["daily_chance_of_snow"],
             "maxwind_kph": day["day"]["maxwind_kph"],
             "maxwind_mph": day["day"]["maxwind_mph"],
+            "wind_speed": day["day"]["maxwind_kph"]
+            if unit == CELSIUS
+            else day["day"]["maxwind_mph"],
+            "wind_unit": "km/h" if unit == CELSIUS else "mph",
+            "humidity": day["day"]["avghumidity"],
             "totalprecip_mm": day["day"]["totalprecip_mm"],
             "totalprecip_in": day["day"]["totalprecip_in"],
             "avghumidity": day["day"]["avghumidity"],
@@ -565,6 +571,8 @@ def forecast(lat: float, lon: float) -> Any:
 
     try:
         formatted_forecast = get_forecast_data(coords, unit)
+        # ADDED: Get location data just like the weather route does
+        _, location = get_weather_data(coords, unit)
     except (ConnectionError, TimeoutError) as e:
         flash(f"Weather service connection error: {str(e)}", "error")
         return redirect(url_for("index"))
@@ -578,6 +586,7 @@ def forecast(lat: float, lon: float) -> Any:
     return render_template(
         "forecast.html",
         forecast=formatted_forecast,
+        location=location,  # ADDED: Pass location object to template
         unit=unit,
         lat=lat,
         lon=lon,
