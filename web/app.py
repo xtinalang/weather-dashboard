@@ -14,7 +14,7 @@ from weather_app.display import WeatherDisplay
 from weather_app.forecast import ForecastManager
 from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
-from weather_app.weather_types import LocationData, TemperatureUnit, WeatherData
+from weather_app.weather_types import TemperatureUnit
 
 from .error_handlers import (
     initialize_components_safely,
@@ -34,7 +34,14 @@ from .forms import (
     UnitSelectionForm,
     UserInputLocationForm,
 )
-from .helpers import WEEKDAY_NAMES, WEEKDAY_TO_NUMBER, Helpers
+from .helpers import (
+    WEEKDAY_NAMES,
+    WEEKDAY_TO_NUMBER,
+    Helpers,
+    extract_location_from_query,
+    get_forecast_data,
+    get_weather_data,
+)
 from .utils import (
     CELSIUS,
     DEFAULT_FORECAST_DAYS,
@@ -106,80 +113,6 @@ else:
 @app.context_processor
 def inject_current_year() -> dict[str, int]:
     return {"current_year": datetime.now().year}
-
-
-# Helper functions for route handlers
-def get_weather_data(
-    coords: tuple[float, float], unit: TemperatureUnit
-) -> tuple[WeatherData, LocationData]:
-    """Get weather data for given coordinates."""
-    weather_data = weather_api.get_weather(coords)
-    if not weather_data:
-        raise ValueError("Failed to get weather data")
-
-    location_obj, _ = Helpers.get_location_by_coordinates(coords[0], coords[1])
-    location_obj = Helpers.update_location_from_api_data(location_obj, weather_data)
-
-    # Format the weather data
-    formatted_data = {
-        "current": {
-            "temp_c": weather_data["current"]["temp_c"],
-            "temp_f": weather_data["current"]["temp_f"],
-            "feelslike_c": weather_data["current"]["feelslike_c"],
-            "feelslike_f": weather_data["current"]["feelslike_f"],
-            "humidity": weather_data["current"]["humidity"],
-            "condition": weather_data["current"]["condition"],
-            "wind_kph": weather_data["current"]["wind_kph"],
-            "wind_mph": weather_data["current"]["wind_mph"],
-            "wind_dir": weather_data["current"]["wind_dir"],
-            "pressure_mb": weather_data["current"]["pressure_mb"],
-            "precip_mm": weather_data["current"]["precip_mm"],
-            "uv": weather_data["current"]["uv"],
-            "last_updated": weather_data["current"]["last_updated"],
-        }
-    }
-
-    return formatted_data, location_obj
-
-
-def get_forecast_data(
-    coords: tuple[float, float], unit: TemperatureUnit
-) -> list[dict[str, Any]]:
-    """Get forecast data for given coordinates."""
-    forecast_data = weather_api.get_forecast(coords)
-    if not forecast_data:
-        raise ValueError("Failed to get forecast data")
-
-    # Format the forecast data
-    formatted_forecast = []
-    for day in forecast_data["forecast"]["forecastday"]:
-        formatted_day = {
-            "date": day["date"],
-            "max_temp": (
-                day["day"]["maxtemp_c"] if unit == CELSIUS else day["day"]["maxtemp_f"]
-            ),
-            "min_temp": (
-                day["day"]["mintemp_c"] if unit == CELSIUS else day["day"]["mintemp_f"]
-            ),
-            "condition": day["day"]["condition"]["text"],
-            "icon": day["day"]["condition"]["icon"],
-            "chance_of_rain": day["day"]["daily_chance_of_rain"],
-            "chance_of_snow": day["day"]["daily_chance_of_snow"],
-            "maxwind_kph": day["day"]["maxwind_kph"],
-            "maxwind_mph": day["day"]["maxwind_mph"],
-            "wind_speed": day["day"]["maxwind_kph"]
-            if unit == CELSIUS
-            else day["day"]["maxwind_mph"],
-            "wind_unit": "km/h" if unit == CELSIUS else "mph",
-            "humidity": day["day"]["avghumidity"],
-            "totalprecip_mm": day["day"]["totalprecip_mm"],
-            "totalprecip_in": day["day"]["totalprecip_in"],
-            "avghumidity": day["day"]["avghumidity"],
-            "uv": day["day"]["uv"],
-        }
-        formatted_forecast.append(formatted_day)
-
-    return formatted_forecast
 
 
 # Routes
@@ -410,7 +343,7 @@ def weather(lat: float, lon: float) -> Any:
     coords = (lat, lon)
 
     try:
-        weather_data, location = get_weather_data(coords, unit)
+        weather_data, location = get_weather_data(coords, unit, weather_api)
     except (ConnectionError, TimeoutError) as e:
         logger.error(f"Weather service connection error: {e}")
         flash(f"Weather service connection error: {str(e)}", "error")
@@ -542,7 +475,7 @@ def api_weather(lat: float, lon: float) -> Any:
     coords = (lat, lon)
 
     try:
-        weather_data, _ = get_weather_data(coords, unit)
+        weather_data, _ = get_weather_data(coords, unit, weather_api)
         return jsonify(weather_data)
     except (ConnectionError, TimeoutError) as e:
         return jsonify({"error": f"Weather service connection error: {str(e)}"}), 503
@@ -570,9 +503,9 @@ def forecast(lat: float, lon: float) -> Any:
         forecast_days = int(request.args.get("days", DEFAULT_FORECAST_DAYS))
 
     try:
-        formatted_forecast = get_forecast_data(coords, unit)
+        formatted_forecast = get_forecast_data(coords, unit, weather_api)
         # ADDED: Get location data just like the weather route does
-        _, location = get_weather_data(coords, unit)
+        _, location = get_weather_data(coords, unit, weather_api)
     except (ConnectionError, TimeoutError) as e:
         flash(f"Weather service connection error: {str(e)}", "error")
         return redirect(url_for("index"))
@@ -681,22 +614,17 @@ def nl_date_weather() -> Any:
     query = request.form.get("query", "").strip()
     unit = Helpers.get_normalized_unit()
 
-    # Extract location using regex
+    # Extract location using multiple regex patterns with exception handling
     try:
-        location_match = re.search(
-            r"(?:in|for)\s+([A-Za-z\s,]+?)(?:\s+(?:on|at|for|,)|$)",
-            query,
-            re.IGNORECASE,
+        location_name = extract_location_from_query(query)
+    except ValueError:
+        flash(
+            "Could not find a location in your query. "
+            "Please include a location (e.g., 'Portland weather tomorrow', "
+            "'Weather for Portland', or 'What's the weather like in Portland?')",
+            "error",
         )
-        if not location_match:
-            flash(
-                "Could not find a location in your query. "
-                "Please include a location (e.g., 'in London')",
-                "error",
-            )
-            return redirect(url_for("index"))
-
-        location_name = location_match.group(1).strip()
+        return redirect(url_for("index"))
     except (re.error, AttributeError) as e:
         flash(f"Error parsing query format: {str(e)}", "error")
         return redirect(url_for("index"))
@@ -749,8 +677,8 @@ def nl_date_weather() -> Any:
 
     # Get current weather and forecast data
     try:
-        current_weather_data, location_obj = get_weather_data(coords, unit)
-        forecast_data = get_forecast_data(coords, unit)
+        current_weather_data, location_obj = get_weather_data(coords, unit, weather_api)
+        forecast_data = get_forecast_data(coords, unit, weather_api)
     except (ConnectionError, TimeoutError) as e:
         flash(f"Weather service connection error: {str(e)}", "error")
         return redirect(url_for("index"))
@@ -906,8 +834,8 @@ def nl_result_with_coords(lat: float, lon: float) -> Any:
 
     # Get current weather and forecast data
     try:
-        current_weather_data, location_obj = get_weather_data(coords, unit)
-        forecast_data = get_forecast_data(coords, unit)
+        current_weather_data, location_obj = get_weather_data(coords, unit, weather_api)
+        forecast_data = get_forecast_data(coords, unit, weather_api)
     except (ConnectionError, TimeoutError) as e:
         flash(f"Weather service connection error: {str(e)}", "error")
         return redirect(url_for("index"))
