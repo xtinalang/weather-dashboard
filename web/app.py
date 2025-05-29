@@ -802,8 +802,9 @@ def nl_date_weather() -> Any:
     try:
         dates = [datetime.strptime(day["date"], "%Y-%m-%d") for day in forecast_data]
     except (ValueError, KeyError) as e:
+        logger.error(f"Error processing forecast dates in nl_date_weather: {e}")
         flash(f"Error processing forecast dates: {str(e)}", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
 
     try:
         return render_template(
@@ -817,8 +818,9 @@ def nl_date_weather() -> Any:
             lon=lon,
         )
     except Exception as e:
-        flash(f"Error displaying weather results: {str(e)}", "error")
-        return redirect(url_for("index"))
+        logger.error(f"Error rendering weather template in nl_date_weather: {e}")
+        flash(f"Error rendering weather data: {str(e)}", "error")
+        return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
 
 
 @app.route("/nl-result/<float:lat>/<float:lon>")
@@ -828,23 +830,35 @@ def nl_result_with_coords(lat: float, lon: float) -> Any:
     unit = request.args.get("unit", DEFAULT_TEMP_UNIT).upper()
     coords = (lat, lon)
 
+    # Debug logging
+    logger.info(f"nl_result_with_coords called with lat={lat}, lon={lon}")
+    logger.info(f"Query parameter: '{query}'")
+    logger.info(f"Unit parameter: '{unit}'")
+    logger.info(f"All args: {dict(request.args)}")
+
     if not query:
-        flash("No query provided", "error")
-        return redirect(url_for("index"))
+        logger.warning("No query provided - redirecting to regular weather page")
+        flash(
+            "Natural language query not found. Showing regular weather instead.", "info"
+        )
+        return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
 
     # Get current weather and forecast data
     try:
         current_weather_data, location_obj = get_weather_data(coords, unit, weather_api)
         forecast_data = get_forecast_data(coords, unit, weather_api)
     except (ConnectionError, TimeoutError) as e:
+        logger.error(f"Weather service connection error in nl_result: {e}")
         flash(f"Weather service connection error: {str(e)}", "error")
         return redirect(url_for("index"))
     except ValueError as e:
+        logger.error(f"Invalid weather data in nl_result: {e}")
         flash(f"Invalid weather data received: {str(e)}", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
     except KeyError as e:
+        logger.error(f"Weather data format error in nl_result: {e}")
         flash(f"Weather data format error: missing {str(e)}", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
 
     try:
         Helpers.save_weather_record(location_obj, current_weather_data)
@@ -953,8 +967,9 @@ def nl_result_with_coords(lat: float, lon: float) -> Any:
     try:
         dates = [datetime.strptime(day["date"], "%Y-%m-%d") for day in forecast_data]
     except (ValueError, KeyError) as e:
+        logger.error(f"Error processing forecast dates in nl_result: {e}")
         flash(f"Error processing forecast dates: {str(e)}", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
 
     try:
         return render_template(
@@ -969,8 +984,9 @@ def nl_result_with_coords(lat: float, lon: float) -> Any:
             query=query,
         )
     except Exception as e:
+        logger.error(f"Error rendering weather template in nl_result: {e}")
         flash(f"Error rendering weather data: {str(e)}", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
 
 
 # Run the app
