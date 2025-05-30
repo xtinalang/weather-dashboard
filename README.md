@@ -1,266 +1,109 @@
-# 🌤️ Weather Dashboard
+# Weather Dashboard
 
-A comprehensive weather application that provides both a command-line interface (CLI) and a web interface for checking weather conditions and forecasts. Built with Python, featuring Typer for CLI functionality and Flask for the web interface.
+A sophisticated weather application that combines natural language processing with weather data to provide an intuitive way to check weather conditions and forecasts.
 
-## ✨ Features
+## Features
 
-### 🖥️ Command Line Interface (CLI)
-- **Interactive mode** for guided weather queries
-- **Direct weather lookups** for specific locations
-- **Forecast management** with customizable days (1-7 days)
-- **Location management** with favorites and search history
-- **Unit preferences** (Celsius/Fahrenheit)
-- **Database operations** for storing locations and settings
-- **Rich terminal output** with emojis and formatting
+- 🗣 Natural Language Queries: Ask about weather in plain English
+- 🌍 Smart Location Handling: Automatic disambiguation of location names
+- 🌡 Flexible Units: Support for both Celsius and Fahrenheit
+- 📅 Date Intelligence: Understanding of relative dates ("tomorrow", "next weekend", etc.)
+- 📊 Comprehensive Data: Detailed weather metrics including temperature, humidity, wind, and more
+- 🔍 Location Memory: Save and manage favorite locations
+- 📱 Responsive Design: Works on desktop and mobile devices
 
-### 🌐 Web Interface
-- **Modern responsive UI** for weather queries
-- **Real-time weather data** with current conditions
-- **Multi-day forecasts** with detailed information
-- **Interactive location search** with autocomplete
-- **Favorite locations** for quick access
-- **Natural language date queries** (e.g., "weather next Monday")
-- **Unit conversion** between Celsius and Fahrenheit
-- **Mobile-friendly** responsive design
+## Quick Start
 
-### 📊 Data Features
-- **SQLite database** for persistent storage (Can also use Posgresql)
-- **Location caching** for faster repeated queries
-- **Weather history** tracking
-- **User preferences** storage
-- **API integration** with WeatherAPI.com
-
-## 🚀 Installation
-
-### Prerequisites
-- Python 3.9 or higher
-- WeatherAPI.com API key (free tier available)
-
-### Setup
-
-1. **Clone the repository:**
+1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/weather-dashboard.git
 cd weather-dashboard
 ```
 
-2. **Create and activate virtual environment:**
+2. Install dependencies:
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-3. **Install dependencies:**
+3. Set up environment variables:
 ```bash
-pip install -e .
+export FLASK_DEBUG=1  # For development
+export FLASK_PORT=5001
+export SECRET_KEY="your-secret-key"
 ```
 
-4. **Set up environment variables:**
+4. Run the application:
 ```bash
-cp .env-template .env
-# Edit .env and add your WeatherAPI.com API key
+python -m web.app
 ```
 
-5. **Initialize the database:**
-```bash
-weather-dashboard init-db
-```
+5. Visit `http://localhost:5001` in your browser
 
-## 🛠️ Usage
-
-### Command Line Interface (Typer CLI)
-
-The CLI is built with [Typer](https://typer.tiangolo.com/) and provides multiple commands for weather operations.
-
-#### Basic Commands
-
-```bash
-# Interactive mode - guided experience
-weather-dashboard interactive
-
-# Get weather for a specific location
-weather-dashboard weather "London, UK" --unit F
-
-# Show 7-day forecast
-weather-dashboard forecast --days 7 --unit C
-
-# Get weather for a specific date
-weather-dashboard date 2024-12-25 --unit F
-
-# Show version
-weather-dashboard version
-
-# Initialize/reset database
-weather-dashboard init-db
-```
-
-#### Advanced Commands
-
-```bash
-# Location management
-weather-dashboard add-location --name "Paris" --lat 48.8566 --lon 2.3522 --country "France" --favorite
-
-# Refresh location data
-weather-dashboard refresh-location --city "London"
-
-# Update settings
-weather-dashboard settings --forecast-days 5 --temp-unit C
-
-# Run diagnostics
-weather-dashboard diagnostics
-
-# Test location saving
-weather-dashboard test-location --city "Tokyo" --country "Japan"
-```
-
-#### CLI Options
-
-Most commands support these common options:
-- `--unit, -u`: Temperature unit (C for Celsius, F for Fahrenheit)
-- `--verbose, -v`: Enable verbose logging
-- `--days, -d`: Number of forecast days (1-7, where applicable)
-
-### Web Interface (Flask)
-
-The web interface provides a user-friendly way to access weather data through your browser.
-
-#### Starting the Web Server
-
-```bash
-# Method 1: Direct module execution
-python -m web
-
-# Method 2: Using the run function
-python -c "from web.app import run; run()"
-```
-
-The web server will start on `http://localhost:5050` by default.
-
-#### Web Features
-
-1. **Home Page** (`/`):
-   - Location search form
-   - Favorite locations quick access
-   - Unit preference settings
-   - Forecast days configuration
-
-2. **Weather Display** (`/weather/{lat}/{lon}`):
-   - Current weather conditions
-   - Detailed metrics (temperature, humidity, wind, pressure)
-   - Weather icons and descriptions
-
-3. **Forecast View** (`/forecast/{lat}/{lon}`):
-   - Multi-day weather forecast
-   - Daily highs and lows
-   - Precipitation chances
-   - Wind and humidity information
-
-4. **API Endpoints** (`/api/weather/{lat}/{lon}`):
-   - JSON weather data for API consumers
-   - Programmatic access to weather information
-
-5. **Natural Language Queries** (`/nl-date-weather`):
-   - Human-friendly date expressions
-   - Examples: "tomorrow", "next Monday", "in 3 days"
-
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 weather-dashboard/
-├── weather_app/          # Core application logic
-│   ├── cli.py           # Typer CLI commands and routing
-│   ├── cli_app.py       # Main WeatherApp orchestration class
-│   ├── api.py           # WeatherAPI.com integration
-│   ├── models.py        # SQLModel database models
-│   ├── repository.py    # Database operations and queries
-│   ├── location.py      # Location management and geocoding
-│   ├── forecast.py      # Forecast data processing
-│   ├── current.py       # Current weather processing
-│   ├── display.py       # CLI output formatting and display
-│   ├── database.py      # Database initialization and connection
-│   ├── exceptions.py    # Custom exception classes
-│   └── weather_types.py # Type definitions and constants
-├── web/                 # Flask web interface
-│   ├── app.py          # Flask application and routes
-│   ├── forms.py        # WTForms form definitions
-│   ├── helpers.py      # Web-specific helper functions
-│   ├── utils.py        # Web utilities and constants
-│   ├── templates/      # Jinja2 HTML templates
-│   └── static/         # CSS, JavaScript, and images
-├── database/           # Database files and migrations
-├── tests/             # Test suites for CLI and web
-├── logs/              # Application log files
-└── pyproject.toml     # Project configuration and dependencies
+├── web/                    # Web application package
+│   ├── app.py             # Flask application
+│   ├── forms.py           # Form definitions
+│   ├── helpers.py         # Helper functions
+│   ├── error_handlers.py  # Error management
+│   └── templates/         # HTML templates
+├── weather_app/           # Core weather functionality
+│   ├── api.py            # Weather API integration
+│   ├── current.py        # Current weather handling
+│   ├── forecast.py       # Forecast processing
+│   └── location.py       # Location management
+├── tests/                 # Test suite
+│   ├── unit/             # Unit tests
+│   ├── functional/       # Functional tests
+│   └── integration/      # Integration tests
+├── experiments/          # Experimental features
+├── docs/                 # Documentation
+└── logs/                 # Application logs
 ```
 
-## 🏗️ Architecture
+## Usage Examples
 
-### CLI Architecture (Typer)
+### Natural Language Queries
+```python
+# Ask about weather naturally
+"What's the weather like in Portland tomorrow?"
+"Will it rain in London next weekend?"
+"Show me the forecast for Paris this week"
+```
 
-The CLI is built using **Typer**, which provides:
-- **Type annotations** for automatic argument validation
-- **Rich help** generation with beautiful formatting
-- **Command grouping** for organized functionality
-- **Option parsing** with short and long flags
-- **Interactive prompts** when needed
+### Location Disambiguation
+```python
+# Handles ambiguous locations
+"Weather in Cambridge"  # Prompts: UK or MA?
+"Portland weather"      # Prompts: OR or ME?
+```
 
-Key CLI components:
-- `cli.py`: Main Typer app with command definitions
-- `cli_app.py`: Business logic orchestration
-- `display.py`: Rich terminal output formatting
-- `user_input.py`: Interactive input handling
+### Date Processing
+```python
+# Understands various date formats
+"tomorrow"
+"this weekend"
+"next Monday"
+"next week"
+```
 
-### Web Architecture (Flask)
+## Development
 
-The web interface uses **Flask** with:
-- **Jinja2 templates** for dynamic HTML generation
-- **WTForms** for form handling and validation
-- **Flask-WTF** for CSRF protection
-- **Responsive CSS** for mobile compatibility
+### Setting Up Development Environment
 
-Key web components:
-- `app.py`: Flask app with route definitions
-- `forms.py`: Form classes for user input
-- `templates/`: HTML templates with Jinja2
-- `static/`: Frontend assets (CSS, JS, images)
-
-### Shared Components
-
-Both interfaces share:
-- **WeatherAPI integration** (`api.py`)
-- **Database models** (`models.py`)
-- **Data repositories** (`repository.py`)
-- **Location management** (`location.py`)
-- **Weather processing** (`forecast.py`, `current.py`)
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file based on `.env-template`:
-
+1. Create a virtual environment:
 ```bash
-# Required
-WEATHER_API_KEY=your_weatherapi_com_key_here
-
-# Optional - Web Interface
-FLASK_PORT=5050
-SECRET_KEY=your-secret-key-for-flask
-
-# Optional - Database
-DATABASE_URL=sqlite:///./weather_app.db
-
-# Optional - Logging
-LOG_LEVEL=INFO
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
 ```
 
-### API Key Setup
-
-1. Sign up at [WeatherAPI.com](https://www.weatherapi.com/)
-2. Get your free API key
-3. Add it to your `.env` file
-
-## 📝 Development
+2. Install development dependencies:
+```bash
+pip install -r requirements-dev.txt
+```
 
 ### Running Tests
 
@@ -268,97 +111,74 @@ LOG_LEVEL=INFO
 # Run all tests
 pytest
 
-# Run CLI tests only
-pytest tests/cli_tests/
+# Run specific test category
+pytest tests/unit/ #still working these
+pytest tests/functional/ #still working these
+pytest tests/integration/ #still working these
 
-# Run web tests only
-pytest tests/web_tests/
-
-# Run with verbose output
-pytest -v
+# Run with coverage
+pytest --cov=web --cov=weather_app tests/
 ```
 
-### Code Quality
-
-The project uses several tools for code quality:
+### Code Style
 
 ```bash
+# Check style
+flake8 web/ weather_app/
+
 # Format code
-black .
-
-# Sort imports
-isort .
-
-# Lint code
-ruff check .
-
-# Type checking
-mypy weather_app/ web/
+black web/ weather_app/
 ```
 
-### Pre-commit Hooks
+## API Documentation
 
-Install pre-commit hooks for automatic code quality checks:
+The application integrates with:
+- Weather API for current conditions and forecasts
+- Geocoding API for location resolution
+- Reverse geocoding for coordinate validation
 
-```bash
-pre-commit install
-```
+Detailed API documentation can be found in `docs/api.md`
 
-## 🐳 Docker
+## Configuration
 
-Run the application in Docker:
+Key configuration options:
+- `FLASK_DEBUG`: Enable/disable debug mode
+- `FLASK_PORT`: Application port (default: 5001)
+- `SECRET_KEY`: Flask secret key
+- `WEATHER_API_KEY`: Weather service API key
+- `LOG_LEVEL`: Logging level (default: INFO)
 
-```bash
-# Build the image
-docker build -t weather-dashboard .
-
-# Run the container
-docker run -p 5050:5050 -e WEATHER_API_KEY=your_api_key weather-dashboard
-```
-
-## 📚 API Reference
-
-### CLI Commands
-
-For detailed CLI command reference, see [CLI_REFERENCE.md](CLI_REFERENCE.md).
-
-### Web Routes
-
-- `GET /` - Home page with search forms
-- `POST /search` - Location search
-- `GET /weather/{lat}/{lon}` - Weather display
-- `GET /forecast/{lat}/{lon}` - Forecast display
-- `POST /favorite/{location_id}` - Toggle favorite status
-- `GET /api/weather/{lat}/{lon}` - JSON weather API
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-- [WeatherAPI.com](https://www.weatherapi.com/) for weather data
-- [Typer](https://typer.tiangolo.com/) for the excellent CLI framework
-- [Flask](https://flask.palletsprojects.com/) for the web framework
-- [Rich](https://rich.readthedocs.io/) for beautiful terminal output
+- Weather data provided by [Weather API Provider]
+- Geocoding services by [Geocoding Provider]
+- Built with Flask and Python
 
-## 📞 Support
+## Support
 
-If you encounter any issues:
+For support:
+- Check the [FAQ](docs/faq.md)
+- Submit an issue
+- Contact the maintainers
 
-1. Check the logs in the `logs/` directory
-2. Run diagnostics: `weather-dashboard diagnostics`
-3. Check the [Issues](https://github.com/your-repo/weather-dashboard/issues) page
-4. Create a new issue with detailed information
+## Roadmap
 
----
-
-*Happy weather checking! 🌤️*
+Future plans include:
+- [ ] Additional language support
+- [ ] More weather data providers
+- [ ] Mobile app version
+- [ ] Weather alerts
+- [ ] Historical data analysis
