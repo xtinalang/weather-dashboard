@@ -37,6 +37,16 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["weather_app"]
+
+[tool.hatch.build]
+only-packages = true
+exclude = [
+    "web/*",
+    "tests/*",
+]
+
 [tool.ruff]
 line-length = 88
 target-version = "py39"
@@ -68,3 +78,20 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+
+[tool.hatch.publish]
+index-name = "testpypi"
+directory = "dist"
+
+[tool.hatch.publish.auth]
+testpypi = { username = "__token__", password = "pypi-AgENdGVzdC5weXBpLm9yZwIkN2YxM2I5MzktOWI0ZC00ODIyLTg3MmQtMmEyZGU0YWRkNjU2AAIqWzMsIjYzZGFlY2ExLTIzZjItNDYzZS1hZDI4LTA1YTYzNmU5NTllYiJdAAAGINKKhmkGJcWoZQDCVEXVM-mJsYnVxFmanAhbEQQ-Ud_L" }
+
+[tool.hatch.envs.publish]
+dependencies = [
+    "hatch",
+]
+
+[tool.hatch.publish.trusted-publishers]
+github = [
+    { owner = "yourusername", repository = "weather-dashboard", workflow = "publish", environment = "release" }
+]
