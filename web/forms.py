@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import (
+    DateField,
     HiddenField,
     RadioField,
     SelectField,
@@ -41,7 +42,11 @@ class UserInputLocationForm(FlaskForm):
 
 
 class DateWeatherForm(FlaskForm):
-    location = StringField("todo ... ", validators=[DataRequired()])
+    """Form for weather on specific dates"""
+
+    location = StringField("Location", validators=[DataRequired()])
+    date = DateField("Date", validators=[DataRequired()])
+    submit = SubmitField("Get Weather")
 
 
 class UnitSelectionForm(FlaskForm):
@@ -67,5 +72,21 @@ class ForecastDaysForm(FlaskForm):
 
 
 class DateWeatherNLForm(FlaskForm):
+    """Form for natural language date weather queries"""
+
     query = StringField("Ask about the weather", validators=[DataRequired()])
+    submit = SubmitField("Get Weather")
+
+
+class LocationDisambiguationForm(FlaskForm):
+    """Form for when users need to choose between multiple location interpretations."""
+
+    selected_location = RadioField(
+        "Which location did you mean?",
+        choices=[],  # Will be populated dynamically
+        validators=[DataRequired(message="Please select a location")],
+    )
+    original_query = HiddenField()
+    unit = HiddenField()
+    action = HiddenField(default="weather")
     submit = SubmitField("Get Weather")

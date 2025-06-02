@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Disambiguate Location - "{{ query }}"{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Did you mean...</h2>
+    <p class="lead">We found multiple possible matches for "{{ query }}". Please select the location you meant:</p>
+
+    <form method="POST" action="{{ url_for('disambiguate_location') }}" class="mt-4">
+        {{ form.csrf_token }}
+        {{ form.original_query }}
+        {{ form.unit }}
+        {{ form.action }}
+
+        <div class="location-options">
+            {% for value, label in form.selected_location.choices %}
+            <div class="location-option card mb-3">
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio"
+                               name="selected_location"
+                               id="location_{{ loop.index }}"
+                               value="{{ value }}"
+                               {% if loop.first %}checked{% endif %}>
+                        <label class="form-check-label" for="location_{{ loop.index }}">
+                            <h3 class="h5 mb-1">{{ label }}</h3>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Get Weather</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">Back to Search</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.location-options {
+    margin: 20px 0;
+}
+
+.location-option {
+    transition: background-color 0.2s;
+}
+
+.location-option:hover {
+    background-color: #f8f9fa;
+}
+
+.form-check-input {
+    margin-right: 10px;
+}
+
+.form-check-label {
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn {
+    padding: 10px 20px;
+}
+</style>
+{% endblock %}

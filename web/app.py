@@ -1,6 +1,6 @@
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, cast
 
 from decouple import config
@@ -14,27 +14,34 @@ from weather_app.display import WeatherDisplay
 from weather_app.forecast import ForecastManager
 from weather_app.location import LocationManager
 from weather_app.repository import LocationRepository, SettingsRepository
-from weather_app.weather_types import LocationData, TemperatureUnit, WeatherData
+from weather_app.weather_types import TemperatureUnit
 
 from .error_handlers import (
     initialize_components_safely,
     initialize_database_safely,
     logger,
     register_error_handlers,
-    safe_api_operation,
     safe_database_operation,
     safe_float_conversion,
+    safe_location_lookup,
     validate_coordinates,
     validate_query_string,
 )
 from .forms import (
     DateWeatherNLForm,
     ForecastDaysForm,
+    LocationDisambiguationForm,
     LocationSearchForm,
     UnitSelectionForm,
     UserInputLocationForm,
 )
-from .helpers import WEEKDAY_NAMES, WEEKDAY_TO_NUMBER, Helpers
+from .helpers import (
+    Helpers,
+    extract_location_from_query,
+    get_forecast_data,
+    get_weather_data,
+)
+from .logging_config import init_debugging
 from .utils import (
     CELSIUS,
     DEFAULT_FORECAST_DAYS,
@@ -48,7 +55,7 @@ PORT = config(
     "FLASK_PORT",
     default=config(
         "PORT",
-        default=config("APP_PORT", default=os.environ.get("FLASK_PORT", 5050)),
+        default=config("APP_PORT", default=os.environ.get("FLASK_PORT", 5001)),
         cast=int,
     ),
     cast=int,
@@ -58,6 +65,9 @@ PORT = config(
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 csrf = CSRFProtect(app)
+
+# Initialize debugging and logging
+init_debugging(app)
 
 # Register error handlers
 register_error_handlers(app)
@@ -108,78 +118,11 @@ def inject_current_year() -> dict[str, int]:
     return {"current_year": datetime.now().year}
 
 
-# Helper functions for route handlers
-def get_weather_data(
-    coords: tuple[float, float], unit: TemperatureUnit
-) -> tuple[WeatherData, LocationData]:
-    """Get weather data for given coordinates."""
-    weather_data = weather_api.get_weather(coords)
-    if not weather_data:
-        raise ValueError("Failed to get weather data")
-
-    location_obj, _ = Helpers.get_location_by_coordinates(coords[0], coords[1])
-    location_obj = Helpers.update_location_from_api_data(location_obj, weather_data)
-
-    # Format the weather data
-    formatted_data = {
-        "current": {
-            "temp_c": weather_data["current"]["temp_c"],
-            "temp_f": weather_data["current"]["temp_f"],
-            "feelslike_c": weather_data["current"]["feelslike_c"],
-            "feelslike_f": weather_data["current"]["feelslike_f"],
-            "humidity": weather_data["current"]["humidity"],
-            "condition": weather_data["current"]["condition"],
-            "wind_kph": weather_data["current"]["wind_kph"],
-            "wind_mph": weather_data["current"]["wind_mph"],
-            "wind_dir": weather_data["current"]["wind_dir"],
-            "pressure_mb": weather_data["current"]["pressure_mb"],
-            "precip_mm": weather_data["current"]["precip_mm"],
-            "uv": weather_data["current"]["uv"],
-            "last_updated": weather_data["current"]["last_updated"],
-        }
-    }
-
-    return formatted_data, location_obj
-
-
-def get_forecast_data(
-    coords: tuple[float, float], unit: TemperatureUnit
-) -> list[dict[str, Any]]:
-    """Get forecast data for given coordinates."""
-    forecast_data = weather_api.get_forecast(coords)
-    if not forecast_data:
-        raise ValueError("Failed to get forecast data")
-
-    # Format the forecast data
-    formatted_forecast = []
-    for day in forecast_data["forecast"]["forecastday"]:
-        formatted_day = {
-            "date": day["date"],
-            "max_temp": (
-                day["day"]["maxtemp_c"] if unit == CELSIUS else day["day"]["maxtemp_f"]
-            ),
-            "min_temp": (
-                day["day"]["mintemp_c"] if unit == CELSIUS else day["day"]["mintemp_f"]
-            ),
-            "condition": day["day"]["condition"],
-            "chance_of_rain": day["day"]["daily_chance_of_rain"],
-            "chance_of_snow": day["day"]["daily_chance_of_snow"],
-            "maxwind_kph": day["day"]["maxwind_kph"],
-            "maxwind_mph": day["day"]["maxwind_mph"],
-            "totalprecip_mm": day["day"]["totalprecip_mm"],
-            "totalprecip_in": day["day"]["totalprecip_in"],
-            "avghumidity": day["day"]["avghumidity"],
-            "uv": day["day"]["uv"],
-        }
-        formatted_forecast.append(formatted_day)
-
-    return formatted_forecast
-
-
 # Routes
 @app.route("/")
 def index() -> str:
     """Home page with search form."""
+    app.logger.debug("Rendering index page")
     search_form = LocationSearchForm()
     ui_form = UserInputLocationForm()
     unit_form = UnitSelectionForm()
@@ -194,6 +137,7 @@ def index() -> str:
             else None
         )
         if settings:
+            app.logger.debug(f"Using saved settings: {settings}")
             unit_form.unit.default = (
                 "F" if settings.temperature_unit.lower() == "fahrenheit" else "C"
             )
@@ -201,11 +145,9 @@ def index() -> str:
             unit_form.process()
             forecast_days_form.process()
     except (AttributeError, ValueError) as e:
-        # Settings data format issues
-        logger.warning(f"Settings data format issue: {e}")
+        app.logger.warning(f"Settings data format issue: {e}")
     except Exception as e:
-        # Other settings-related errors
-        logger.error(f"Error loading settings: {e}")
+        app.logger.error(f"Error loading settings: {e}", exc_info=True)
 
     # Get favorite locations for quick access
     favorites = []
@@ -213,6 +155,7 @@ def index() -> str:
         favorites = safe_database_operation(location_repo.get_favorites)
         if favorites is None:
             favorites = []
+        app.logger.debug(f"Loaded {len(favorites)} favorite locations")
 
     return render_template(
         "index.html",
@@ -225,79 +168,118 @@ def index() -> str:
     )
 
 
+def handle_location_search(query: str, unit: str, action: str = "weather") -> Any:
+    """
+    Helper function to handle location searches and return appropriate response.
+    Returns redirect response or a tuple of (results, None) for multiple results.
+    """
+    app.logger.debug(
+        f"Handling location search - Query: {query}, Unit: {unit}, Action: {action}"
+    )
+    try:
+        # For NL queries, we want to show all options
+        if action == "nl":
+            results = weather_api.search_city(query)
+        else:
+            # For regular searches, use disambiguation
+            disambiguated = Helpers.disambiguate_location(query)
+            app.logger.debug(f"Disambiguated location: {disambiguated}")
+            results = weather_api.search_city(disambiguated)
+
+        app.logger.debug(f"Search results: {results}")
+
+        if not results:
+            app.logger.info(f"No locations found for query: {query}")
+            flash(f"No locations found matching '{query}'", "warning")
+            return redirect(url_for("index"))
+
+        if (
+            len(results) == 1 and action != "nl"
+        ):  # Only auto-redirect for non-NL queries
+            # Single result - get coordinates and redirect
+            first_result = results[0]
+            lat, lon = float(first_result["lat"]), float(first_result["lon"])
+            app.logger.debug(
+                f"Single result found: {first_result['name']} ({lat}, {lon})"
+            )
+
+            if action == "forecast":
+                return redirect(url_for("forecast", lat=lat, lon=lon, unit=unit))
+            else:
+                return redirect(url_for("weather", lat=lat, lon=lon, unit=unit))
+
+        # Multiple results or NL query - return them for template rendering
+        app.logger.debug(f"Multiple results found: {len(results)} locations")
+        return results, None
+
+    except (ValueError, TypeError) as e:
+        app.logger.error(f"Invalid location format: {e}", exc_info=True)
+        flash(f"Invalid location format: {str(e)}", "error")
+        return redirect(url_for("index"))
+    except (ConnectionError, TimeoutError) as e:
+        app.logger.error(f"Weather service connection error: {e}", exc_info=True)
+        flash(f"Weather service connection error: {str(e)}", "error")
+        return redirect(url_for("index"))
+    except Exception as e:
+        app.logger.error(f"Unexpected error in location search: {e}", exc_info=True)
+        flash(f"Error searching for location: {e}", "error")
+        return redirect(url_for("index"))
+
+
 @app.route("/search", methods=["POST"])
 def search() -> Any:
     """Search for locations."""
+    app.logger.debug("Processing search request")
     form = LocationSearchForm()
     unit = cast(TemperatureUnit, request.form.get("unit", DEFAULT_TEMP_UNIT).upper())
     forecast_days = request.form.get("forecast_days")
 
     # Determine action based on which form was submitted
-    action = "weather"  # default
-    if "forecast_days" in request.form and request.form.get("forecast_days"):
-        action = "forecast"
+    action = (
+        "forecast"
+        if "forecast_days" in request.form and request.form.get("forecast_days")
+        else "weather"
+    )
+    app.logger.debug(f"Search action: {action}")
 
     if not form.validate_on_submit():
-        logger.warning("Search form validation failed")
+        app.logger.warning("Search form validation failed")
         flash("Please enter a valid search query.", "warning")
         return redirect(url_for("index"))
 
     query = form.query.data
+    app.logger.debug(f"Search query: {query}")
 
-    # Validate query input
     if not validate_query_string(query):
+        app.logger.warning(f"Invalid search query: {query}")
         flash("Invalid search query. Please check your input.", "warning")
         return redirect(url_for("index"))
 
-    # Use safe API operation
-    results = safe_api_operation(weather_api.search_city, query)
-    if results is None:
-        return redirect(url_for("index"))
-
-    if not results:
-        flash(f"No cities found matching '{query}'", "warning")
-        return redirect(url_for("index"))
-
-    if len(results) == 1:
-        # Single result - redirect directly
-        if action == "forecast":
-            return redirect(
-                url_for(
-                    "forecast",
-                    lat=results[0]["lat"],
-                    lon=results[0]["lon"],
-                    unit=unit,
-                    days=forecast_days,
-                )
-            )
-        return redirect(
-            url_for(
-                "weather",
-                lat=results[0]["lat"],
-                lon=results[0]["lon"],
-                unit=unit,
-            )
+    result = handle_location_search(query, unit, action)
+    if isinstance(result, tuple):
+        results, _ = result
+        app.logger.debug(f"Showing selection page for {len(results)} results")
+        # Show selection page for multiple results
+        return render_template(
+            "location_selection.html",
+            results=results,
+            query=query,
+            unit=unit,
+            action=action,
+            forecast_days=forecast_days,
         )
-
-    # Multiple results - show selection page
-    return render_template(
-        "location_selection.html",
-        results=results,
-        query=query,
-        unit=unit,
-        action=action,
-        forecast_days=forecast_days,
-    )
+    return result  # This is a redirect response
 
 
 @app.route("/select-location", methods=["POST"])
 def select_location() -> Any:
     """Handle location selection from search results."""
+    app.logger.debug("Processing location selection")
+
     # Get form data directly since we're using custom HTML radio buttons
     selected_data = request.form.get("selected_location")
-
     if not selected_data:
-        logger.warning("No location selected in form submission")
+        app.logger.warning("No location selected in form submission")
         flash("Please select a location", "error")
         return redirect(url_for("index"))
 
@@ -308,56 +290,52 @@ def select_location() -> Any:
         if len(parts) != 5:
             raise ValueError("Invalid location data format")
 
-        lat, lon, name, region, country = parts
-        lat, lon = safe_float_conversion(lat), safe_float_conversion(lon)
+        lat, lon = safe_float_conversion(parts[0]), safe_float_conversion(parts[1])
+        name, region, country = parts[2:5]
 
         # Validate coordinates
         if not validate_coordinates(lat, lon):
             raise ValueError("Invalid coordinates")
 
+        app.logger.debug(
+            f"Selected location: {name}, {region}, {country} ({lat}, {lon})"
+        )
+
     except (ValueError, TypeError) as e:
-        logger.error(f"Invalid location selection data: {selected_data}, error: {e}")
+        app.logger.error(
+            f"Invalid location selection data: {selected_data}, error: {e}"
+        )
         flash("Invalid location selection", "error")
         return redirect(url_for("index"))
 
     action = request.form.get("action", "weather")
     unit = request.form.get("unit", DEFAULT_TEMP_UNIT)
+    nl_query = request.form.get("nl_query")
     forecast_days = request.form.get("forecast_days")
 
-    logger.info(
-        f"Location selected: {name}, {region}, {country} "
-        f"({lat}, {lon}) for action: {action}"
-    )
+    app.logger.debug(f"Action: {action}, Unit: {unit}, NL Query: {nl_query}")
 
-    # Redirect based on action
-    if action == "forecast":
-        return redirect(
-            url_for(
-                "forecast",
-                lat=lat,
-                lon=lon,
-                unit=unit,
-                days=forecast_days,
+    # Handle different types of requests
+    try:
+        if action == "forecast":
+            return redirect(
+                url_for(
+                    "forecast_path",
+                    coordinates=f"{lat}/{lon}",
+                    unit=unit,
+                    days=forecast_days,
+                )
             )
-        )
-    elif action == "nl":
-        # For natural language queries, we need to process the original query
-        # with the selected coordinates
-        nl_query = request.form.get("nl_query", "")
-        if nl_query:
-            # Store the coordinates in session or pass as parameters
-            # For simplicity, we'll redirect to a special NL result route
+        elif action == "nl":
             return redirect(
                 url_for(
                     "nl_result_with_coords",
-                    lat=lat,
-                    lon=lon,
+                    coordinates=f"{lat}/{lon}",
                     query=nl_query,
                     unit=unit,
                 )
             )
         else:
-            # Fallback to regular weather
             return redirect(
                 url_for(
                     "weather",
@@ -366,15 +344,12 @@ def select_location() -> Any:
                     unit=unit,
                 )
             )
-    else:
-        return redirect(
-            url_for(
-                "weather",
-                lat=lat,
-                lon=lon,
-                unit=unit,
-            )
+    except Exception as e:
+        app.logger.error(
+            f"Error redirecting after location selection: {e}", exc_info=True
         )
+        flash("Error processing location selection", "error")
+        return redirect(url_for("index"))
 
 
 @app.route("/weather/<path:coordinates>")
@@ -404,7 +379,7 @@ def weather(lat: float, lon: float) -> Any:
     coords = (lat, lon)
 
     try:
-        weather_data, location = get_weather_data(coords, unit)
+        weather_data, location = get_weather_data(coords, unit, weather_api)
     except (ConnectionError, TimeoutError) as e:
         logger.error(f"Weather service connection error: {e}")
         flash(f"Weather service connection error: {str(e)}", "error")
@@ -452,6 +427,9 @@ def ui_location() -> Any:
     if not location:
         flash("Please enter a valid location", "error")
         return redirect(url_for("index"))
+
+    # Disambiguate location before searching
+    location = Helpers.disambiguate_location(location)
 
     try:
         results = weather_api.search_city(location)
@@ -536,7 +514,7 @@ def api_weather(lat: float, lon: float) -> Any:
     coords = (lat, lon)
 
     try:
-        weather_data, _ = get_weather_data(coords, unit)
+        weather_data, _ = get_weather_data(coords, unit, weather_api)
         return jsonify(weather_data)
     except (ConnectionError, TimeoutError) as e:
         return jsonify({"error": f"Weather service connection error: {str(e)}"}), 503
@@ -564,7 +542,9 @@ def forecast(lat: float, lon: float) -> Any:
         forecast_days = int(request.args.get("days", DEFAULT_FORECAST_DAYS))
 
     try:
-        formatted_forecast = get_forecast_data(coords, unit)
+        formatted_forecast = get_forecast_data(coords, unit, weather_api)
+        # ADDED: Get location data just like the weather route does
+        _, location = get_weather_data(coords, unit, weather_api)
     except (ConnectionError, TimeoutError) as e:
         flash(f"Weather service connection error: {str(e)}", "error")
         return redirect(url_for("index"))
@@ -578,6 +558,7 @@ def forecast(lat: float, lon: float) -> Any:
     return render_template(
         "forecast.html",
         forecast=formatted_forecast,
+        location=location,  # ADDED: Pass location object to template
         unit=unit,
         lat=lat,
         lon=lon,
@@ -609,6 +590,9 @@ def forecast_form() -> Any:
 
     location = request.form.get("location")
     if location:
+        # Disambiguate location before searching
+        location = Helpers.disambiguate_location(location)
+
         try:
             results = weather_api.search_city(location)
         except (ConnectionError, TimeoutError) as e:
@@ -669,361 +653,99 @@ def forecast_path(coordinates: str) -> Any:
 @app.route("/nl-date-weather", methods=["POST"])
 def nl_date_weather() -> Any:
     """Handle natural language weather queries."""
+    app.logger.debug("Processing natural language weather query")
     query = request.form.get("query", "").strip()
     unit = Helpers.get_normalized_unit()
+    app.logger.debug(f"NL Query: {query}, Unit: {unit}")
 
-    # Extract location using regex
+    # Extract location using multiple regex patterns with exception handling
     try:
-        location_match = re.search(
-            r"(?:in|for)\s+([A-Za-z\s,]+?)(?:\s+(?:on|at|for|,)|$)",
-            query,
-            re.IGNORECASE,
+        location_name = extract_location_from_query(query)
+        app.logger.debug(f"Extracted location: {location_name}")
+    except ValueError:
+        app.logger.warning(f"Could not extract location from query: {query}")
+        flash(
+            "Could not find a location in your query. "
+            "Please include a location (e.g., 'Portland weather tomorrow', "
+            "'Weather for Portland', or 'What's the weather like in Portland?')",
+            "error",
         )
-        if not location_match:
-            flash(
-                "Could not find a location in your query. "
-                "Please include a location (e.g., 'in London')",
-                "error",
-            )
-            return redirect(url_for("index"))
-
-        location_name = location_match.group(1).strip()
+        return redirect(url_for("index"))
     except (re.error, AttributeError) as e:
+        app.logger.error(f"Error parsing query format: {e}", exc_info=True)
         flash(f"Error parsing query format: {str(e)}", "error")
         return redirect(url_for("index"))
 
-    # Try direct API search first
-    coords = None
-    multiple_results = None
-    try:
-        results = weather_api.search_city(location_name)
-
-        if results and len(results) > 0:
-            if len(results) == 1:
-                # Single result - proceed with existing logic
-                first_result = results[0]
-                try:
-                    lat = float(first_result.get("lat", 0))
-                    lon = float(first_result.get("lon", 0))
-                    if lat == 0 or lon == 0:
-                        raise ValueError("Invalid coordinates")
-                    coords = (lat, lon)
-                except (ValueError, TypeError):
-                    coords = None
-            else:
-                # Multiple results - let user choose
-                multiple_results = results
-        else:
-            location_name = Helpers.normalize_location_input(location_name)
-            coords = location_manager.get_coordinates(location_name)
-    except (ConnectionError, TimeoutError):
-        location_name = Helpers.normalize_location_input(location_name)
-        coords = location_manager.get_coordinates(location_name)
-    except Exception:
-        location_name = Helpers.normalize_location_input(location_name)
-        coords = location_manager.get_coordinates(location_name)
-
-    # If we have multiple results, show selection page
-    if multiple_results:
+    # Search for the location and get all possible matches
+    result = handle_location_search(location_name, unit, "nl")
+    if isinstance(result, tuple):
+        results, _ = result
+        app.logger.debug(f"Showing selection page for {len(results)} results")
+        # Show selection page for multiple results
         return render_template(
             "location_selection.html",
-            results=multiple_results,
+            results=results,
             query=location_name,
             unit=unit,
             action="nl",
             nl_query=query,  # Pass the original NL query
         )
-
-    if not coords:
-        flash(f"Could not find location: {location_name}", "error")
-        return redirect(url_for("index"))
-
-    # Get current weather and forecast data
-    try:
-        current_weather_data, location_obj = get_weather_data(coords, unit)
-        forecast_data = get_forecast_data(coords, unit)
-    except (ConnectionError, TimeoutError) as e:
-        flash(f"Weather service connection error: {str(e)}", "error")
-        return redirect(url_for("index"))
-    except ValueError as e:
-        flash(f"Invalid weather data received: {str(e)}", "error")
-        return redirect(url_for("index"))
-    except KeyError as e:
-        flash(f"Weather data format error: missing {str(e)}", "error")
-        return redirect(url_for("index"))
-
-    try:
-        Helpers.save_weather_record(location_obj, current_weather_data)
-    except OSError:
-        # Non-critical error - just log it
-        pass
-    except Exception:
-        # Non-critical error - don't fail the request
-        pass
-
-    # Enhanced natural language date parsing
-    query_lower = query.lower()
-    filtered_forecast = []
-    today = datetime.now().date()
-
-    # Helper function to get date range for filtering
-    def get_date_range_for_query(query_text: str, today_date):
-        """Parse natural language date queries and return date range."""
-        target_dates = []
-
-        # Tomorrow
-        if "tomorrow" in query_text:
-            tomorrow = today_date + timedelta(days=1)
-            target_dates = [tomorrow]
-
-        # This weekend (upcoming Saturday and Sunday)
-        elif "this weekend" in query_text:
-            days_until_saturday = (5 - today_date.weekday()) % 7
-            if (
-                days_until_saturday == 0 and today_date.weekday() == 5
-            ):  # Today is Saturday
-                saturday = today_date
-            else:
-                saturday = today_date + timedelta(days=days_until_saturday)
-            sunday = saturday + timedelta(days=1)
-            target_dates = [saturday, sunday]
-
-        # Next weekend
-        elif "next weekend" in query_text:
-            days_until_next_saturday = ((5 - today_date.weekday()) % 7) + 7
-            saturday = today_date + timedelta(days=days_until_next_saturday)
-            sunday = saturday + timedelta(days=1)
-            target_dates = [saturday, sunday]
-
-        # This week (Monday to Sunday of current week)
-        elif "this week" in query_text:
-            days_since_monday = today_date.weekday()
-            monday = today_date - timedelta(days=days_since_monday)
-            target_dates = [monday + timedelta(days=i) for i in range(7)]
-
-        # Next week (Monday to Sunday of next week)
-        elif "next week" in query_text:
-            days_since_monday = today_date.weekday()
-            next_monday = today_date + timedelta(days=(7 - days_since_monday))
-            target_dates = [next_monday + timedelta(days=i) for i in range(7)]
-
-        # Specific weekdays
-        elif any(day in query_text for day in WEEKDAY_NAMES):
-            for day_name, day_num in WEEKDAY_TO_NUMBER.items():
-                if day_name in query_text:
-                    days_ahead = (day_num - today_date.weekday()) % 7
-                    if days_ahead == 0:  # Today is the requested day
-                        if "next" in query_text:
-                            days_ahead = 7  # Next occurrence
-                        else:
-                            days_ahead = 0  # Today
-                    target_date = today_date + timedelta(days=days_ahead)
-                    target_dates = [target_date]
-                    break
-
-        # General weekend (any weekend days in forecast)
-        elif (
-            "weekend" in query_text
-            and "this" not in query_text
-            and "next" not in query_text
-        ):
-            # Find all weekend days in the forecast period
-            for i in range(7):  # Check next 7 days
-                check_date = today_date + timedelta(days=i)
-                if check_date.weekday() >= 5:  # Saturday (5) or Sunday (6)
-                    target_dates.append(check_date)
-
-        return target_dates
-
-    # Get target dates based on the query
-    target_dates = get_date_range_for_query(query_lower, today)
-
-    if target_dates:
-        # Filter forecast data for target dates
-        try:
-            for day in forecast_data:
-                day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
-                if day_date in target_dates:
-                    filtered_forecast.append(day)
-
-            if filtered_forecast:
-                forecast_data = filtered_forecast
-        except (ValueError, KeyError):
-            # Continue with original forecast data
-            pass
-        except Exception:
-            # Continue with original forecast data
-            pass
-
-    # Ensure we have valid coordinates for the template
-    lat, lon = coords
-    if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)):
-        flash("Invalid coordinates format", "error")
-        return redirect(url_for("index"))
-
-    # Convert dates to datetime objects for the template
-    try:
-        dates = [datetime.strptime(day["date"], "%Y-%m-%d") for day in forecast_data]
-    except (ValueError, KeyError) as e:
-        flash(f"Error processing forecast dates: {str(e)}", "error")
-        return redirect(url_for("index"))
-
-    try:
-        return render_template(
-            "results_date_weather.html",
-            current_weather=current_weather_data,
-            forecast_data=forecast_data,
-            dates=dates,
-            location=location_obj,
-            unit=unit,
-            lat=lat,
-            lon=lon,
-        )
-    except Exception as e:
-        flash(f"Error displaying weather results: {str(e)}", "error")
-        return redirect(url_for("index"))
+    return result  # This is a redirect response
 
 
-@app.route("/nl-result/<float:lat>/<float:lon>")
-def nl_result_with_coords(lat: float, lon: float) -> Any:
+@app.route("/nl-result/<path:coordinates>")
+def nl_result_with_coords(coordinates: str) -> Any:
     """Handle natural language weather results with selected coordinates."""
-    query = request.args.get("query", "")
-    unit = request.args.get("unit", DEFAULT_TEMP_UNIT).upper()
-    coords = (lat, lon)
-
-    if not query:
-        flash("No query provided", "error")
-        return redirect(url_for("index"))
-
-    # Get current weather and forecast data
     try:
-        current_weather_data, location_obj = get_weather_data(coords, unit)
-        forecast_data = get_forecast_data(coords, unit)
-    except (ConnectionError, TimeoutError) as e:
-        flash(f"Weather service connection error: {str(e)}", "error")
-        return redirect(url_for("index"))
-    except ValueError as e:
-        flash(f"Invalid weather data received: {str(e)}", "error")
-        return redirect(url_for("index"))
-    except KeyError as e:
-        flash(f"Weather data format error: missing {str(e)}", "error")
-        return redirect(url_for("index"))
+        # Parse coordinates from path
+        lat, lon = Helpers.parse_coordinates_from_path(coordinates)
+        query = request.args.get("query", "")
+        unit = request.args.get("unit", DEFAULT_TEMP_UNIT).upper()
+        coords = (lat, lon)
 
-    try:
-        Helpers.save_weather_record(location_obj, current_weather_data)
-    except OSError:
-        # Non-critical error - just log it
-        pass
-    except Exception:
-        # Non-critical error - don't fail the request
-        pass
+        app.logger.debug(f"Processing NL result for coordinates: {coords}")
+        app.logger.debug(f"Original query: '{query}'")
+        app.logger.debug(f"Unit: '{unit}'")
 
-    # Enhanced natural language date parsing (same logic as in nl_date_weather)
-    query_lower = query.lower()
-    filtered_forecast = []
-    today = datetime.now().date()
+        # Validate location before proceeding
+        success, error_msg = safe_location_lookup(coords, weather_api)
+        if not success:
+            app.logger.error(f"Location validation failed: {error_msg}")
+            flash(f"Invalid location: {error_msg}", "error")
+            return redirect(url_for("index"))
 
-    # Helper function to get date range for filtering
-    def get_date_range_for_query(query_text: str, today_date):
-        """Parse natural language date queries and return date range."""
-        target_dates = []
+        # Get weather data
+        current_weather_data, location_obj = get_weather_data(coords, unit, weather_api)
+        app.logger.debug(f"Got current weather for {location_obj.name}")
 
-        # Tomorrow
-        if "tomorrow" in query_text:
-            tomorrow = today_date + timedelta(days=1)
-            target_dates = [tomorrow]
+        forecast_data = get_forecast_data(coords, unit, weather_api)
+        app.logger.debug(f"Got forecast data with {len(forecast_data)} days")
 
-        # This weekend (upcoming Saturday and Sunday)
-        elif "this weekend" in query_text:
-            days_until_saturday = (5 - today_date.weekday()) % 7
-            if (
-                days_until_saturday == 0 and today_date.weekday() == 5
-            ):  # Today is Saturday
-                saturday = today_date
-            else:
-                saturday = today_date + timedelta(days=days_until_saturday)
-            sunday = saturday + timedelta(days=1)
-            target_dates = [saturday, sunday]
-
-        # Next weekend
-        elif "next weekend" in query_text:
-            days_until_next_saturday = ((5 - today_date.weekday()) % 7) + 7
-            saturday = today_date + timedelta(days=days_until_next_saturday)
-            sunday = saturday + timedelta(days=1)
-            target_dates = [saturday, sunday]
-
-        # This week (Monday to Sunday of current week)
-        elif "this week" in query_text:
-            days_since_monday = today_date.weekday()
-            monday = today_date - timedelta(days=days_since_monday)
-            target_dates = [monday + timedelta(days=i) for i in range(7)]
-
-        # Next week (Monday to Sunday of next week)
-        elif "next week" in query_text:
-            days_since_monday = today_date.weekday()
-            next_monday = today_date + timedelta(days=(7 - days_since_monday))
-            target_dates = [next_monday + timedelta(days=i) for i in range(7)]
-
-        # Specific weekdays
-        elif any(day in query_text for day in WEEKDAY_NAMES):
-            for day_name, day_num in WEEKDAY_TO_NUMBER.items():
-                if day_name in query_text:
-                    days_ahead = (day_num - today_date.weekday()) % 7
-                    if days_ahead == 0:  # Today is the requested day
-                        if "next" in query_text:
-                            days_ahead = 7  # Next occurrence
-                        else:
-                            days_ahead = 0  # Today
-                    target_date = today_date + timedelta(days=days_ahead)
-                    target_dates = [target_date]
-                    break
-
-        # General weekend (any weekend days in forecast)
-        elif (
-            "weekend" in query_text
-            and "this" not in query_text
-            and "next" not in query_text
-        ):
-            # Find all weekend days in the forecast period
-            for i in range(7):  # Check next 7 days
-                check_date = today_date + timedelta(days=i)
-                if check_date.weekday() >= 5:  # Saturday (5) or Sunday (6)
-                    target_dates.append(check_date)
-
-        return target_dates
-
-    # Get target dates based on the query
-    target_dates = get_date_range_for_query(query_lower, today)
-
-    if target_dates:
-        # Filter forecast data for target dates
+        # Save weather record (non-critical operation)
         try:
-            for day in forecast_data:
-                day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
-                if day_date in target_dates:
-                    filtered_forecast.append(day)
+            Helpers.save_weather_record(location_obj, current_weather_data)
+            app.logger.debug("Saved weather record")
+        except Exception as e:
+            app.logger.warning(f"Failed to save weather record: {e}")
 
-            if filtered_forecast:
-                forecast_data = filtered_forecast
-        except (ValueError, KeyError):
-            # Continue with original forecast data
-            pass
-        except Exception:
-            # Continue with original forecast data
-            pass
+        # Get target dates based on the query and filter forecast
+        target_dates = Helpers.get_date_range_for_query(query)
+        app.logger.debug(f"Target dates: {target_dates}")
 
-    # Convert dates to datetime objects for the template
-    try:
-        dates = [datetime.strptime(day["date"], "%Y-%m-%d") for day in forecast_data]
-    except (ValueError, KeyError) as e:
-        flash(f"Error processing forecast dates: {str(e)}", "error")
-        return redirect(url_for("index"))
+        filtered_forecast = Helpers.filter_forecast_by_dates(
+            forecast_data, target_dates
+        )
+        app.logger.debug(f"Filtered forecast to {len(filtered_forecast)} days")
 
-    try:
+        # Convert dates to datetime objects for the template
+        dates = [
+            datetime.strptime(day["date"], "%Y-%m-%d") for day in filtered_forecast
+        ]
+
         return render_template(
             "results_date_weather.html",
             current_weather=current_weather_data,
-            forecast_data=forecast_data,
+            forecast_data=filtered_forecast,
             dates=dates,
             location=location_obj,
             unit=unit,
@@ -1031,14 +753,82 @@ def nl_result_with_coords(lat: float, lon: float) -> Any:
             lon=lon,
             query=query,
         )
-    except Exception as e:
-        flash(f"Error rendering weather data: {str(e)}", "error")
+
+    except ValueError as e:
+        app.logger.error(f"Value error in weather processing: {e}", exc_info=True)
+        flash(str(e), "error")
         return redirect(url_for("index"))
+    except (ConnectionError, TimeoutError) as e:
+        app.logger.error(f"Weather service connection error: {e}", exc_info=True)
+        flash(f"Weather service connection error: {str(e)}", "error")
+        return redirect(url_for("index"))
+    except Exception as e:
+        app.logger.error(f"Unexpected error in weather processing: {e}", exc_info=True)
+        flash("An unexpected error occurred processing your request.", "error")
+        return redirect(url_for("index"))
+
+
+@app.route("/disambiguate-location", methods=["GET", "POST"])
+def disambiguate_location() -> Any:
+    """Handle cases where location disambiguation needs user input."""
+    form = LocationDisambiguationForm()
+
+    if request.method == "GET":
+        query = request.args.get("query", "")
+        unit = request.args.get("unit", DEFAULT_TEMP_UNIT)
+        action = request.args.get("action", "weather")
+
+        result = handle_location_search(query, unit, action)
+        if isinstance(result, tuple):
+            results, _ = result
+            # Create choices for the form
+            choices = [
+                (
+                    f"{r['name']}, {r.get('region', '')}, {r['country']}",
+                    f"{r['name']}, {r.get('region', '')}, {r['country']}",
+                    f"({r['lat']}, {r['lon']})",
+                )
+                for r in results
+            ]
+            form.selected_location.choices = choices
+            form.original_query.data = query
+            form.unit.data = unit
+            form.action.data = action
+
+            return render_template("disambiguate_location.html", form=form, query=query)
+        return result  # This is a redirect response
+
+    # POST request - process the disambiguation
+    if form.validate_on_submit():
+        selected_location = form.selected_location.data
+        unit = form.unit.data
+        action = form.action.data
+        nl_query = form.original_query.data if action == "nl" else None
+
+        # Use the helper function for the selected location
+        result = handle_location_search(selected_location, unit, action)
+        if isinstance(result, tuple):
+            results, _ = result
+            # Show selection page for multiple results
+            return render_template(
+                "location_selection.html",
+                results=results,
+                query=selected_location,
+                unit=unit,
+                action=action,
+                nl_query=nl_query,
+            )
+        return result  # This is a redirect response
+
+    # Form validation failed
+    flash("Please select a location option.", "error")
+    return redirect(url_for("index"))
 
 
 # Run the app
 def run() -> None:
     """Run the Flask application."""
+    app.logger.info(f"Starting Weather Dashboard on port {PORT}")
     app.run(debug=True, host="0.0.0.0", port=PORT)
 
 

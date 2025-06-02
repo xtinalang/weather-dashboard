@@ -1,6 +1,6 @@
 """Unit tests for web helpers and utilities - fixed version."""
 
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import pytest
 
@@ -86,11 +86,8 @@ class TestHelpers:
         """Test normalizing location input with known abbreviations."""
         web_helpers, _ = web_modules_combined
 
-        # The implementation has a bug where it adds an extra space when input is just the abbreviation
         result = web_helpers.Helpers.normalize_location_input("UK")
-        assert (
-            result == " United Kingdom"
-        )  # Expecting the extra space due to implementation bug
+        assert result == " United Kingdom"
 
         result = web_helpers.Helpers.normalize_location_input("USA")
         assert result == " United States"  # Expecting the extra space
@@ -317,3 +314,292 @@ class TestHelpersIntegration:
         with flask_app.test_request_context("/", method="GET"):
             unit = web_helpers.Helpers.get_normalized_unit()
             assert unit == web_utils.DEFAULT_TEMP_UNIT
+
+
+class TestNaturalLanguageProcessing:
+    """Test cases for natural language processing functionality."""
+
+    def test_get_date_range_for_query(self, web_modules_combined, monkeypatch):
+        """Test date range extraction from natural language queries."""
+        web_helpers, _ = web_modules_combined
+
+        # Mock today's date for consistent testing
+        mock_today = datetime(2025, 5, 23).date()  # A Friday
+        monkeypatch.setattr("datetime.datetime.now", lambda: datetime(2025, 5, 23))
+
+        test_cases = [
+            (
+                "What's the weather like in Portland tomorrow?",
+                [mock_today + timedelta(days=1)],  # Saturday
+            ),
+            (
+                "Portland weather this weekend",
+                [
+                    mock_today + timedelta(days=1),
+                    mock_today + timedelta(days=2),
+                ],  # Sat and Sun
+            ),
+            (
+                "Weather in Portland next Monday",
+                [mock_today + timedelta(days=3)],  # Next Monday
+            ),
+            (
+                "Portland weather next weekend",
+                [
+                    mock_today + timedelta(days=8),
+                    mock_today + timedelta(days=9),
+                ],  # Next Sat/Sun
+            ),
+            (
+                "Weather in Portland today",
+                [mock_today],  # Today
+            ),
+        ]
+
+        for query, expected_dates in test_cases:
+            result = web_helpers.Helpers.get_date_range_for_query(query)
+            assert result == expected_dates, f"Failed for query: {query}"
+
+    def test_extract_location_from_query(self, web_modules_combined):
+        """Test location extraction from natural language queries."""
+        web_helpers, _ = web_modules_combined
+
+        test_cases = [
+            ("What's the weather like in Portland?", "Portland"),
+            ("Weather in Portland, Oregon", "Portland, Oregon"),
+            ("Portland weather tomorrow", "Portland"),
+            ("Show me the forecast for Portland", "Portland"),
+            ("Will it rain in Portland this weekend?", "Portland"),
+            ("Portland, OR weather", "Portland, OR"),
+        ]
+
+        for query, expected in test_cases:
+            result = web_helpers.extract_location_from_query(query)
+            assert result.strip() == expected, f"Failed for query: {query}"
+
+    def test_filter_forecast_by_dates(self, web_modules_combined, monkeypatch):
+        """Test filtering forecast data by dates."""
+        web_helpers, _ = web_modules_combined
+
+        # Mock today's date for consistent testing
+        mock_today = datetime(2025, 5, 23).date()
+        monkeypatch.setattr("datetime.datetime.now", lambda: datetime(2025, 5, 23))
+
+        # Mock forecast data
+        forecast_data = [
+            {"date": mock_today.strftime("%Y-%m-%d"), "temp": 20},
+            {"date": (mock_today + timedelta(days=1)).strftime("%Y-%m-%d"), "temp": 22},
+            {"date": (mock_today + timedelta(days=2)).strftime("%Y-%m-%d"), "temp": 25},
+        ]
+
+        # Test cases
+        test_cases = [
+            ([mock_today], [forecast_data[0]]),  # Only today
+            ([mock_today + timedelta(days=1)], [forecast_data[1]]),  # Only tomorrow
+            (
+                [mock_today, mock_today + timedelta(days=1)],
+                [forecast_data[0], forecast_data[1]],
+            ),  # Multiple days
+            ([], forecast_data),  # No dates should return all data
+            (
+                [mock_today + timedelta(days=10)],
+                forecast_data,
+            ),  # Date not in forecast should return all data
+        ]
+
+        for target_dates, expected_forecast in test_cases:
+            result = web_helpers.Helpers.filter_forecast_by_dates(
+                forecast_data, target_dates
+            )
+            assert result == expected_forecast, f"Failed for dates: {target_dates}"
+
+    def test_complex_nl_queries(self, web_modules_combined, monkeypatch):
+        """Test handling of complex natural language queries."""
+        web_helpers, _ = web_modules_combined
+
+        # Mock today's date for consistent testing
+        mock_today = datetime(2025, 5, 23).date()  # Friday
+        monkeypatch.setattr("datetime.datetime.now", lambda: datetime(2025, 5, 23))
+
+        # Test location extraction with various formats
+        complex_queries = [
+            (
+                "What's the weather going to be like in Portland, Oregon next weekend?",
+                "Portland, Oregon",
+            ),
+            (
+                "Show me the forecast for downtown Portland this week",
+                "downtown Portland",
+            ),
+            ("Will it rain in Portland, OR tomorrow morning?", "Portland, OR"),
+            ("Portland Oregon weather forecast for next Monday", "Portland Oregon"),
+        ]
+
+        for query, expected_location in complex_queries:
+            result = web_helpers.extract_location_from_query(query)
+            assert result.strip() == expected_location, f"Failed for query: {query}"
+
+        # Test date extraction with complex queries
+        complex_date_queries = [
+            (
+                "What's the weather like in Portland next week?",
+                [
+                    mock_today + timedelta(days=i) for i in range(3, 10)
+                ],  # Next week days
+            ),
+            (
+                "Portland weather this weekend",
+                [
+                    mock_today + timedelta(days=1),
+                    mock_today + timedelta(days=2),
+                ],  # This weekend
+            ),
+        ]
+
+        for query, expected_dates in complex_date_queries:
+            result = web_helpers.Helpers.get_date_range_for_query(query)
+            assert result == expected_dates, f"Failed for query: {query}"
+
+    def test_extract_location_invalid_queries(self, web_modules_combined):
+        """Test location extraction with invalid queries."""
+        web_helpers, _ = web_modules_combined
+
+        invalid_queries = [
+            "",  # Empty query
+            "What's the weather?",  # No location
+            "Show me the forecast",  # No location
+            "Will it rain?",  # No location
+            "weather like",  # No location specified
+            "temperature in",  # Incomplete location
+        ]
+
+        for query in invalid_queries:
+            with pytest.raises(ValueError):
+                web_helpers.extract_location_from_query(query)
+
+    def test_handle_ambiguous_locations(self, web_modules_combined):
+        """Test handling of ambiguous location names."""
+        web_helpers, _ = web_modules_combined
+
+        test_cases = [
+            ("portland", "Portland, Oregon, USA"),
+            ("london", "London, England, UK"),
+            ("paris", "Paris, France"),
+            ("manchester", "Manchester, England, UK"),
+            ("cambridge", "Cambridge, Massachusetts, USA"),
+            ("springfield", "Springfield, Illinois, USA"),
+            ("dublin", "Dublin, Ireland"),
+            ("birmingham", "Birmingham, Alabama, USA"),
+            ("york", "York, England, UK"),
+        ]
+
+        for input_location, expected_output in test_cases:
+            result = web_helpers.Helpers.disambiguate_location(input_location)
+            assert result == expected_output, f"Failed for {input_location}"
+
+        # Test non-ambiguous locations remain unchanged
+        non_ambiguous = [
+            "Tokyo, Japan",
+            "Sydney, Australia",
+            "Berlin, Germany",
+        ]
+
+        for location in non_ambiguous:
+            result = web_helpers.Helpers.disambiguate_location(location)
+            assert (
+                result == location
+            ), f"Should not change non-ambiguous location: {location}"
+
+    def test_natural_language_error_handling(self, web_modules_combined, monkeypatch):
+        """Test error handling in natural language processing."""
+        web_helpers, _ = web_modules_combined
+
+        # Mock today's date for consistent testing
+        mock_today = datetime(2025, 5, 23)
+        monkeypatch.setattr("datetime.datetime.now", lambda: mock_today)
+
+        # Test invalid date formats - should return today's date
+        invalid_date_queries = [
+            "Weather in Portland on 32nd day",
+            "Weather in Portland last century",
+            "Weather in Portland in the year 3000",
+            "Weather in Portland -5 days ago",
+        ]
+
+        for query in invalid_date_queries:
+            result = web_helpers.Helpers.get_date_range_for_query(query)
+            assert result == [
+                mock_today.date()
+            ], f"Failed for invalid date query: {query}"
+
+        # Test invalid location formats
+        invalid_location_queries = [
+            "Weather in @#$%^",
+            "Weather in 12345",
+            "Weather in !@#",
+        ]
+
+        for query in invalid_location_queries:
+            with pytest.raises(ValueError):
+                web_helpers.extract_location_from_query(query)
+
+        # Test invalid forecast data
+        invalid_forecasts = [
+            [{"invalid": "data"}],
+            [{"date": "invalid-date", "temp": 20}],
+            [{}],  # Empty dict
+            None,  # None value
+        ]
+
+        for invalid_forecast in invalid_forecasts:
+            result = web_helpers.Helpers.filter_forecast_by_dates(
+                invalid_forecast or [], [mock_today.date()]
+            )
+            # Should return original data on error
+            assert result == (
+                invalid_forecast or []
+            ), f"Failed for invalid forecast: {invalid_forecast}"
+
+    def test_date_range_edge_cases(self, web_modules_combined, monkeypatch):
+        """Test edge cases for date range processing."""
+        web_helpers, _ = web_modules_combined
+
+        # Mock today's date for consistent testing
+        mock_today = datetime(2025, 5, 23)  # A Friday
+        monkeypatch.setattr("datetime.datetime.now", lambda: mock_today)
+        today = mock_today.date()
+
+        edge_cases = [
+            # Empty or invalid queries should return today
+            ("", [today]),
+            ("no date info", [today]),
+            # Specific day when today is that day
+            ("friday", [today]),  # Today is Friday
+            # Next occurrence when specifying today's weekday with "next"
+            ("next friday", [today + timedelta(days=7)]),
+            # Weekend when today is Friday
+            (
+                "this weekend",
+                [
+                    today + timedelta(days=1),  # Saturday
+                    today + timedelta(days=2),  # Sunday
+                ],
+            ),
+            # Next week
+            (
+                "next week",
+                [
+                    today + timedelta(days=3),  # Next Monday
+                    today + timedelta(days=4),
+                    today + timedelta(days=5),
+                    today + timedelta(days=6),
+                    today + timedelta(days=7),
+                    today + timedelta(days=8),
+                    today + timedelta(days=9),
+                ],
+            ),
+        ]
+
+        for query, expected_dates in edge_cases:
+            result = web_helpers.Helpers.get_date_range_for_query(query)
+            assert result == expected_dates, f"Failed for edge case: {query}"

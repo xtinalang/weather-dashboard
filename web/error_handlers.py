@@ -32,10 +32,77 @@ def validate_coordinates(lat: Union[str, float], lon: Union[str, float]) -> bool
     try:
         lat = float(lat)
         lon = float(lon)
-        return (-90 <= lat <= 90) and (-180 <= lon <= 180)
-    except (ValueError, TypeError):
-        logger.warning(f"Invalid coordinates: lat={lat}, lon={lon}")
+        if not (-90 <= lat <= 90):
+            logger.warning(f"Latitude {lat} out of valid range (-90 to 90)")
+            return False
+        if not (-180 <= lon <= 180):
+            logger.warning(f"Longitude {lon} out of valid range (-180 to 180)")
+            return False
+        return True
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Invalid coordinates format: lat={lat}, lon={lon}, error={e}")
         return False
+
+
+def validate_location_data(location_data: dict) -> bool:
+    """Validate location data structure."""
+    required_fields = ["name", "lat", "lon", "country"]
+    try:
+        # Check required fields exist
+        if not all(field in location_data for field in required_fields):
+            missing = [f for f in required_fields if f not in location_data]
+            logger.warning(f"Missing required location fields: {missing}")
+            return False
+
+        # Validate coordinates
+        if not validate_coordinates(location_data["lat"], location_data["lon"]):
+            return False
+
+        # Validate string fields
+        if not location_data["name"] or not isinstance(location_data["name"], str):
+            logger.warning("Invalid location name")
+            return False
+        if not location_data["country"] or not isinstance(
+            location_data["country"], str
+        ):
+            logger.warning("Invalid country")
+            return False
+
+        return True
+    except Exception as e:
+        logger.error(f"Location data validation error: {e}")
+        return False
+
+
+def safe_location_lookup(coords: tuple[float, float], weather_api) -> tuple[bool, str]:
+    """
+    Safely look up location information.
+    Returns (success, error_message).
+    """
+    try:
+        lat, lon = coords
+        if not validate_coordinates(lat, lon):
+            return False, "Invalid coordinates"
+
+        # Try to get location info from weather API
+        weather_data = safe_api_operation(weather_api.get_weather, coords)
+        if not weather_data:
+            return False, "Could not retrieve location data"
+
+        # Validate location data
+        if "location" not in weather_data:
+            logger.error("Weather data missing location information")
+            return False, "Location information not available"
+
+        location_info = weather_data["location"]
+        if not validate_location_data(location_info):
+            return False, "Invalid location data received"
+
+        return True, ""
+
+    except Exception as e:
+        logger.error(f"Location lookup error: {e}", exc_info=True)
+        return False, "Error looking up location"
 
 
 def safe_float_conversion(value: str, default: float = 0.0) -> float:
@@ -110,7 +177,27 @@ def register_error_handlers(app: Flask) -> None:
     def not_found_error(error):
         """Handle 404 errors."""
         logger.warning(f"404 error: {request.url}")
-        flash("The page you're looking for doesn't exist.", "warning")
+
+        # Check if this is a coordinate-based URL
+        path = request.path
+        if "/nl-result/" in path or "/weather/" in path or "/forecast/" in path:
+            try:
+                # Extract coordinates from path
+                coords_part = path.split("/")[-2:]
+                lat, lon = map(float, coords_part)
+
+                # Validate coordinates and location
+                success, error_msg = safe_location_lookup((lat, lon), app.weather_api)
+                if not success:
+                    flash(f"Invalid location: {error_msg}", "error")
+                else:
+                    flash("The requested weather data is not available.", "warning")
+            except Exception as e:
+                logger.error(f"Error processing coordinates in 404 handler: {e}")
+                flash("Invalid location coordinates.", "error")
+        else:
+            flash("The page you're looking for doesn't exist.", "warning")
+
         context = create_index_context()
         return render_template("index.html", **context), 404
 
