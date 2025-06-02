@@ -18,7 +18,7 @@ run-flask:
 
 # Run the Typer CLI
 run-typer:
-	$(PYTHON) -m weather_app.cli
+	$(PYTHON) -m weather_app.cli interactive
 
 # Install dependencies
 install:
