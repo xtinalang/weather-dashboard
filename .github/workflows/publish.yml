@@ -1,35 +1,69 @@
-name: Publish to PyPI
+# name: Publish to PyPI
+
+# on:
+#   release:
+#     types: [published]
+
+# jobs:
+#   publish:
+#     name: Build and publish to PyPI
+#     runs-on: ubuntu-latest
+#     environment: release
+#     permissions:
+#       id-token: write  # Required for trusted publishing
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: "3.9"
+#           cache: "pip"
+
+#       - name: Install build dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install build
+
+#       - name: Build package
+#         run: python -m build
+
+#       - name: Publish package to TestPyPI
+#         uses: pypa/gh-action-pypi-publish@release/v1
+#         with:
+#           repository-url: https://test.pypi.org/legacy/
+
+
+name: Publish Python 🐍 distributions 📦 to PyPI and TestPyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "*"
 
 jobs:
-  publish:
-    name: Build and publish to PyPI
+  build-and-publish:
+    name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write  # Required for trusted publishing
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: "3.9"
-          cache: "pip"
+          version: "0.5.25"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - name: Install build dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install build
+      - name: Build distributions
+        run: uv build
 
-      - name: Build package
-        run: python -m build
+      - name: Publish to TestPyPI (for test tags)
+        if: startsWith(github.ref, 'refs/tags/test-')
+        run: uv publish --index-url https://test.pypi.org/legacy/ --token ${{ secrets.TEST_PYPI_API_TOKEN }}
 
-      - name: Publish package to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
+      - name: Publish to PyPI (for versioned releases)
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: uv publish --token ${{ secrets.PYPI_TOKEN }}
