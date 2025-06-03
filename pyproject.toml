@@ -84,7 +84,8 @@ index-name = "testpypi"
 directory = "dist"
 
 [tool.hatch.publish.auth]
-testpypi = { username = "__token__", password = ${{ secrets.PYPI_SECRET }}
+testpypi = { username = "__token__", password = "${{ secrets.PYPI_SECRET }}" }
+
 [tool.hatch.envs.publish]
 dependencies = [
     "hatch",

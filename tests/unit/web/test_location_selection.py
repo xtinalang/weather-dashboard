@@ -121,7 +121,10 @@ class TestLocationSelectionRoutes:
             )
 
             assert response.status_code == 200
-            assert b"No cities found matching" in response.data
+            assert (
+                "No locations found matching &#39;NonexistentPlace&#39;"
+                in response.data.decode("utf-8")
+            )
 
     def test_search_route_api_error(self, client):
         """Test search route when API raises an error."""
