@@ -1,6 +1,8 @@
 import logging
+import os
 from collections.abc import Generator
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Optional, TypeVar
 
 from sqlalchemy.engine import Engine
@@ -11,6 +13,9 @@ from .config import DATABASE_URL
 T = TypeVar("T", bound=SQLModel)
 
 logger = logging.getLogger(__name__)
+
+# Follow XDG Base Directory specification
+data_home = os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")
 
 
 class Database:
