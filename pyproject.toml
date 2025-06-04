@@ -45,6 +45,13 @@ only-packages = true
 exclude = [
     "web/*",
     "tests/*",
+    "/tests",  # Still exclude tests from distribution
+    "/.env*",
+    "/.git*",
+    "/.*",
+    "/__pycache__",
+    "*.pyc",
+    "/node_modules",
 ]
 
 [tool.ruff]
@@ -78,20 +85,10 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+ignore_missing_imports = true  # Added: for external dependencies
 
-[tool.hatch.publish]
-index-name = "testpypi"
-directory = "dist"
-
-[tool.hatch.publish.auth]
-testpypi = { username = "__token__", password = "${{ secrets.PYPI_SECRET }}" }
-
-[tool.hatch.envs.publish]
-dependencies = [
-    "hatch",
-]
-
-[tool.hatch.publish.trusted-publishers]
-github = [
-    { owner = "yourusername", repository = "weather-dashboard", workflow = "publish", environment = "release" }
-]
+[tool.pytest.ini_options]  # Added: pytest configuration
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
