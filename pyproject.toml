@@ -45,6 +45,7 @@ only-packages = true
 exclude = [
     "web/*",
     "tests/*",
+    "README.md",
 ]
 
 [tool.ruff]
