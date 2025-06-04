@@ -37,6 +37,23 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["weather_app"]
+
+[tool.hatch.build]
+only-packages = true
+exclude = [
+    "web/*",
+    "tests/*",
+    "/tests",  # Still exclude tests from distribution
+    "/.env*",
+    "/.git*",
+    "/.*",
+    "/__pycache__",
+    "*.pyc",
+    "/node_modules",
+]
+
 [tool.ruff]
 line-length = 88
 target-version = "py39"
@@ -68,3 +85,10 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
+ignore_missing_imports = true  # Added: for external dependencies
+
+[tool.pytest.ini_options]  # Added: pytest configuration
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

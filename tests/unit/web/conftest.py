@@ -203,19 +203,9 @@ def web_utils_module(project_setup):
 @pytest.fixture
 def web_modules_combined(project_setup):
     """Get both web.helpers and web.utils modules for testing."""
-    project_root = project_setup
-
-    # Load web.helpers module
-    helpers_path = project_root / "web" / "helpers.py"
-    helpers_spec = importlib.util.spec_from_file_location("web.helpers", helpers_path)
-    helpers_module = importlib.util.module_from_spec(helpers_spec)
-    helpers_spec.loader.exec_module(helpers_module)
-
-    # Load web.utils module
-    utils_path = project_root / "web" / "utils.py"
-    utils_spec = importlib.util.spec_from_file_location("web.utils", utils_path)
-    utils_module = importlib.util.module_from_spec(utils_spec)
-    utils_spec.loader.exec_module(utils_module)
+    # Use direct imports instead of importlib to ensure freezegun works properly
+    import web.helpers as helpers_module
+    import web.utils as utils_module
 
     return helpers_module, utils_module
 

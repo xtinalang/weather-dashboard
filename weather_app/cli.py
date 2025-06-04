@@ -11,7 +11,7 @@ from rich.console import Console
 from . import logger
 from .api import WeatherAPI
 from .cli_app import WeatherApp
-from .database import DATABASE_URL
+from .config import DATABASE_URL, config_instance
 from .database import init_db as initialize_database
 from .display import WeatherDisplay
 from .exceptions import APIError, InputError
@@ -502,6 +502,46 @@ def test_location_saving(
 
         # Print traceback for debugging
         console.print(f"[red]Traceback: {traceback.format_exc()}[/red]")
+
+
+@app.command("database-info")
+def database_info(
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Enable verbose logging"
+    ),
+) -> None:
+    """Show database location and configuration information."""
+    configure_logging(verbose)
+
+    console.print("[bold blue]Database Configuration[/bold blue]")
+    console.print(f"Database URL: {DATABASE_URL}")
+
+    if config_instance.is_sqlite:
+        db_path = config_instance.get_database_path()
+        if db_path:
+            console.print(f"Database file: {db_path}")
+            console.print(f"Data directory: {config_instance.data_dir}")
+
+            if db_path.exists():
+                size = db_path.stat().st_size
+                console.print(f"Database size: {size / 1024:.1f} KB")
+                console.print("[green]✓ Database file exists[/green]")
+            else:
+                console.print("[yellow]⚠ Database file does not exist yet[/yellow]")
+                console.print(
+                    "[blue]Run 'weather-dashboard init-db' to create it[/blue]"
+                )
+
+    elif config_instance.is_postgres:
+        console.print("[blue]Using PostgreSQL database[/blue]")
+
+    # Show location count if database exists
+    try:
+        location_repo = LocationRepository()
+        count = location_repo.count()
+        console.print(f"Stored locations: {count}")
+    except Exception as e:
+        console.print(f"[yellow]Could not access database: {e}[/yellow]")
 
 
 def configure_logging(verbose: bool = False) -> None:
