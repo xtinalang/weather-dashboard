@@ -1,195 +1,278 @@
-# Weather Dashboard
+# 🌤️ Weather Dashboard CLI
 
-A comprehensive weather application with both a command-line interface (CLI) and web interface. Get current weather conditions and forecasts for any location worldwide.
+A powerful command-line weather application built with Typer that provides current weather, forecasts, and location management with local database storage.
 
-## Features
+## 📦 Installation
 
-### Command Line Interface (CLI)
-- Get current weather conditions for any location
-- View weather forecasts (1-7 days)
-- Support for both Celsius and Fahrenheit
-- Rich terminal output with color formatting
-- Verbose logging option for debugging
-
-### Web Interface
-- User-friendly web dashboard
-- Natural language query support (e.g., "What's the weather like in London?")
-- Location disambiguation for cities with the same name
-- Multiple location selection options
-- Favorite locations management
-- Support for both current weather and forecasts
-
-## Installation
-
-1. Clone the repository:
+### From PyPI (Recommended)
 ```bash
-git clone https://github.com/yourusername/weather-dashboard.git
+pip install weather-dashboard
+```
+
+### From Source
+```bash
+git clone <repository-url>
 cd weather-dashboard
+pip install -e .
 ```
 
-2. Create and activate a virtual environment:
+## 🚀 Quick Start
+
+1. **Get your API key** from [WeatherAPI.com](https://www.weatherapi.com/)
+
+2. **Set your API key** (optional - can be set via environment variable):
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+export WEATHER_API_KEY="your-api-key-here"
 ```
 
-3. Install dependencies:
+3. **Initialize the database**:
 ```bash
-uv pip install -e .
+weather-dashboard init-db
 ```
 
-4. Set up your environment variables:
+4. **Get current weather**:
 ```bash
-export WEATHER_API_KEY=your_api_key_here  # Get from weatherapi.com
+weather-dashboard current
 ```
 
-## Usage
+## 🛠️ Commands
 
-### Command Line Interface
+### Weather Information
 
+#### `current`
+Show current weather for a location (interactive mode if no location set)
 ```bash
-# Get current weather
-weather current "London, UK" --unit C
-
-# Get forecast
-weather forecast "New York" --days 5 --unit F
-
-# Show version
-weather version
-
-# Show help
-weather --help
+weather-dashboard current [OPTIONS]
 ```
+**Options:**
+- `--unit, -u`: Temperature unit (C for Celsius, F for Fahrenheit) [default: C]
+- `--verbose, -v`: Enable verbose logging
 
-### Web Interface
-
-1. Start the Flask development server:
+#### `weather <location>`
+Get current weather and forecast for a specific location
 ```bash
-flask run
+weather-dashboard weather "London, UK" --unit F
+weather-dashboard weather "New York" --unit C
 ```
 
-2. Open your browser and navigate to `http://localhost:5000`
-
-3. Use the web interface to:
-   - Search for locations
-   - View current weather
-   - Check forecasts
-   - Save favorite locations
-   - Use natural language queries
-
-## Project Structure
-
-```
-weather-dashboard/
-├── weather_app/                  # Main package directory
-│   ├── __init__.py              # Package initialization
-│   ├── cli.py                   # Typer CLI implementation
-│   ├── cli_app.py               # CLI application logic
-│   ├── api.py                   # Weather API client
-│   ├── display.py               # Terminal display formatting
-│   ├── current.py               # Current weather handling
-│   ├── forecast.py              # Forecast processing
-│   ├── location.py              # Location management
-│   ├── models.py                # Database models
-│   ├── repository.py            # Data access layer
-│   ├── database.py              # Database configuration
-│   ├── exceptions.py            # Custom exceptions
-│   ├── user_input.py            # User input handling
-│   ├── weather_types.py         # Type definitions
-│   ├── emoji.py                 # Emoji support
-│   └── migrate_database.py      # Database migrations
-├── web/                         # Web interface
-│   ├── __init__.py             # Web package initialization
-│   ├── app.py                  # Flask application
-│   ├── forms.py                # Form definitions
-│   ├── helpers.py              # Helper functions
-│   ├── error_handlers.py       # Error handling
-│   ├── templates/              # HTML templates
-│   │   ├── base.html          # Base template
-│   │   ├── index.html         # Home page
-│   │   ├── weather.html       # Weather display
-│   │   ├── forecast.html      # Forecast display
-│   │   ├── search_results.html # Search results
-│   │   ├── location_selection.html # Location selection
-│   │   └── disambiguate_location.html # Location disambiguation
-│   └── static/                 # Static assets
-│       ├── css/               # Stylesheets
-│       ├── js/                # JavaScript files
-│       └── images/            # Image assets
-├── tests/                      # Test suite
-│   ├── __init__.py            # Test initialization
-│   ├── conftest.py            # Test configuration
-│   └── unit/                  # Unit tests
-│       ├── web/               # Web tests
-│       │   ├── test_app.py    # App tests
-│       │   ├── test_forms.py  # Form tests
-│       │   └── test_helpers.py # Helper tests
-│       └── weather_app/       # Core functionality tests
-│           ├── test_api.py    # API tests
-│           ├── test_cli.py    # CLI tests
-│           └── test_location.py # Location tests
-├── .env                        # Environment variables
-├── .gitignore                 # Git ignore rules
-├── pyproject.toml             # Project configuration
-├── requirements.txt           # Production dependencies
-├── requirements-dev.txt       # Development dependencies
-├── README.md                  # This file
-└── LICENSE                    # License information
-```
-
-## Development
-
-### Running Tests
+#### `forecast`
+Show weather forecast (interactive mode or with options)
 ```bash
-pytest
+weather-dashboard forecast [OPTIONS]
 ```
+**Options:**
+- `--days, -d`: Number of days to forecast (1-7)
+- `--unit, -u`: Temperature unit (C/F)
+- `--verbose, -v`: Enable verbose logging
 
-### Code Style
-This project uses `ruff` for linting and formatting:
+#### `date <date>`
+Get forecast for a specific date
 ```bash
-ruff check .
-ruff format .
+weather-dashboard date 2024-12-25 --unit F
+weather-dashboard date 2024-01-15
 ```
 
-## Dependencies
+### Interactive Mode
 
-- Python ≥ 3.9
-- Typer: CLI interface
-- Flask: Web framework
-- SQLAlchemy: Database ORM
-- Rich: Terminal formatting
-- Requests: HTTP client
-- WeatherAPI.com account (free tier available)
+#### `interactive`
+Start the interactive weather application
+```bash
+weather-dashboard interactive
+```
 
-## Contributing
+### Database Management
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+#### `init-db`
+Initialize or reset the database
+```bash
+weather-dashboard init-db
+```
 
-## License
+#### `database-info`
+Show database location and configuration information
+```bash
+weather-dashboard database-info
+```
+
+### Location Management
+
+#### `add-location`
+Add a new location to the database
+```bash
+weather-dashboard add-location \
+  --name "Paris" \
+  --lat 48.8566 \
+  --lon 2.3522 \
+  --country "France" \
+  --region "Île-de-France"
+```
+
+#### `refresh-location`
+Refresh location data in the database
+```bash
+# Refresh by city name
+weather-dashboard refresh-location --city "London"
+
+# Refresh by location ID
+weather-dashboard refresh-location --id 1
+```
+
+### Settings
+
+#### `settings`
+Update application settings
+```bash
+# Set default forecast days
+weather-dashboard settings --forecast-days 5
+
+# Set default temperature unit
+weather-dashboard settings --temp-unit F
+
+# Set both
+weather-dashboard settings --forecast-days 3 --temp-unit C
+```
+
+#### `set-forecast-days`
+Set default number of forecast days
+```bash
+weather-dashboard set-forecast-days --days 7
+```
+
+### Utilities
+
+#### `version`
+Display the current version
+```bash
+weather-dashboard version
+```
+
+#### `diagnostics`
+Run comprehensive diagnostics on database and API connectivity
+```bash
+weather-dashboard diagnostics
+```
+
+#### `test-location`
+Test location saving functionality (for debugging)
+```bash
+weather-dashboard test-location --city "Tokyo" --country "Japan"
+```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+The CLI app supports the following environment variables:
+
+- `WEATHER_API_KEY`: Your WeatherAPI.com API key (required)
+- `DATABASE_URL`: Database connection URL (optional, defaults to local SQLite)
+
+### Database Location
+
+By default, the app stores data in:
+- **Linux/macOS**: `~/.local/share/weather-dashboard/weather_app.db`
+- **Windows**: `%APPDATA%/weather-dashboard/weather_app.db`
+
+Use `weather-dashboard database-info` to see your exact database location.
+
+### Custom Database
+
+You can override the default database location:
+```bash
+export DATABASE_URL="sqlite:///path/to/your/database.db"
+# Or use PostgreSQL
+export DATABASE_URL="postgresql://user:password@localhost:5432/weather_db"
+```
+
+## 📋 Examples
+
+### Basic Usage
+```bash
+# Get current weather (interactive mode)
+weather-dashboard current
+
+# Get weather for specific location
+weather-dashboard weather "Tokyo, Japan"
+
+# Get 5-day forecast in Fahrenheit
+weather-dashboard forecast --days 5 --unit F
+
+# Check weather for a future date
+weather-dashboard date 2024-02-14 --unit C
+```
+
+### Database Management
+```bash
+# Initialize database
+weather-dashboard init-db
+
+# Check database status
+weather-dashboard database-info
+
+# Add favorite location
+weather-dashboard add-location \
+  --name "Home" \
+  --lat 40.7128 \
+  --lon -74.0060 \
+  --country "USA" \
+  --region "New York"
+```
+
+### Settings Configuration
+```bash
+# Set preferences
+weather-dashboard settings --forecast-days 7 --temp-unit F
+
+# Run diagnostics
+weather-dashboard diagnostics
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**"No API key found"**
+- Set your API key: `export WEATHER_API_KEY="your-key"`
+- Or create a `.env` file with `WEATHER_API_KEY=your-key`
+
+**"Database connection failed"**
+- Run: `weather-dashboard init-db`
+- Check database location: `weather-dashboard database-info`
+
+**"Location not found"**
+- Try more specific location names: "London, UK" instead of "London"
+- Use interactive mode for location search
+
+### Debug Mode
+Enable verbose logging for troubleshooting:
+```bash
+weather-dashboard current --verbose
+weather-dashboard diagnostics --verbose
+```
+
+### Reset Everything
+```bash
+# Reset database
+weather-dashboard init-db
+
+# Check if everything works
+weather-dashboard diagnostics
+```
+
+## 🔗 Related
+
+- **Web Interface**: See main README.md for the Flask web application
+- **API Documentation**: Check the WeatherAPI.com documentation
+- **Source Code**: View the full source code repository
+
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
+## 🤝 Contributing
 
-- Weather data provided by [Weather API Provider]
-- Geocoding services by [Geocoding Provider]
-- Built with Flask and Python
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Support
+---
 
-For support:
-- Check the [FAQ](docs/faq.md)
-- Submit an issue
-- Contact the maintainers
-
-## Roadmap
-
-Future plans include:
-- [ ] Additional language support
-- [ ] More weather data providers
-- [ ] Mobile app version
-- [ ] Weather alerts
-- [ ] Historical data analysis
+**Made with ❤️ using Typer and Rich**
