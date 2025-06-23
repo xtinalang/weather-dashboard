@@ -733,7 +733,7 @@ def nl_result_with_coords(coordinates: str) -> Any:
         app.logger.debug(f"Target dates: {target_dates}")
 
         filtered_forecast = Helpers.filter_forecast_by_dates(
-            forecast_data, target_dates
+            forecast_data, target_dates[0], target_dates[1]
         )
         app.logger.debug(f"Filtered forecast to {len(filtered_forecast)} days")
 
