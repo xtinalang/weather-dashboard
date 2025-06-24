@@ -134,6 +134,10 @@ def extract_location_from_query(query: str) -> str:
             "snow",
             "wind",
             "humid",
+            "hot",
+            "cold",
+            "warm",
+            "cool",
         }
         # Special handling for "weather" - allow if followed by comma
         # (like "Weather, Texas")
@@ -244,6 +248,19 @@ def extract_location_from_query(query: str) -> str:
         r"tuesday|wednesday|thursday|friday|saturday|sunday))"
     )
     match = re.search(pattern5, query, re.IGNORECASE)
+    if match:
+        location = match.group(1).strip()
+        if is_valid_location(location) and len(location.split()) <= 3:
+            return location
+
+    # Pattern 6: "How [weather_word] is it in [LOCATION]" format
+    pattern6 = (
+        r"(?:how\s+(?:hot|cold|warm|cool|sunny|rainy|cloudy|windy)\s+is\s+it|"
+        r"is\s+it\s+(?:hot|cold|warm|cool|sunny|rainy|cloudy|windy))\s+"
+        r"(?:in|at)\s+([A-Za-z]+(?:\s+[A-Za-z]+)*?)"
+        r"(?:\s+(?:right\s+now|today|tomorrow|this|next|week)|[?!]|$)"
+    )
+    match = re.search(pattern6, query, re.IGNORECASE)
     if match:
         location = match.group(1).strip()
         if is_valid_location(location) and len(location.split()) <= 3:
@@ -758,8 +775,23 @@ class Helpers:
 
     @classmethod
     def filter_forecast_by_dates(
-        cls, forecast_data: dict, start_date: datetime, end_date: datetime
-    ) -> dict:
+        cls, forecast_data, start_date: datetime, end_date: datetime
+    ):
+        # Handle both raw API response format and formatted list format
+        if isinstance(forecast_data, list):
+            # This is formatted forecast data (list of dicts)
+            filtered_days = []
+            try:
+                for day in forecast_data:
+                    day_date = datetime.strptime(day["date"], "%Y-%m-%d").date()
+                    if start_date.date() <= day_date <= end_date.date():
+                        filtered_days.append(day)
+            except (ValueError, KeyError) as e:
+                logger.error(f"Error filtering formatted forecast data: {e}")
+                return forecast_data  # Return original data on error
+            return filtered_days if filtered_days else forecast_data
+
+        # Handle raw API response format (dict with forecast.forecastday)
         if not isinstance(forecast_data, dict) or "forecast" not in forecast_data:
             return forecast_data
 
@@ -791,8 +823,6 @@ def get_date_range_for_query(query: str) -> tuple[datetime, datetime]:
     return Helpers.get_date_range_for_query(query)
 
 
-def filter_forecast_by_dates(
-    forecast_data: dict, start_date: datetime, end_date: datetime
-) -> dict:
+def filter_forecast_by_dates(forecast_data, start_date: datetime, end_date: datetime):
     """Module-level wrapper for forecast filtering."""
     return Helpers.filter_forecast_by_dates(forecast_data, start_date, end_date)
