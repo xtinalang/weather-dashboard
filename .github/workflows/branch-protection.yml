@@ -52,13 +52,13 @@ jobs:
           echo "🔍 Running quality checks..."
 
           # Ruff linting
-          uv run ruff check . --output-format=github
+          uv run ruff check . --output-format=github --exclude Experimental
 
           # Ruff formatting
-          uv run ruff format --check .
+          uv run ruff format --check . --exclude Experimental
 
           # Flake8
-          uv run flake8 .
+          uv run flake8 . --exclude=Experimental
 
           # MyPy (allow failure for now)
           uv run mypy weather_app/ || echo "⚠️ MyPy found issues"

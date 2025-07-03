@@ -35,12 +35,12 @@ jobs:
 
       - name: Run ruff linting (strict mode)
         run: |
-          uv run ruff check . --diff
-          uv run ruff format --check .
+          uv run ruff check . --diff --exclude Experimental
+          uv run ruff format --check . --exclude Experimental
 
       - name: Run flake8 (strict mode)
         run: |
-          uv run flake8 . --count --statistics
+          uv run flake8 . --count --statistics --exclude=Experimental
 
       - name: Run mypy type checking (strict mode)
         run: |

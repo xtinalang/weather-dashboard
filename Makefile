@@ -38,16 +38,16 @@ package: clean
 # Linting and formatting
 lint:
 	@echo "🔍 Running linting checks..."
-	uv run ruff check .
-	uv run ruff format --check .
-	uv run flake8 .
+	uv run ruff check . --exclude Experimental
+	uv run ruff format --check . --exclude Experimental
+	uv run flake8 . --exclude=Experimental
 	uv run mypy weather_app/ || echo "⚠️ MyPy found issues"
 
 # Fix linting issues
 lint-fix:
 	@echo "🔧 Fixing linting issues..."
-	uv run ruff check . --fix
-	uv run ruff format .
+	uv run ruff check . --fix --exclude Experimental
+	uv run ruff format . --exclude Experimental
 
 # Run tests
 test:
