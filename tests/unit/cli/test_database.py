@@ -37,15 +37,9 @@ def mock_db() -> MagicMock:
 
 
 @patch("weather_app.database.DATABASE_URL", "sqlite:///test.db")
-@patch("weather_app.database.config")
 @patch("weather_app.database.create_engine")
-def test_database_initialize(
-    mock_create_engine: MagicMock, mock_config: MagicMock
-) -> None:
+def test_database_initialize(mock_create_engine: MagicMock) -> None:
     """Test database initialization with SQLite."""
-    # Mock the config to return SQLite URL
-    mock_config.return_value = "sqlite:///test.db"
-
     # Reset the singleton instance
     Database._instance = None
     Database._engine = None
@@ -60,15 +54,10 @@ def test_database_initialize(
     assert "sqlite:///" in call_args[0][0]
 
 
-@patch("weather_app.database.config")
+@patch("weather_app.database.DATABASE_URL", "sqlite:///test.db")
 @patch("weather_app.database.create_engine")
-def test_database_singleton(
-    mock_create_engine: MagicMock, mock_config: MagicMock
-) -> None:
+def test_database_singleton(mock_create_engine: MagicMock) -> None:
     """Test the singleton pattern of the Database class."""
-    # Mock the config to return SQLite URL
-    mock_config.return_value = "sqlite:///test.db"
-
     # Reset the singleton instance
     Database._instance = None
     Database._engine = None

@@ -109,7 +109,8 @@ class TestCLIIntegration:
 
         # Invalid date format
         result = cli_runner.invoke(app, ["date", "invalid-date"])
-        assert_cli_success(result, "Invalid date format")
+        assert result.exit_code == 1  # Should fail with invalid date
+        assert "Invalid date format" in result.stdout
 
     def test_command_validation_integration(self, cli_runner):
         """Test command parameter validation."""

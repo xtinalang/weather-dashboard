@@ -237,7 +237,7 @@ def test_date_command_with_unit(runner: CliRunner) -> None:
 def test_date_command_invalid_date(runner: CliRunner) -> None:
     """Test date command with invalid date format."""
     result = runner.invoke(app, ["date", "invalid-date"])
-    assert result.exit_code == 0  # Command runs but shows error message
+    assert result.exit_code == 1  # Command should fail with invalid date
     assert "Invalid date format" in result.stdout
 
 

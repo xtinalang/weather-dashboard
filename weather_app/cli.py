@@ -39,6 +39,15 @@ def current(
 ) -> None:
     """Show current weather for a location"""
     configure_logging(verbose)
+
+    # Validate unit parameter
+    if unit.upper() not in ["C", "F"]:
+        console.print(
+            f"[bold red]Error: Invalid unit '{unit}'. Use 'C' for Celsius or 'F' for"
+            f"Fahrenheit[/bold red]"
+        )
+        raise typer.Exit(1)
+
     weather_app = get_app()
     weather_app.unit = unit.upper()
     weather_app.run()
@@ -58,6 +67,15 @@ def forecast(
 ) -> None:
     """Show weather forecast"""
     configure_logging(verbose)
+
+    # Validate unit parameter
+    if unit.upper() not in ["C", "F"]:
+        console.print(
+            f"[bold red]Error: Invalid unit '{unit}'. Use 'C' for Celsius or 'F' for"
+            f"Fahrenheit[/bold red]"
+        )
+        raise typer.Exit(1)
+
     weather_app = get_app()
     weather_app.unit = unit.upper()
 
@@ -113,6 +131,15 @@ def get_weather(
 ) -> None:
     """Get current weather and forecast for a specific location."""
     configure_logging(verbose)
+
+    # Validate unit parameter
+    if unit.upper() not in ["C", "F"]:
+        console.print(
+            f"[bold red]Error: Invalid unit '{unit}'. Use 'C' for Celsius or"
+            f"F for Fahrenheit[/bold red]"
+        )
+        raise typer.Exit(1)
+
     try:
         logger.info(f"Getting weather for {location} in unit {unit}")
         api = WeatherAPI()
@@ -128,6 +155,23 @@ def get_weather(
                 "[bold red]❌ Failed to retrieve weather information. "
                 "Check your input or API key.[/bold red]"
             )
+    except ValueError as e:
+        error_msg = str(e).lower()
+        # Check both the main exception and its cause for API key errors
+        cause_msg = str(e.__cause__).lower() if e.__cause__ else ""
+
+        if (
+            "api key" in error_msg
+            or "weather_api_key" in error_msg
+            or "api key" in cause_msg
+            or "weather_api_key" in cause_msg
+        ):
+            console.print(
+                "[bold red]❌ API key not found. Please set WEATHER_API_KEY"
+                "in your environment or .env file.[/bold red]"
+            )
+        else:
+            console.print(f"[bold red]❌ Configuration error: {e}[/bold red]")
     except APIError as e:
         console.print(f"[bold red]❌ API Error: {e.message}[/bold red]")
     except InputError as e:
@@ -155,6 +199,15 @@ def date_forecast(
 ) -> None:
     """Get forecast for a specific date."""
     configure_logging(verbose)
+
+    # Validate unit parameter
+    if unit.upper() not in ["C", "F"]:
+        console.print(
+            f"[bold red]Error: Invalid unit '{unit}'. Use 'C' for Celsius or 'F' "
+            f"for Fahrenheit[/bold red]"
+        )
+        raise typer.Exit(1)
+
     try:
         target_date = datetime.strptime(date, "%Y-%m-%d")
         weather_app = get_app()
@@ -164,6 +217,7 @@ def date_forecast(
         console.print(
             f"[bold red]Error: Invalid date format '{date}'. Use YYYY-MM-DD[/bold red]"
         )
+        raise typer.Exit(1) from None
 
 
 @app.command(name="init-db")

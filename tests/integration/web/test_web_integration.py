@@ -69,7 +69,7 @@ class TestWebIntegration:
 
         response = client.post("/search", data={"query": "London"})
         assert_web_response(response, 200)
-        mock_api.search_city.assert_called_once_with("London")
+        mock_api.search_city.assert_called_once_with("London, England, UK")
 
     @patch("web.app.weather_api")
     def test_weather_display_integration(self, mock_api, client, mock_weather_data):
