@@ -36,7 +36,7 @@ jobs:
       - name: Run quality checks
         run: |
           uv run ruff check . --diff --exclude Experimental --exclude .venv --exclude dist
-          uv run ruff format . --exclude Experimental --exclude .venv --exclude dist
+          uv run ruff format --check . --exclude Experimental --exclude .venv --exclude dist
           uv run flake8 . --exclude=Experimental,.venv,dist
           uv run mypy weather_app/ || echo "MyPy issues found but continuing..."
 
