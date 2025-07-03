@@ -154,9 +154,9 @@ class TestNaturalLanguageLocationExtraction:
 
         for query, expected_location in test_cases:
             result = extract_location_from_query(query)
-            assert (
-                result == expected_location
-            ), f"Query: '{query}' -> Expected: '{expected_location}', Got: '{result}'"
+            assert result == expected_location, (
+                f"Query: '{query}' -> Expected: '{expected_location}', Got: '{result}'"
+            )
 
     def test_location_extraction_location_weather(self):
         """Test extracting location from 'LOCATION weather' pattern."""
@@ -169,9 +169,9 @@ class TestNaturalLanguageLocationExtraction:
 
         for query, expected_location in test_cases:
             result = extract_location_from_query(query)
-            assert (
-                result == expected_location
-            ), f"Query: '{query}' -> Expected: '{expected_location}', Got: '{result}'"
+            assert result == expected_location, (
+                f"Query: '{query}' -> Expected: '{expected_location}', Got: '{result}'"
+            )
 
     def test_location_extraction_complex_queries(self):
         """Test extracting location from complex natural language queries."""
@@ -184,9 +184,9 @@ class TestNaturalLanguageLocationExtraction:
 
         for query, expected_location in test_cases:
             result = extract_location_from_query(query)
-            assert (
-                result == expected_location
-            ), f"Query: '{query}' -> Expected: '{expected_location}', Got: '{result}'"
+            assert result == expected_location, (
+                f"Query: '{query}' -> Expected: '{expected_location}', Got: '{result}'"
+            )
 
     def test_location_extraction_invalid_queries(self):
         """Test handling of invalid queries that should not extract locations."""
