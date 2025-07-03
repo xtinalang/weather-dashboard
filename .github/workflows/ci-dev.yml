@@ -56,6 +56,58 @@ jobs:
         run: |
           uv build
 
+  playwright-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.25"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          uv pip install -e .
+
+      - name: Install Playwright
+        run: |
+          uv add playwright --dev
+          uv run playwright install --with-deps
+
+      - name: Start weather app (if needed for E2E tests)
+        run: |
+          # Start your weather app in the background if your tests need it running
+          # uv run python -m weather_app &
+          # sleep 5  # Give it time to start
+          echo "Add your app startup command here if needed"
+
+      - name: Run Playwright tests
+        env:
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: |
+          uv run playwright test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.python-version }}
+          path: playwright-report/
+          retention-days: 30
+
   security-scan:
     runs-on: ubuntu-latest
     steps:
