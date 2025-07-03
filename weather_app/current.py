@@ -5,7 +5,7 @@ Handles retrieving, processing, and displaying current weather data.
 
 import logging
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Any, cast
 
 from .api import WeatherAPI
 from .display import WeatherDisplay
@@ -75,7 +75,9 @@ class CurrentWeatherManager:
                 # Continue anyway to show the weather
 
             # Display the current weather
-            self.display.show_current_weather(weather_data, temp_unit)
+            self.display.show_current_weather(
+                cast(dict[str, Any], weather_data), temp_unit
+            )
         except Exception as e:
             self.display.show_error(f"Error retrieving current weather: {e}")
 
@@ -100,7 +102,9 @@ class CurrentWeatherManager:
             return
 
         # Display the historical weather
-        self.display.show_historical_weather(weather_data, date_str)
+        self.display.show_historical_weather(
+            cast(dict[str, Any], weather_data), date_str
+        )
 
     def update_display_preferences(self, temperature_unit: str) -> None:
         try:
@@ -155,6 +159,8 @@ class CurrentWeatherManager:
 
     def get_latest_weather(self, location: Location) -> WeatherRecord | None:
         try:
+            if location.id is None:
+                return None
             record: WeatherRecord | None = self.weather_repo.get_latest_for_location(
                 location.id
             )

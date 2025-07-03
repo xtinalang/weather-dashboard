@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, cast
+from typing import Any, cast
 
 from .api import WeatherAPI
 from .database import init_db
@@ -12,10 +12,10 @@ from .weather_types import LocationData
 logger = logging.getLogger("weather_app")
 
 # Module-level instances for reuse
-_weather_api: Optional[WeatherAPI] = None
-_display: Optional[WeatherDisplay] = None
-_user_input: Optional[User_Input_Information] = None
-_location_repo: Optional[LocationRepository] = None
+_weather_api: WeatherAPI | None = None
+_display: WeatherDisplay | None = None
+_user_input: User_Input_Information | None = None
+_location_repo: LocationRepository | None = None
 
 
 def _get_weather_api() -> WeatherAPI:
@@ -97,7 +97,7 @@ def search_location() -> str | None:
                 )
                 continue
 
-            display.show_city(city_list)
+            display.show_city(cast(list[dict[str, Any]], city_list))
             selection: str = user_input.get_location_selection(len(city_list))
 
             if selection.lower() == "q":
@@ -158,7 +158,7 @@ def direct_location() -> str | None:
                 )
                 continue
 
-            display.show_city(results)
+            display.show_city(cast(list[dict[str, Any]], results))
 
             # Ask user to confirm
             print("\nIs this the correct location? (y/n)")
@@ -259,7 +259,7 @@ def save_location_to_db(location_data: LocationData) -> LocationData:
             raise ValueError(f"Invalid coordinates: {e}") from e
 
         country: str = location_data.get("country", "Unknown")
-        region: Optional[str] = location_data.get("region")
+        region: str | None = location_data.get("region")
 
         logger.debug(f"Saving location: {name} at {latitude}, {longitude}")
 
@@ -275,13 +275,15 @@ def save_location_to_db(location_data: LocationData) -> LocationData:
 
             # Return a dictionary with the location data
             result: LocationData = {
-                "id": location.id,
                 "name": location.name,
                 "lat": location.latitude,
                 "lon": location.longitude,
                 "country": location.country,
                 "region": location.region,
             }
+            # Only include id if it's not None
+            if location.id is not None:
+                result["id"] = location.id
 
             logger.info(f"Location saved or found: {name} (ID: {location.id})")
             return result
@@ -309,11 +311,11 @@ def toggle_favorite(location_id: int) -> bool:
     """Toggle favorite status of a location"""
     try:
         location_repo = _get_location_repo()
-        location: Optional[Location] = location_repo.get_by_id(location_id)
+        location: Location | None = location_repo.get_by_id(location_id)
         if location:
             # Toggle the favorite status
             new_favorite_status: bool = not location.is_favorite
-            updated: Optional[Location] = location_repo.update(
+            updated: Location | None = location_repo.update(
                 location_id, {"is_favorite": new_favorite_status}
             )
             return updated is not None
@@ -323,26 +325,17 @@ def toggle_favorite(location_id: int) -> bool:
         return False
 
 
-def get_coordinates(location_name: str) -> Optional[tuple[float, float]] | None:
+def get_coordinates(location_name: str) -> tuple[float, float] | None | None:
     """Get coordinates for a location"""
     try:
         location_repo = _get_location_repo()
         weather_api = _get_weather_api()
 
-        # First try to find by name in database
-        location: Optional[Location] = location_repo.find_by_name(location_name)
-        if location:
-            return location.latitude, location.longitude
-
-        # If not found, try to find by region
-        location: Optional[Location] = location_repo.find_by_region(location_name)
-        if location:
-            return location.latitude, location.longitude
-
-        # If not found, try to find by country
-        location: Optional[Location] = location_repo.find_by_country(location_name)
-        if location:
-            return location.latitude, location.longitude
+        # Try to search by name/region/country in database
+        search_results: list[Location] = location_repo.search(location_name, limit=1)
+        if search_results:
+            found_location = search_results[0]
+            return found_location.latitude, found_location.longitude
 
         # If not found in database, try API search
         try:
@@ -360,7 +353,7 @@ def get_coordinates(location_name: str) -> Optional[tuple[float, float]] | None:
                     latitude=lat,
                     longitude=lon,
                 )
-                location_repo.save(new_location)
+                location_repo.create(new_location)
 
                 return lat, lon
         except Exception as api_error:
@@ -417,5 +410,5 @@ class LocationManager:
     def toggle_favorite(self, location_id: int) -> bool:
         return toggle_favorite(location_id)
 
-    def get_coordinates(self, location_name: str) -> Optional[tuple[float, float]]:
+    def get_coordinates(self, location_name: str) -> tuple[float, float] | None:
         return get_coordinates(location_name)

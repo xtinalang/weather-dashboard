@@ -394,19 +394,18 @@ def run_diagnostics(
     # 3. Location Manager Test
     try:
         console.print("\n[bold]3. Location Manager Test[/bold]")
-        location_manager = LocationManager()
+        api = WeatherAPI()
+        display = WeatherDisplay()
+        location_manager = LocationManager(api, display)
 
-        # Test location search
-        test_location = location_manager.get_location("Paris")
-        if test_location:
+        # Test location search (get_location returns coordinates, not location object)
+        coords = location_manager.get_location()
+        if coords:
             console.print(
-                f"[green]✓ Location manager working. Found: "
-                f"{test_location.name}, {test_location.country}[/green]"
+                f"[green]✓ Location manager working. Got coordinates: {coords}[/green]"
             )
         else:
-            console.print(
-                "[yellow]⚠ Location manager returned no results for 'Paris'[/yellow]"
-            )
+            console.print("[yellow]⚠ Location manager returned no results[/yellow]")
 
     except Exception as e:
         console.print(f"[red]✗ Location manager test failed: {e}[/red]")
@@ -528,23 +527,27 @@ def test_location_saving(
             )
 
             # Try to retrieve it back
-            retrieved = location_repo.get_by_id(saved_location.id)
-            if retrieved:
-                console.print(
-                    f"[green]✓ Successfully retrieved location: "
-                    f"{retrieved.name}[/green]"
-                )
+            if saved_location.id is None:
+                console.print("[red]✗ Saved location has no ID[/red]")
             else:
-                console.print("[red]✗ Failed to retrieve saved location[/red]")
+                retrieved = location_repo.get_by_id(saved_location.id)
+                if retrieved:
+                    console.print(
+                        f"[green]✓ Successfully retrieved location: "
+                        f"{retrieved.name}[/green]"
+                    )
+                else:
+                    console.print("[red]✗ Failed to retrieve saved location[/red]")
 
-            # Clean up - delete the test location
-            try:
-                location_repo.delete(saved_location.id)
-                console.print("[green]✓ Test location cleaned up[/green]")
-            except Exception as e:
-                console.print(
-                    f"[yellow]Warning: Could not clean up test location: {e}[/yellow]"
-                )
+                # Clean up - delete the test location
+                try:
+                    location_repo.delete(saved_location.id)
+                    console.print("[green]✓ Test location cleaned up[/green]")
+                except Exception as e:
+                    console.print(
+                        f"[yellow]Warning: Could not clean up test"
+                        f"location: {e}[/yellow]"
+                    )
 
         else:
             console.print("[red]✗ Failed to save location[/red]")

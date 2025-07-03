@@ -43,8 +43,9 @@ class CurrentWeather(TypedDict, total=False):
 
 # Location data
 class LocationData(TypedDict, total=False):
+    id: int
     name: str
-    region: str
+    region: str | None
     country: str
     lat: float
     lon: float
