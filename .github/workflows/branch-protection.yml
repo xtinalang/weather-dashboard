@@ -1,0 +1,136 @@
+name: Branch Protection
+
+on:
+  pull_request:
+    branches: [ main, master, production, develop, dev, development ]
+
+jobs:
+  enforce-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.25"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          uv pip install -e .
+
+      - name: Check commit messages
+        run: |
+          # Simple check for commit message format
+          git log --oneline -n 10 | grep -E "^[a-f0-9]{7,} (feat|fix|docs|style|refactor|test|chore):" || echo "⚠️ Consider using conventional commits format"
+
+      - name: Check for merge conflicts
+        run: |
+          git diff --check
+
+      - name: Ensure dependencies are locked
+        run: |
+          if [ ! -f "uv.lock" ]; then
+            echo "❌ uv.lock file is missing"
+            exit 1
+          fi
+
+          # Check if uv.lock is up to date
+          uv lock --check || {
+            echo "❌ uv.lock is not up to date with pyproject.toml"
+            echo "Please run 'uv lock' to update it"
+            exit 1
+          }
+
+      - name: Run quality checks
+        run: |
+          echo "🔍 Running quality checks..."
+
+          # Ruff linting
+          uv run ruff check . --output-format=github
+
+          # Ruff formatting
+          uv run ruff format --check .
+
+          # Flake8
+          uv run flake8 .
+
+          # MyPy (allow failure for now)
+          uv run mypy weather_app/ || echo "⚠️ MyPy found issues"
+
+      - name: Run tests
+        run: |
+          echo "🧪 Running tests..."
+          uv run pytest --verbose --tb=short
+
+      - name: Check for large files
+        run: |
+          # Check for files larger than 100MB
+          find . -type f -size +100M -not -path "./.git/*" -not -path "./.venv/*" -not -path "./node_modules/*" | while read file; do
+            echo "❌ Large file detected: $file"
+            exit 1
+          done || echo "✅ No large files found"
+
+      - name: Check for secrets
+        run: |
+          echo "🔒 Checking for potential secrets..."
+          # Basic check for common secret patterns
+          if grep -r -i -E "(api_key|password|secret|token)" --include="*.py" --include="*.yml" --include="*.yaml" . | grep -v "# Safe comment" | head -5; then
+            echo "⚠️ Potential secrets found. Please review and use environment variables or .env files"
+          else
+            echo "✅ No obvious secrets found"
+          fi
+
+  size-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        run: |
+          # Get the number of changed files
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}..HEAD | wc -l)
+
+          # Get the number of changed lines
+          CHANGED_LINES=$(git diff --stat origin/${{ github.base_ref }}..HEAD | tail -1 | grep -o '[0-9]\+ insertions\|[0-9]\+ deletions' | grep -o '[0-9]\+' | awk '{sum += $1} END {print sum}')
+
+          echo "📊 PR Statistics:"
+          echo "Changed files: $CHANGED_FILES"
+          echo "Changed lines: $CHANGED_LINES"
+
+          if [ $CHANGED_FILES -gt 50 ]; then
+            echo "⚠️ Large PR detected ($CHANGED_FILES files). Consider breaking it down."
+          fi
+
+          if [ $CHANGED_LINES -gt 1000 ]; then
+            echo "⚠️ Large PR detected ($CHANGED_LINES lines). Consider breaking it down."
+          fi
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.25"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Check for dependency vulnerabilities
+        run: |
+          uv sync --dev
+          uv add safety --dev
+          uv run safety check || {
+            echo "⚠️ Security vulnerabilities found in dependencies"
+            echo "Please review and update vulnerable packages"
+            exit 1
+          }
