@@ -1,6 +1,6 @@
 # Makefile for weather_app
 
-.PHONY: run-flask run-typer install clean package all
+.PHONY: run-flask run-typer install clean package all lint test security check-all ci-dev ci-prod
 
 # Variables
 PYTHON = python
@@ -33,4 +33,59 @@ clean:
 
 # Package the application
 package: clean
-	$(PYTHON) setup.py sdist bdist_wheel
+	uv build
+
+# Linting and formatting
+lint:
+	@echo "🔍 Running linting checks..."
+	uv run ruff check .
+	uv run ruff format --check .
+	uv run flake8 .
+	uv run mypy weather_app/ || echo "⚠️ MyPy found issues"
+
+# Fix linting issues
+lint-fix:
+	@echo "🔧 Fixing linting issues..."
+	uv run ruff check . --fix
+	uv run ruff format .
+
+# Run tests
+test:
+	@echo "🧪 Running tests..."
+	uv run pytest --verbose --tb=short
+
+# Run tests with coverage
+test-coverage:
+	@echo "🧪 Running tests with coverage..."
+	uv run coverage run -m pytest
+	uv run coverage report
+	uv run coverage html
+
+# Security scanning
+security:
+	@echo "🔒 Running security scans..."
+	uv add safety bandit --dev
+	uv run safety check
+	uv run bandit -r weather_app/
+
+# Pre-commit hooks
+pre-commit:
+	@echo "🔗 Running pre-commit hooks..."
+	uv run pre-commit run --all-files
+
+# Run all quality checks (like CI development)
+check-all: lint test security pre-commit
+	@echo "✅ All quality checks passed!"
+
+# Run CI development checks locally
+ci-dev: check-all
+	@echo "🚀 Development CI checks complete!"
+
+# Run CI production checks locally
+ci-prod: lint test-coverage security
+	@echo "📦 Building package..."
+	uv build
+	@echo "🧪 Testing package installation..."
+	uv add dist/*.whl
+	uv run weather-dashboard --help
+	@echo "🚀 Production CI checks complete!"
