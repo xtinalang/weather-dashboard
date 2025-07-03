@@ -36,7 +36,7 @@ class CitySearchResult(TypedDict, total=False):
 class WeatherAPI:
     def __init__(self, api_key: Optional[str] = None) -> None:
         try:
-            self.api_key: str = api_key or config("WEATHER_API_KEY")
+            self.api_key: str = api_key or config("WEATHER_API_KEY", default="")
             if not self.api_key:
                 err_msg: str = (
                     "Weather API key not found. Please set WEATHER_API_KEY in .env file"

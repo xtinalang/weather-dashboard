@@ -47,6 +47,8 @@ jobs:
           uv run mypy weather_app/ --strict
 
       - name: Run tests with pytest and coverage
+        env:
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
           uv add coverage --dev
           uv run coverage run -m pytest --verbose --tb=short
@@ -145,6 +147,7 @@ jobs:
       - name: Run integration tests
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/weather_test
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
           uv run pytest tests/ -k "integration" --verbose || echo "No integration tests found"
 

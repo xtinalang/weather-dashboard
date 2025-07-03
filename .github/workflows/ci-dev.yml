@@ -47,6 +47,8 @@ jobs:
           uv run mypy weather_app/
 
       - name: Run tests with pytest
+        env:
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
           uv run pytest --verbose --tb=short
 
@@ -99,6 +101,8 @@ jobs:
           uv run radon cc weather_app/ --min B
 
       - name: Generate coverage report
+        env:
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
           uv add coverage --dev
           uv run coverage run -m pytest
