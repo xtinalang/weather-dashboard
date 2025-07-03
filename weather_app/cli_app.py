@@ -1,7 +1,6 @@
 # Main WeatherApp (application orchestration)
 import logging
 from datetime import datetime
-from typing import Optional
 
 from .api import WeatherAPI
 from .current import CurrentWeatherManager
@@ -13,12 +12,13 @@ from .location import LocationManager
 from .models import Location
 from .repository import LocationRepository, SettingsRepository
 from .user_input import User_Input_Information
+from .weather_types import TemperatureUnit
 
 logger = logging.getLogger("weather_app")
 
 
 class WeatherApp:
-    def __init__(self):
+    def __init__(self) -> None:
         # Initialize database
         self.db = Database()
 
@@ -30,7 +30,7 @@ class WeatherApp:
         self.current_manager = CurrentWeatherManager(self.weather_api, self.display)
         self.location_repo = LocationRepository()
         self.settings_repo = SettingsRepository()
-        self.unit = "C"  # Default to Celsius
+        self.unit: TemperatureUnit = "C"  # Default to Celsius
         self.user_input = User_Input_Information
 
     def _return_fresh_location(self, location: Location) -> Location:
@@ -52,7 +52,7 @@ class WeatherApp:
             updated_at=datetime.now(),
         )
 
-    def refresh_location(self, location: Location) -> Optional[Location]:
+    def refresh_location(self, location: Location) -> Location | None:
         try:
             location_name = location.name if hasattr(location, "name") else "Unknown"
             location_id = location.id if hasattr(location, "id") else "Unknown"
@@ -286,7 +286,7 @@ class WeatherApp:
             logger.error(f"Error showing current weather: {e}")
             self.display.show_error("Failed to get current weather")
 
-    def run_from_user_input(self):
+    def run_from_user_input(self) -> None:
         """Main application flow"""
         print("Welcome to the Weather App!")
         print("==========================")

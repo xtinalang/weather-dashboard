@@ -29,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger("database_migration")
 
 
-def migrate_database():
+def migrate_database() -> bool:
     """Add missing columns to existing tables"""
     try:
         logger.info("Starting database migration...")
@@ -116,7 +116,7 @@ def migrate_database():
         return False
 
 
-def create_backup():
+def create_backup() -> bool:
     """Create a backup of the database before migration"""
     try:
         db_path = Path(Database.get_database_path())

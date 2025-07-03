@@ -5,7 +5,7 @@ from .api import WeatherAPI
 from .display import WeatherDisplay
 from .models import Location, UserSettings
 from .repository import LocationRepository, SettingsRepository
-from .weather_types import ForecastData, ForecastDay, TemperatureUnit
+from .weather_types import ForecastData, ForecastDay, TemperatureUnit, WeatherResponse
 
 
 class ForecastManager:
@@ -40,11 +40,11 @@ class ForecastManager:
             temp_unit: TemperatureUnit
             if unit is None:
                 try:
-                    settings: UserSettings = self.settings_repo.get_settings()
+                    user_settings: UserSettings = self.settings_repo.get_settings()
                     temp_unit = cast(
                         TemperatureUnit,
                         "F"
-                        if settings.temperature_unit.lower() == "fahrenheit"
+                        if user_settings.temperature_unit.lower() == "fahrenheit"
                         else "C",
                     )
                 except Exception as e:
@@ -60,7 +60,7 @@ class ForecastManager:
 
             # Get forecast data from API
             coords: str = f"{location.latitude},{location.longitude}"
-            forecast_data: dict[str, Any] | None = self.api.get_forecast(
+            forecast_data: WeatherResponse | None = self.api.get_forecast(
                 coords, days=forecast_days
             )
 
@@ -70,7 +70,7 @@ class ForecastManager:
 
             # Display the forecast
             self.display.show_forecast(
-                forecast_data, unit=temp_unit, days=forecast_days
+                cast(dict[str, Any], forecast_data), unit=temp_unit, days=forecast_days
             )
         except Exception as e:
             self.display.show_error(f"Error getting forecast: {e}")
@@ -106,7 +106,7 @@ class ForecastManager:
 
             # Get forecast data
             coords: str = f"{location.latitude},{location.longitude}"
-            forecast_data: dict[str, Any] | None = self.api.get_forecast(
+            forecast_data: WeatherResponse | None = self.api.get_forecast(
                 coords,
                 days=days_ahead + 1,  # +1 because we need to include the target day
             )
@@ -123,7 +123,9 @@ class ForecastManager:
                 single_day_forecast: ForecastData = {
                     "forecast": {"forecastday": [target_forecast]}
                 }
-                self.display.show_forecast(single_day_forecast, unit=temp_unit)
+                self.display.show_forecast(
+                    cast(dict[str, Any], single_day_forecast), unit=temp_unit
+                )
             else:
                 self.display.show_error(
                     f"No forecast available for {target_date.date()}"
@@ -132,11 +134,12 @@ class ForecastManager:
             self.display.show_error(f"Error getting forecast for date: {e}")
 
     def _filter_forecast_for_date(
-        self, forecast_data: dict[str, Any], target_date: datetime
+        self, forecast_data: WeatherResponse, target_date: datetime
     ) -> ForecastDay | None:
         target_date_str: str = target_date.date().isoformat()
 
-        for day in forecast_data.get("forecast", {}).get("forecastday", []):
+        forecast_list = forecast_data.get("forecast", {}).get("forecastday", [])
+        for day in cast(list[dict[str, Any]], forecast_list):
             if day.get("date") == target_date_str:
                 return cast(ForecastDay, day)
         return None

@@ -1,13 +1,14 @@
 """Custom exceptions for the weather application."""
 
-from typing import Optional
-
 
 class WeatherAppError(Exception):
     """Base exception class for all weather app errors."""
 
     def __init__(
-        self, message: str = "An error occurred in the Weather App", *args, **kwargs
+        self,
+        message: str = "An error occurred in the Weather App",
+        *args: object,
+        **kwargs: object,
     ) -> None:
         self.message: str = message
         super().__init__(message, *args, **kwargs)
@@ -19,11 +20,11 @@ class APIError(WeatherAppError):
     def __init__(
         self,
         message: str = "Weather API error",
-        status_code: Optional[int] = None,
-        *args,
-        **kwargs,
+        status_code: int | None = None,
+        *args: object,
+        **kwargs: object,
     ) -> None:
-        self.status_code: Optional[int] = status_code
+        self.status_code: int | None = status_code
         super().__init__(message, *args, **kwargs)
 
 
@@ -33,11 +34,11 @@ class InputError(WeatherAppError):
     def __init__(
         self,
         message: str = "Invalid user input",
-        field: Optional[str] = None,
-        *args,
-        **kwargs,
+        field: str | None = None,
+        *args: object,
+        **kwargs: object,
     ) -> None:
-        self.field: Optional[str] = field
+        self.field: str | None = field
         error_message: str = (
             f"{message}" if not field else f"{message} (field: {field})"
         )
@@ -48,7 +49,7 @@ class DatabaseError(WeatherAppError):
     """Exception raised for database-related errors."""
 
     def __init__(
-        self, message: str = "Database error occurred", *args, **kwargs
+        self, message: str = "Database error occurred", *args: object, **kwargs: object
     ) -> None:
         super().__init__(message, *args, **kwargs)
 
@@ -59,11 +60,11 @@ class ConfigurationError(WeatherAppError):
     def __init__(
         self,
         message: str = "Configuration error",
-        setting: Optional[str] = None,
-        *args,
-        **kwargs,
+        setting: str | None = None,
+        *args: object,
+        **kwargs: object,
     ) -> None:
-        self.setting: Optional[str] = setting
+        self.setting: str | None = setting
         error_message: str = (
             f"{message}" if not setting else f"{message} (setting: {setting})"
         )

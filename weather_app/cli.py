@@ -3,7 +3,7 @@ import os
 import sys
 import traceback
 from datetime import datetime
-from typing import Optional
+from typing import Any, cast
 
 import typer
 from rich.console import Console
@@ -18,6 +18,7 @@ from .exceptions import APIError, InputError
 from .location import LocationManager
 from .models import Location
 from .repository import LocationRepository
+from .weather_types import TemperatureUnit
 
 app = typer.Typer(help="🌤️ A Totally Awesome Command-line Weather App")
 console = Console()
@@ -49,13 +50,13 @@ def current(
         raise typer.Exit(1)
 
     weather_app = get_app()
-    weather_app.unit = unit.upper()
+    weather_app.unit = cast(TemperatureUnit, unit.upper())
     weather_app.run()
 
 
 @app.command()
 def forecast(
-    days: Optional[int] = typer.Option(
+    days: int | None = typer.Option(
         None, "--days", "-d", help="Number of days to forecast (1-7)", min=1, max=7
     ),
     unit: str = typer.Option(
@@ -77,7 +78,7 @@ def forecast(
         raise typer.Exit(1)
 
     weather_app = get_app()
-    weather_app.unit = unit.upper()
+    weather_app.unit = cast(TemperatureUnit, unit.upper())
 
     if days:
         weather_app.show_forecast_for_days(days)
@@ -148,8 +149,8 @@ def get_weather(
         data = api.get_weather(location)
         if data:
             unit_choice = "F" if unit and unit.upper() == "F" else "C"
-            display.show_current_weather(data, unit_choice)
-            display.show_forecast(data, unit_choice)
+            display.show_current_weather(cast(dict[str, Any], data), unit_choice)
+            display.show_forecast(cast(dict[str, Any], data), unit_choice)
         else:
             console.print(
                 "[bold red]❌ Failed to retrieve weather information. "
@@ -211,7 +212,7 @@ def date_forecast(
     try:
         target_date = datetime.strptime(date, "%Y-%m-%d")
         weather_app = get_app()
-        weather_app.unit = unit.upper()
+        weather_app.unit = cast(TemperatureUnit, unit.upper())
         weather_app.show_forecast_for_date(target_date)
     except ValueError:
         console.print(
@@ -240,10 +241,10 @@ def init_database(
 
 @app.command()
 def settings(
-    forecast_days: Optional[int] = typer.Option(
+    forecast_days: int | None = typer.Option(
         None, "--forecast-days", help="Default number of forecast days (1-7)"
     ),
-    temp_unit: Optional[str] = typer.Option(
+    temp_unit: str | None = typer.Option(
         None, "--temp-unit", help="Default temperature unit (C or F)"
     ),
     verbose: bool = typer.Option(
@@ -274,8 +275,8 @@ def settings(
 
 @app.command("refresh-location")
 def refresh_location(
-    city: Optional[str] = typer.Option(None, "--city", help="City name to refresh"),
-    id: Optional[int] = typer.Option(None, "--id", help="Location ID to refresh"),
+    city: str | None = typer.Option(None, "--city", help="City name to refresh"),
+    id: int | None = typer.Option(None, "--id", help="Location ID to refresh"),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
     ),
@@ -442,9 +443,7 @@ def add_location(
     latitude: float = typer.Option(..., "--lat", help="Latitude coordinate"),
     longitude: float = typer.Option(..., "--lon", help="Longitude coordinate"),
     country: str = typer.Option(..., "--country", "-c", help="Country name"),
-    region: Optional[str] = typer.Option(
-        None, "--region", "-r", help="Region/state name"
-    ),
+    region: str | None = typer.Option(None, "--region", "-r", help="Region/state name"),
     favorite: bool = typer.Option(False, "--favorite", "-f", help="Mark as favorite"),
     verbose: bool = typer.Option(
         False, "--verbose", "-v", help="Enable verbose logging"
