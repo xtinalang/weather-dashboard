@@ -196,6 +196,18 @@ wheels = [
 ]
 
 [[package]]
+name = "freezegun"
+version = "1.5.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "python-dateutil" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c7/75/0455fa5029507a2150da59db4f165fbc458ff8bb1c4f4d7e8037a14ad421/freezegun-1.5.2.tar.gz", hash = "sha256:a54ae1d2f9c02dbf42e02c18a3ab95ab4295818b549a34dac55592d72a905181", size = 34855, upload_time = "2025-05-24T12:38:47.051Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b5/b2/68d4c9b6431121b6b6aa5e04a153cac41dcacc79600ed6e2e7c3382156f5/freezegun-1.5.2-py3-none-any.whl", hash = "sha256:5aaf3ba229cda57afab5bd311f0108d86b6fb119ae89d2cd9c43ec8c1733c85b", size = 18715, upload_time = "2025-05-24T12:38:45.274Z" },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1102,6 +1114,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "flake8" },
+    { name = "freezegun" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-playwright" },
@@ -1129,6 +1142,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "flake8", specifier = ">=6.1.0" },
+    { name = "freezegun", specifier = ">=1.2.2" },
     { name = "mypy", specifier = ">=1.5.1" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-playwright", specifier = ">=0.7.0" },

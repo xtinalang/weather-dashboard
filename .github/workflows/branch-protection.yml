@@ -2,7 +2,7 @@ name: Branch Protection
 
 on:
   pull_request:
-    branches: [ main, master, production, develop, dev, development ]
+    branches: [ main, master, production, develop, dev, development, Development ]
 
 jobs:
   enforce-quality:
