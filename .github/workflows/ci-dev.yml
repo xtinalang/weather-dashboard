@@ -35,12 +35,12 @@ jobs:
 
       - name: Run ruff linting
         run: |
-          uv run ruff check . --exclude Experimental
-          uv run ruff format --check . --exclude Experimental
+          uv run ruff check . --exclude Experimental --exclude .venv --exclude dist
+          uv run ruff format --check . --exclude Experimental --exclude .venv --exclude dist
 
       - name: Run flake8
         run: |
-          uv run flake8 . --exclude=Experimental
+          uv run flake8 . --exclude=Experimental,.venv,dist
 
       - name: Run mypy type checking
         run: |

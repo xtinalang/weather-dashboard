@@ -4,8 +4,10 @@ extend-ignore = E203
 exclude =
     .git,
     .venv,
+    .venv/*,
     __pycache__,
     dist,
+    dist/*,
     build,
     .pytest_cache,
     .mypy_cache,
