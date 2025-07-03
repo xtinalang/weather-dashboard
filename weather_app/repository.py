@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import DetachedInstanceError
@@ -32,7 +32,7 @@ class BaseRepository(Generic[T]):
             session.refresh(obj)
             return obj
 
-    def get_by_id(self, id: int) -> Optional[T]:
+    def get_by_id(self, id: int) -> T | None:
         """Get a record by ID"""
         try:
             with self.db.get_session() as session:
@@ -52,7 +52,7 @@ class BaseRepository(Generic[T]):
             error_msg = f"Failed to get all {self.model_class.__name__}s: {e}"
             raise DatabaseError(error_msg) from e
 
-    def update(self, id: int, data: dict[str, Any]) -> Optional[T]:
+    def update(self, id: int, data: dict[str, Any]) -> T | None:
         """Update a record by ID with the provided data"""
         try:
             with self.db.get_session() as session:
@@ -133,7 +133,7 @@ class LocationRepository(BaseRepository[Location]):
         """Get favorite locations"""
         try:
             with self.db.get_session() as session:
-                statement = select(Location).where(Location.is_favorite.is_(True))
+                statement = select(Location).where(Location.is_favorite)
                 results = session.exec(statement).all()
                 return list(results)
         except SQLAlchemyError as e:
@@ -142,7 +142,7 @@ class LocationRepository(BaseRepository[Location]):
 
     def find_by_coordinates(
         self, latitude: float, longitude: float, threshold: float = 0.01
-    ) -> Optional[Location]:
+    ) -> Location | None:
         """Find location by approximate coordinates within a threshold"""
 
         logger = logging.getLogger("weather_app")
@@ -238,7 +238,7 @@ class LocationRepository(BaseRepository[Location]):
         latitude: float,
         longitude: float,
         country: str = "Unknown",
-        region: Optional[str] = None,
+        region: str | None = None,
     ) -> Location:
         """Find a location by coordinates or create it if it doesn't exist"""
 
@@ -333,7 +333,7 @@ class WeatherRepository(BaseRepository[WeatherRecord]):
                 statement = (
                     select(WeatherRecord)
                     .where(WeatherRecord.location_id == location_id)
-                    .order_by(WeatherRecord.timestamp.desc())
+                    .order_by(col(WeatherRecord.timestamp).desc())
                     .limit(limit)
                 )
                 results = session.exec(statement).all()
@@ -350,7 +350,7 @@ class WeatherRepository(BaseRepository[WeatherRecord]):
                 statement = (
                     select(WeatherRecord)
                     .where(WeatherRecord.timestamp >= cutoff_date)
-                    .order_by(WeatherRecord.timestamp.desc())
+                    .order_by(col(WeatherRecord.timestamp).desc())
                 )
                 results = session.exec(statement).all()
                 return list(results)
@@ -358,14 +358,14 @@ class WeatherRepository(BaseRepository[WeatherRecord]):
             error_msg = f"Failed to get recent weather records: {e}"
             raise DatabaseError(error_msg) from e
 
-    def get_latest_for_location(self, location_id: int) -> Optional[WeatherRecord]:
+    def get_latest_for_location(self, location_id: int) -> WeatherRecord | None:
         """Get the most recent weather record for a location"""
         try:
             with self.db.get_session() as session:
                 statement = (
                     select(WeatherRecord)
                     .where(WeatherRecord.location_id == location_id)
-                    .order_by(WeatherRecord.timestamp.desc())
+                    .order_by(col(WeatherRecord.timestamp).desc())
                     .limit(1)
                 )
                 return session.exec(statement).first()

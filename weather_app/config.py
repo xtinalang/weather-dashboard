@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 from decouple import config
 
@@ -33,7 +32,7 @@ SECRET_KEY = config("SECRET_KEY", default="dev-key-change-in-production")
 class Config:
     """Configuration class for the weather application."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.database_url = DATABASE_URL
         self.weather_api_key = WEATHER_API_KEY
         self.secret_key = SECRET_KEY
@@ -42,14 +41,14 @@ class Config:
     @property
     def is_sqlite(self) -> bool:
         """Check if using SQLite database."""
-        return self.database_url.startswith("sqlite")
+        return bool(self.database_url.startswith("sqlite"))
 
     @property
     def is_postgres(self) -> bool:
         """Check if using PostgreSQL database."""
-        return self.database_url.startswith("postgresql")
+        return bool(self.database_url.startswith("postgresql"))
 
-    def get_database_path(self) -> Optional[Path]:
+    def get_database_path(self) -> Path | None:
         """Get the database file path if using SQLite."""
         if self.is_sqlite:
             # Extract path from sqlite:///path format

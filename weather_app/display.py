@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from .emoji import get_weather_emoji
 
@@ -28,7 +28,7 @@ class WeatherDisplay:
         print(f"⚠️ {message}")
 
     @staticmethod
-    def show_city(city: Optional[list[dict[str, Any]]]) -> None:
+    def show_city(city: list[dict[str, Any]] | None) -> None:
         """Display list of matching cities for user to choose from."""
         logger.info("Displaying city information")
         if not city:
@@ -51,7 +51,7 @@ class WeatherDisplay:
 
     @staticmethod
     def show_current_weather(
-        weather_data: Optional[dict[str, Any]], unit: str = "C"
+        weather_data: dict[str, Any] | None, unit: str = "C"
     ) -> None:
         """Display current weather for a location."""
         logger.info("Displaying current weather")
@@ -93,7 +93,7 @@ class WeatherDisplay:
 
     @staticmethod
     def show_forecast(
-        weather_data: Optional[dict[str, Any]], unit: str = "C", days: int = None
+        weather_data: dict[str, Any] | None, unit: str = "C", days: int | None = None
     ) -> None:
         logger.info("Displaying weather forecast")
         if not weather_data:
@@ -168,7 +168,7 @@ class WeatherDisplay:
 
     @staticmethod
     def show_historical_weather(
-        weather_data: Optional[dict[str, Any]], date_str: str
+        weather_data: dict[str, Any] | None, date_str: str
     ) -> None:
         logger.info(f"Displaying historical weather for {date_str}")
         if not weather_data:

@@ -4,7 +4,7 @@ from typing import Literal, TypedDict
 CELSIUS = "C"
 FAHRENHEIT = "F"
 VALID_UNITS = {CELSIUS, FAHRENHEIT}
-TemperatureUnit = Literal[CELSIUS, FAHRENHEIT]
+TemperatureUnit = Literal["C", "F"]
 VALID_TEMP_UNITS = ["F", "C"]
 DEFAULT_TEMP_UNIT = "C"
 DEFAULT_FORECAST_DAYS = 7

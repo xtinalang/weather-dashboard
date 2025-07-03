@@ -3,7 +3,7 @@ name = "weather_app"
 version = "0.1.0"
 description = "Weather dashboard application with SQLite database storage"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "python-dotenv>=1.1.0",
     "requests>=2.32.3",
@@ -60,7 +60,7 @@ exclude = [
 
 [tool.ruff]
 line-length = 88
-target-version = "py39"
+target-version = "py310"
 exclude = [
     ".git",
     ".venv",
@@ -97,7 +97,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
