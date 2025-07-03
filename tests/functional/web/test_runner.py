@@ -50,8 +50,9 @@ def run_pytest_command(test_files, args):
     if args.retry:
         cmd.extend(["--maxfail", "3"])  # Stop after 3 failures for retry mode
 
-    # Additional pytest options
+    # Additional pytest options for async tests
     cmd.extend(["--tb=short"])  # Shorter traceback format
+    cmd.extend(["--asyncio-mode=auto"])  # Enable async test mode
 
     print(f"🚀 Running command: {' '.join(cmd)}")
     print("-" * 60)

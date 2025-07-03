@@ -5,26 +5,19 @@ Tests various error scenarios, network failures, and edge cases.
 
 import pytest
 from conftest import HOST
-from playwright.sync_api import Error as PlaywrightError
-from playwright.sync_api import Page
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import Error as PlaywrightError
+from playwright.async_api import Page
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 
 class TestNetworkErrorHandling:
     """Test suite for network and API error handling."""
 
-    @pytest.fixture
-    def page(self, browser):
-        """Create a new page for each test."""
-        page = browser.new_page()
-        yield page
-        page.close()
-
-    def test_page_load_failure_handling(self, page: Page):
+    async def test_page_load_failure_handling(self, page: Page):
         """Test handling when main page fails to load."""
         try:
             # Try to load the page with a short timeout
-            page.goto(HOST, timeout=5000)
+            await page.goto(HOST, timeout=5000)
 
             # If successful, check basic elements are present
             content = page.content()
@@ -35,12 +28,12 @@ class TestNetworkErrorHandling:
             # (server might not be running in CI)
             pytest.skip("Web server not available for testing")
 
-    def test_invalid_search_handling(self, page: Page):
+    async def test_invalid_search_handling(self, page: Page):
         """Test handling of searches that return no results."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         search_form = page.locator("form[action*='search']")
-        if search_form.count() > 0:
+        if await search_form.count() > 0:
             search_input = search_form.locator("input[name='query']")
             search_button = search_form.locator("button[type='submit']")
 
@@ -52,9 +45,9 @@ class TestNetworkErrorHandling:
             ]
 
             for search_term in invalid_searches:
-                search_input.fill(search_term)
-                search_button.click()
-                page.wait_for_load_state("networkidle")
+                await search_input.fill(search_term)
+                await search_button.click()
+                await page.wait_for_load_state("networkidle")
 
                 # Should handle gracefully without crashing
                 content = page.content()
@@ -67,9 +60,9 @@ class TestNetworkErrorHandling:
                 )
 
                 # Go back for next test
-                page.goto(HOST)
+                await page.goto(HOST)
 
-    def test_malformed_url_handling(self, page: Page):
+    async def test_malformed_url_handling(self, page: Page):
         """Test handling of malformed URLs."""
         malformed_urls = [
             f"{HOST}/weather/abc/def",  # Invalid coordinates
@@ -80,8 +73,8 @@ class TestNetworkErrorHandling:
 
         for url in malformed_urls:
             try:
-                page.goto(url)
-                page.wait_for_load_state("networkidle")
+                await page.goto(url)
+                await page.wait_for_load_state("networkidle")
 
                 # Should handle gracefully
                 content = page.content()
@@ -95,22 +88,22 @@ class TestNetworkErrorHandling:
                 # Timeout is acceptable for error handling
                 pass
 
-    def test_api_timeout_simulation(self, page: Page):
+    async def test_api_timeout_simulation(self, page: Page):
         """Test handling when API calls take too long."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         # Submit a weather request
         search_form = page.locator("form[action*='search']")
-        if search_form.count() > 0:
+        if await search_form.count() > 0:
             search_input = search_form.locator("input[name='query']")
             search_button = search_form.locator("button[type='submit']")
 
-            search_input.fill("London")
-            search_button.click()
+            await search_input.fill("London")
+            await search_button.click()
 
             # Wait for response with reasonable timeout
             try:
-                page.wait_for_load_state("networkidle", timeout=30000)
+                await page.wait_for_load_state("networkidle", timeout=30000)
                 content = page.content()
                 assert content
             except (PlaywrightTimeoutError, PlaywrightError):
@@ -121,20 +114,13 @@ class TestNetworkErrorHandling:
 class TestFormErrorHandling:
     """Test suite for form validation and error handling."""
 
-    @pytest.fixture
-    def page(self, browser):
-        """Create a new page for each test."""
-        page = browser.new_page()
-        yield page
-        page.close()
-
-    def test_form_csrf_error_handling(self, page: Page):
+    async def test_form_csrf_error_handling(self, page: Page):
         """Test CSRF token validation error handling."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         # Try to manipulate CSRF tokens if present
         csrf_inputs = page.locator("input[name*='csrf'], input[name*='token']")
-        if csrf_inputs.count() > 0:
+        if await csrf_inputs.count() > 0:
             # Remove or modify CSRF token
             page.evaluate("""
                 const csrfInputs = document.querySelectorAll(
@@ -145,66 +131,66 @@ class TestFormErrorHandling:
 
             # Try to submit form
             forms = page.locator("form")
-            if forms.count() > 0:
+            if await forms.count() > 0:
                 submit_buttons = forms.locator(
                     "button[type='submit'], input[type='submit']"
                 )
-                if submit_buttons.count() > 0:
-                    submit_buttons.first.click()
-                    page.wait_for_load_state("networkidle")
+                if await submit_buttons.count() > 0:
+                    await submit_buttons.first.click()
+                    await page.wait_for_load_state("networkidle")
 
                     # Should handle CSRF error gracefully
                     content = page.content()
                     assert content
 
-    def test_javascript_disabled_fallback(self, page: Page):
+    async def test_javascript_disabled_fallback(self, page: Page):
         """Test that forms work when JavaScript is disabled."""
         # Disable JavaScript
         page.add_init_script(
             "Object.defineProperty(navigator, 'userAgent', {get: () => 'NoJS'});"
         )
 
-        page.goto(HOST)
+        await page.goto(HOST)
 
         # Forms should still be functional
         search_form = page.locator("form[action*='search']")
-        if search_form.count() > 0:
+        if await search_form.count() > 0:
             search_input = search_form.locator("input[name='query']")
             search_button = search_form.locator("button[type='submit']")
 
-            search_input.fill("London")
-            search_button.click()
-            page.wait_for_load_state("networkidle")
+            await search_input.fill("London")
+            await search_button.click()
+            await page.wait_for_load_state("networkidle")
 
             # Should work without JavaScript
             content = page.content()
             assert content
 
-    def test_large_input_handling(self, page: Page):
+    async def test_large_input_handling(self, page: Page):
         """Test handling of unusually large inputs."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         search_form = page.locator("form[action*='search']")
-        if search_form.count() > 0:
+        if await search_form.count() > 0:
             search_input = search_form.locator("input[name='query']")
             search_button = search_form.locator("button[type='submit']")
 
             # Test with very long input
             long_input = "a" * 1000  # 1000 characters
-            search_input.fill(long_input)
-            search_button.click()
-            page.wait_for_load_state("networkidle")
+            await search_input.fill(long_input)
+            await search_button.click()
+            await page.wait_for_load_state("networkidle")
 
             # Should handle gracefully
             content = page.content()
             assert content
 
-    def test_special_character_injection(self, page: Page):
+    async def test_special_character_injection(self, page: Page):
         """Test handling of potentially dangerous special characters."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         search_form = page.locator("form[action*='search']")
-        if search_form.count() > 0:
+        if await search_form.count() > 0:
             search_input = search_form.locator("input[name='query']")
             search_button = search_form.locator("button[type='submit']")
 
@@ -218,9 +204,9 @@ class TestFormErrorHandling:
             ]
 
             for dangerous_input in dangerous_inputs:
-                search_input.fill(dangerous_input)
-                search_button.click()
-                page.wait_for_load_state("networkidle")
+                await search_input.fill(dangerous_input)
+                await search_button.click()
+                await page.wait_for_load_state("networkidle")
 
                 # Should sanitize and handle safely
                 content = page.content()
@@ -228,31 +214,24 @@ class TestFormErrorHandling:
                 assert "<script>" not in content  # Should be escaped
 
                 # Go back for next test
-                page.goto(HOST)
+                await page.goto(HOST)
 
 
 class TestUserExperienceErrors:
     """Test suite for user experience during error conditions."""
 
-    @pytest.fixture
-    def page(self, browser):
-        """Create a new page for each test."""
-        page = browser.new_page()
-        yield page
-        page.close()
-
-    def test_helpful_error_messages(self, page: Page):
+    async def test_helpful_error_messages(self, page: Page):
         """Test that error messages are helpful and user-friendly."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         # Try to trigger various errors and check messages
         search_form = page.locator("form[action*='search']")
-        if search_form.count() > 0:
+        if await search_form.count() > 0:
             search_button = search_form.locator("button[type='submit']")
 
             # Submit empty form
-            search_button.click()
-            page.wait_for_load_state("networkidle")
+            await search_button.click()
+            await page.wait_for_load_state("networkidle")
 
             content = page.content()
             # Should provide helpful guidance
@@ -267,14 +246,14 @@ class TestUserExperienceErrors:
                 ]
             )
 
-    def test_error_recovery_paths(self, page: Page):
+    async def test_error_recovery_paths(self, page: Page):
         """Test that users can recover from errors easily."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         # Navigate to a likely error page
         try:
-            page.goto(f"{HOST}/nonexistent")
-            page.wait_for_load_state("networkidle")
+            await page.goto(f"{HOST}/nonexistent")
+            await page.wait_for_load_state("networkidle")
 
             content = page.content()
             # Should provide ways to get back to working state
@@ -285,28 +264,28 @@ class TestUserExperienceErrors:
 
             # Should have working navigation
             home_links = page.locator("a[href*='/'], a[href='#'], a:has-text('home')")
-            assert home_links.count() > 0
+            assert await home_links.count() > 0
 
         except (PlaywrightTimeoutError, PlaywrightError):
             # If error page doesn't load, that's fine
             pass
 
-    def test_loading_states_during_errors(self, page: Page):
+    async def test_loading_states_during_errors(self, page: Page):
         """Test loading states when errors occur."""
-        page.goto(HOST)
+        await page.goto(HOST)
 
         search_form = page.locator("form[action*='search']")
-        if search_form.count() > 0:
+        if await search_form.count() > 0:
             search_input = search_form.locator("input[name='query']")
             search_button = search_form.locator("button[type='submit']")
 
-            search_input.fill("test")
+            await search_input.fill("test")
 
             # Look for loading indicators
-            search_button.click()
+            await search_button.click()
 
             # Even if errors occur, loading should complete
-            page.wait_for_load_state("networkidle")
+            await page.wait_for_load_state("networkidle")
 
             # Page should be in a stable state
             content = page.content()
@@ -316,14 +295,7 @@ class TestUserExperienceErrors:
 class TestBrowserCompatibility:
     """Test suite for browser-specific error handling."""
 
-    @pytest.fixture
-    def page(self, browser):
-        """Create a new page for each test."""
-        page = browser.new_page()
-        yield page
-        page.close()
-
-    def test_console_error_monitoring(self, page: Page):
+    async def test_console_error_monitoring(self, page: Page):
         """Test that there are no critical console errors."""
         console_errors = []
 
@@ -333,8 +305,8 @@ class TestBrowserCompatibility:
 
         page.on("console", handle_console)
 
-        page.goto(HOST)
-        page.wait_for_load_state("networkidle")
+        await page.goto(HOST)
+        await page.wait_for_load_state("networkidle")
 
         # Some errors might be expected (like API failures), but should not be critical
         critical_errors = [
@@ -354,7 +326,7 @@ class TestBrowserCompatibility:
         # Should not have critical JavaScript errors
         assert len(critical_errors) == 0, f"Critical console errors: {critical_errors}"
 
-    def test_responsive_design_error_handling(self, page: Page):
+    async def test_responsive_design_error_handling(self, page: Page):
         """Test error handling on different screen sizes."""
         viewports = [
             {"width": 320, "height": 568},  # Mobile
@@ -363,28 +335,28 @@ class TestBrowserCompatibility:
         ]
 
         for viewport in viewports:
-            page.set_viewport_size(viewport)
-            page.goto(HOST)
+            await page.set_viewport_size(viewport)
+            await page.goto(HOST)
 
             # Forms should be accessible at all sizes
             search_form = page.locator("form[action*='search']")
-            if search_form.count() > 0:
-                assert search_form.is_visible()
+            if await search_form.count() > 0:
+                assert await search_form.is_visible()
 
                 # Submit button should be accessible
                 search_button = search_form.locator("button[type='submit']")
-                assert search_button.is_visible()
+                assert await search_button.is_visible()
 
-    def test_slow_network_simulation(self, page: Page):
+    async def test_slow_network_simulation(self, page: Page):
         """Test behavior under slow network conditions."""
         # Simulate slow network
         page.route("**/*", lambda route: route.continue_())
 
-        page.goto(HOST)
+        await page.goto(HOST)
 
         # Should handle slow loading gracefully
         try:
-            page.wait_for_load_state("networkidle", timeout=10000)
+            await page.wait_for_load_state("networkidle", timeout=10000)
             content = page.content()
             assert content
         except (PlaywrightTimeoutError, PlaywrightError):

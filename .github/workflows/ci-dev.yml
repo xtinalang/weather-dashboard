@@ -84,7 +84,7 @@ jobs:
 
       - name: Install Playwright
         run: |
-          uv add playwright --dev
+          uv add playwright pytest-playwright --dev
           uv run playwright install --with-deps
 
       - name: Start weather app (if needed for E2E tests)
@@ -98,7 +98,7 @@ jobs:
         env:
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: |
-          uv run playwright test
+          uv run pytest --browser chromium --headed=false tests/
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
