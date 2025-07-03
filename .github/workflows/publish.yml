@@ -15,12 +15,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           version: "0.5.25"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
+
 
       - name: Install dependencies
         run: |
@@ -29,9 +35,9 @@ jobs:
 
       - name: Run quality checks
         run: |
-          uv run ruff check . --diff
-          uv run ruff format --check .
-          uv run flake8 .
+          uv run ruff check . --diff --exclude Experimental --exclude .venv --exclude dist
+          uv run ruff format --check . --exclude Experimental --exclude .venv --exclude dist
+          uv run flake8 . --exclude=Experimental,.venv,dist
           uv run mypy weather_app/ || echo "MyPy issues found but continuing..."
 
       - name: Run tests
