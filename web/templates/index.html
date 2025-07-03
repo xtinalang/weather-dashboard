@@ -54,11 +54,11 @@
             <div class="card">
                 <div class="card-body">
                     <h2 class="card-title">Weather Forecast</h2>
-                    <form method="POST" action="{{ url_for('forecast_form') }}">
+                    <form method="POST" action="{{ url_for('forecast_form') }}" id="forecast-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="form-group mb-3">
-                            <label for="location" class="form-label">Location</label>
-                            <input type="text" name="location" id="location" class="form-control"
+                            <label for="forecast-location" class="form-label">Location</label>
+                            <input type="text" name="location" id="forecast-location" class="form-control"
                                    placeholder="Enter city name (e.g., London, New York)" required>
                         </div>
                         <div class="form-group mb-3">

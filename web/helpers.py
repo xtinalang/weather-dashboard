@@ -284,7 +284,9 @@ def get_weather_data(
     coords: tuple[float, float], unit: TemperatureUnit, weather_api: WeatherAPI
 ) -> tuple[WeatherData, LocationData]:
     """Get weather data for given coordinates."""
-    weather_data = weather_api.get_weather(coords)
+    # Convert coordinates tuple to string format expected by API
+    coords_str = f"{coords[0]},{coords[1]}"
+    weather_data = weather_api.get_weather(coords_str)
     if not weather_data:
         raise ValueError("Failed to get weather data")
 
@@ -317,7 +319,9 @@ def get_forecast_data(
     coords: tuple[float, float], unit: TemperatureUnit, weather_api: WeatherAPI
 ) -> list[dict[str, Any]]:
     """Get forecast data for given coordinates."""
-    forecast_data = weather_api.get_forecast(coords)
+    # Convert coordinates tuple to string format expected by API
+    coords_str = f"{coords[0]},{coords[1]}"
+    forecast_data = weather_api.get_forecast(coords_str)
     if not forecast_data:
         raise ValueError("Failed to get forecast data")
 
