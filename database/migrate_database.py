@@ -54,7 +54,8 @@ def migrate_database():
             if "forecast_days" not in column_names:
                 logger.info("Adding 'forecast_days' column to UserSettings table")
                 add_column_sql = text(
-                    "ALTER TABLE usersettings ADD COLUMN forecast_days INTEGER DEFAULT 7"
+                    "ALTER TABLE usersettings ADD COLUMN forecast_days "
+                    "INTEGER DEFAULT 7"
                 )
                 session.execute(add_column_sql)
                 session.commit()
@@ -85,23 +86,27 @@ def migrate_database():
                         # Set default value if null
                         logger.info("Setting default value for forecast_days")
                         update_sql = text(
-                            "UPDATE usersettings SET forecast_days = 7 WHERE forecast_days IS NULL"
+                            "UPDATE usersettings SET forecast_days = 7 "
+                            "WHERE forecast_days IS NULL"
                         )
                         session.execute(update_sql)
                         session.commit()
                         print("✅ Set default value (7) for forecast_days")
-                    # Update any existing forecast_days values of 5 to 7 as part of the standard change
+                    # Update any existing forecast_days values of 5 to 7 as part of
+                    # the standard change
                     elif forecast_days == 5:
                         logger.info(
                             "Updating forecast_days from 5 to 7 to match new default"
                         )
                         update_sql = text(
-                            "UPDATE usersettings SET forecast_days = 7 WHERE forecast_days = 5"
+                            "UPDATE usersettings SET forecast_days = 7 "
+                            "WHERE forecast_days = 5"
                         )
                         session.execute(update_sql)
                         session.commit()
                         print(
-                            "✅ Updated forecast_days from 5 to 7 to match new application default"
+                            "✅ Updated forecast_days from 5 to 7 to match new "
+                            "application default"
                         )
 
             return True

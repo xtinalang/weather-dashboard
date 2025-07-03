@@ -13,9 +13,3 @@ exclude =
     Experimental,
     node_modules,
     .uv
-
-[dependency-groups]
-dev = [
-    # ... existing dependencies ...
-    "freezegun>=1.2.2",
-]

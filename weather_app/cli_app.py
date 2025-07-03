@@ -54,9 +54,9 @@ class WeatherApp:
 
     def refresh_location(self, location: Location) -> Optional[Location]:
         try:
-            logger.debug(
-                f"Refreshing location: {location.name if hasattr(location, 'name') else 'Unknown'} (ID: {location.id if hasattr(location, 'id') else 'Unknown'})"
-            )
+            location_name = location.name if hasattr(location, "name") else "Unknown"
+            location_id = location.id if hasattr(location, "id") else "Unknown"
+            logger.debug(f"Refreshing location: {location_name} (ID: {location_id})")
 
             # Method 1: Try to use the repository's find_or_create method directly
             if hasattr(location, "latitude") and hasattr(location, "longitude"):
@@ -66,10 +66,12 @@ class WeatherApp:
                     region = getattr(location, "region", None)
 
                     logger.debug(
-                        f"Using find_or_create for {name} at {location.latitude}, {location.longitude}"
+                        f"Using find_or_create for {name} at "
+                        f"{location.latitude}, {location.longitude}"
                     )
 
-                    # This will either find the existing location or create a new one with these coordinates
+                    # This will either find the existing location or create a new
+                    # one with these coordinates
                     return self.location_repo.find_or_create_by_coordinates(
                         name=name,
                         latitude=location.latitude,
@@ -87,7 +89,8 @@ class WeatherApp:
                     fresh_location = self.location_repo.get_by_id(location.id)
                     if fresh_location:
                         logger.debug(
-                            f"Successfully refreshed location by ID: {fresh_location.name} (ID: {fresh_location.id})"
+                            f"Refreshed location by ID: {fresh_location.name} "
+                            f"(ID: {fresh_location.id})"
                         )
                         return self._return_fresh_location(fresh_location)
                     else:
@@ -101,19 +104,22 @@ class WeatherApp:
             if hasattr(location, "latitude") and hasattr(location, "longitude"):
                 try:
                     logger.debug(
-                        f"Trying to refresh by coordinates: {location.latitude}, {location.longitude}"
+                        f"Trying to refresh by coordinates: "
+                        f"{location.latitude}, {location.longitude}"
                     )
                     fresh_location = self.location_repo.find_by_coordinates(
                         location.latitude, location.longitude
                     )
                     if fresh_location:
                         logger.debug(
-                            f"Successfully refreshed location by coordinates: {fresh_location.name} (ID: {fresh_location.id})"
+                            f"Successfully refreshed location by coordinates: "
+                            f"{fresh_location.name} (ID: {fresh_location.id})"
                         )
                         return self._return_fresh_location(fresh_location)
                     else:
                         logger.warning(
-                            f"Location with coordinates {location.latitude}, {location.longitude} not found"
+                            f"Location with coordinates {location.latitude}, "
+                            f"{location.longitude} not found"
                         )
                 except Exception as e:
                     logger.warning(f"Error refreshing location by coordinates: {e}")
@@ -144,7 +150,8 @@ class WeatherApp:
                     )
 
                     logger.debug(
-                        f"Created new location as last resort: {new_location.name} (ID: {new_location.id})"
+                        f"Created new location as last resort: {new_location.name} "
+                        f"(ID: {new_location.id})"
                     )
                     return new_location
 
@@ -306,7 +313,8 @@ class WeatherApp:
             except Exception as e:
                 logger.error(f"Failed to parse coordinates '{coords}': {e}")
                 print(
-                    f"Invalid coordinates format: {coords}. Expected format: 'latitude,longitude'"
+                    f"Invalid coordinates format: {coords}. "
+                    f"Expected format: 'latitude,longitude'"
                 )
                 return
 
@@ -319,7 +327,8 @@ class WeatherApp:
                         f"Location with coordinates {lat},{lon} not found in database"
                     )
                     print(
-                        f"Location with coordinates {lat},{lon} not found. Please try a different location."
+                        f"Location with coordinates {lat},{lon} not found. "
+                        f"Please try a different location."
                     )
                     return
                 logger.debug(f"Found location: {location.name} (ID: {location.id})")
@@ -331,7 +340,8 @@ class WeatherApp:
             # Refresh the location to ensure it's attached to a session
             try:
                 logger.debug(
-                    f"Attempting to refresh location: {location.name} (ID: {location.id})"
+                    f"Attempting to refresh location: {location.name} "
+                    f"(ID: {location.id})"
                 )
                 location = self.refresh_location(location)
                 if not location:
@@ -339,7 +349,8 @@ class WeatherApp:
                     print("Error: Could not refresh location data. Please try again.")
                     return
                 logger.debug(
-                    f"Successfully refreshed location: {location.name} (ID: {location.id})"
+                    f"Successfully refreshed location: {location.name} "
+                    f"(ID: {location.id})"
                 )
             except Exception as e:
                 logger.error(f"Error refreshing location: {e}")
@@ -350,7 +361,8 @@ class WeatherApp:
 
             # Now we have a fresh location object within a session
             logger.info(
-                f"Fetching weather for coordinates: {location.latitude},{location.longitude}"
+                f"Fetching weather for coordinates: "
+                f"{location.latitude},{location.longitude}"
             )
 
             # Get and display current weather

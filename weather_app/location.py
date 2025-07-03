@@ -92,7 +92,8 @@ def search_location() -> str | None:
             if not city_list:
                 logger.warning(f"No results found for query: {query}")
                 print(
-                    f"No cities found matching '{query}'. Please try a different search term."
+                    f"No cities found matching '{query}'. "
+                    f"Please try a different search term."
                 )
                 continue
 
@@ -120,7 +121,8 @@ def search_location() -> str | None:
                     return f"{lat},{lon}"
                 else:
                     print(
-                        f"Invalid selection. Please enter a number between 1 and {len(city_list)}."
+                        f"Invalid selection. Please enter a number between 1 and "
+                        f"{len(city_list)}."
                     )
         except Exception as e:
             logger.error(f"Error in location search: {e}")
@@ -151,7 +153,8 @@ def direct_location() -> str | None:
             if not results:
                 logger.warning(f"No results found for direct location: {location}")
                 print(
-                    f"No cities found matching '{location}'. Please try a different location."
+                    f"No cities found matching '{location}'. "
+                    f"Please try a different location."
                 )
                 continue
 
@@ -224,7 +227,8 @@ def use_saved_location() -> str | None:
                 return f"{selected.latitude},{selected.longitude}"
             else:
                 print(
-                    f"Invalid selection. Please enter a number between 1 and {len(locations)}."
+                    f"Invalid selection. Please enter a number between 1 and "
+                    f"{len(locations)}."
                 )
 
         # If we get here, the selection was invalid

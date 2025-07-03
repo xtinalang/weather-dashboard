@@ -138,7 +138,8 @@ class TestWeatherRoute:
             mock_get_weather.side_effect = ValueError("API Error")
 
             response = client.get("/weather/51.5074/-0.1278")
-            # The actual app might handle errors differently, check what it actually returns
+            # The actual app might handle errors differently, check what it
+            # actually returns
             assert response.status_code in [200, 302, 500]
 
 
@@ -185,7 +186,8 @@ class TestApiWeatherRoute:
             mock_location = MagicMock()
             mock_get_weather.return_value = (mock_weather_data, mock_location)
 
-            # Use positive coordinates since Flask's <float:> converter doesn't handle negative numbers
+            # Use positive coordinates since Flask's <float:> converter doesn't
+            # handle negative numbers
             response = client.get("/api/weather/51.5074/0.1278")
             assert response.status_code == 200
             data = json.loads(response.data)
@@ -225,7 +227,8 @@ class TestNaturalLanguageRoute:
 
     def test_nl_query_valid(self, client):
         """Test natural language query with valid input."""
-        # The actual route is /nl-date-weather, and the function is internal to the route
+        # The actual route is /nl-date-weather, and the function is internal
+        # to the route
         response = client.post(
             "/nl-date-weather",
             data={"query": "weather in London tomorrow", "location": "London"},

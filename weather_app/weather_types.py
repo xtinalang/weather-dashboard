@@ -114,7 +114,8 @@ class WeatherData(TypedDict, total=False):
     forecast: ForecastDays | None
 
 
-# Weather response for weather from /current.json or /forecast.json "current" or "forecast"
+# Weather response for weather from /current.json or /forecast.json
+# "current" or "forecast"
 class WeatherResponse(TypedDict, total=False):
     location: LocationData
     current: CurrentWeather
