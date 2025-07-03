@@ -20,6 +20,7 @@ dependencies = [
     "pytest-playwright>=0.7.0",
     "python-dateutil>=2.9.0.post0",
     "make>=0.1.6.post2",
+    "coverage>=7.9.2",
 ]
 
 [project.scripts]
@@ -32,6 +33,7 @@ dev = [
     "flake8>=6.1.0",
     "mypy>=1.5.1",
     "freezegun>=1.2.2",
+    "coverage>=7.9.2",
 ]
 
 [build-system]
