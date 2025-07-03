@@ -22,7 +22,7 @@ class Database:
     """Database connection manager for the weather application."""
 
     _instance: Optional["Database"] = None
-    _engine: Optional[Engine] = None
+    _engine: Engine | None = None
 
     def __new__(cls) -> "Database":
         """Singleton pattern to ensure only one database instance exists."""

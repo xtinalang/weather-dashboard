@@ -8,7 +8,6 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Optional
 
 
 class FunctionalTestRunner:
@@ -16,7 +15,7 @@ class FunctionalTestRunner:
 
     def __init__(self):
         self.project_root = Path(__file__).parent.parent.parent
-        self.web_server_process: Optional[subprocess.Popen] = None
+        self.web_server_process: subprocess.Popen | None = None
         self.test_results: dict[str, bool] = {}
 
     def setup_test_environment(self) -> bool:

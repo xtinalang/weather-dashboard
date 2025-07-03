@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -9,12 +9,12 @@ if TYPE_CHECKING:
 
 
 class Location(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     latitude: float
     longitude: float
     country: str = Field(index=True)
-    region: Optional[str] = Field(default=None, index=True)
+    region: str | None = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
     is_favorite: bool = Field(default=False, index=True)
@@ -43,17 +43,17 @@ class Location(SQLModel, table=True):
 
 
 class WeatherRecord(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     location_id: int = Field(foreign_key="location.id", index=True)
     timestamp: datetime = Field(default_factory=datetime.now, index=True)
     temperature: float
-    feels_like: Optional[float] = Field(default=None)
-    humidity: Optional[int] = Field(default=None)
-    pressure: Optional[float] = Field(default=None)
-    wind_speed: Optional[float] = Field(default=None)
-    wind_direction: Optional[str] = Field(default=None)
+    feels_like: float | None = Field(default=None)
+    humidity: int | None = Field(default=None)
+    pressure: float | None = Field(default=None)
+    wind_speed: float | None = Field(default=None)
+    wind_direction: str | None = Field(default=None)
     condition: str
-    condition_description: Optional[str] = Field(default=None)
+    condition_description: str | None = Field(default=None)
 
     # Relationships
     location: Location = Relationship(back_populates="weather_records")
@@ -78,14 +78,14 @@ class UserSettings(SQLModel, table=True):
     id: int = Field(default=1, primary_key=True)  # Only one settings record
     temperature_unit: str = Field(default="celsius")  # celsius, fahrenheit
     wind_speed_unit: str = Field(default="m/s")  # m/s, km/h, mph
-    default_location_id: Optional[int] = Field(default=None, foreign_key="location.id")
+    default_location_id: int | None = Field(default=None, foreign_key="location.id")
     save_history: bool = Field(default=True)
     max_history_days: int = Field(default=7)
     theme: str = Field(default="default")  # default, dark, light
     forecast_days: int = Field(default=7)  # default number of forecast days
 
     # Relationship to default location
-    default_location: Optional[Location] = Relationship()
+    default_location: Location | None = Relationship()
 
     def to_dict(self) -> dict[str, object]:
         return {

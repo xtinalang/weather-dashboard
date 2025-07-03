@@ -4,7 +4,6 @@ Contains error handlers, input validation, and logging configuration.
 """
 
 import logging
-from typing import Union
 
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_wtf.csrf import CSRFError
@@ -27,7 +26,7 @@ logger = setup_logging()
 
 
 # Input validation helpers
-def validate_coordinates(lat: Union[str, float], lon: Union[str, float]) -> bool:
+def validate_coordinates(lat: str | float, lon: str | float) -> bool:
     """Validate coordinate ranges."""
     try:
         lat = float(lat)

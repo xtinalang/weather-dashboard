@@ -250,9 +250,9 @@ class TestConstants:
         _, web_utils = web_modules_combined
 
         assert web_utils.DEFAULT_TEMP_UNIT in ["C", "F"]
-        assert isinstance(web_utils.VALID_TEMP_UNITS, (list, tuple))
-        assert isinstance(web_utils.TEMPERATURE_UNIT_CHOICES, (list, tuple))
-        assert isinstance(web_utils.FORECAST_DAYS_CHOICES, (list, tuple))
+        assert isinstance(web_utils.VALID_TEMP_UNITS, list | tuple)
+        assert isinstance(web_utils.TEMPERATURE_UNIT_CHOICES, list | tuple)
+        assert isinstance(web_utils.FORECAST_DAYS_CHOICES, list | tuple)
 
     def test_temperature_unit_choices_format(self, web_modules_combined):
         """Test temperature unit choices format."""

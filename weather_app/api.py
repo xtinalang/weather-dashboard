@@ -1,8 +1,6 @@
 import logging
 from typing import (
-    Optional,
     TypedDict,
-    Union,
     cast,
 )
 
@@ -34,7 +32,7 @@ class CitySearchResult(TypedDict, total=False):
 
 
 class WeatherAPI:
-    def __init__(self, api_key: Optional[str] = None) -> None:
+    def __init__(self, api_key: str | None = None) -> None:
         try:
             self.api_key: str = api_key or config("WEATHER_API_KEY", default="")
             if not self.api_key:
@@ -47,11 +45,11 @@ class WeatherAPI:
             raise ValueError("Failed to initialize WeatherAPI") from e
 
     def get_weather(
-        self, location: str, date: Optional[str] = None
-    ) -> Optional[WeatherResponse]:
+        self, location: str, date: str | None = None
+    ) -> WeatherResponse | None:
         try:
             endpoint: str = "forecast.json"
-            params: dict[str, Union[str, int]] = {
+            params: dict[str, str | int] = {
                 "q": location,
                 "key": self.api_key,
                 "days": 7,
@@ -83,12 +81,12 @@ class WeatherAPI:
             print("An unexpected error occurred while fetching weather data.")
             return None
 
-    def get_forecast(self, location: str, days: int = 7) -> Optional[WeatherResponse]:
+    def get_forecast(self, location: str, days: int = 7) -> WeatherResponse | None:
         try:
             # Ensure days is within valid range
             valid_days: int = max(1, min(days, 7))
 
-            params: dict[str, Union[str, int]] = {
+            params: dict[str, str | int] = {
                 "q": location,
                 "key": self.api_key,
                 "days": valid_days,
@@ -115,7 +113,7 @@ class WeatherAPI:
             print("An unexpected error occurred while fetching forecast data.")
             return None
 
-    def search_city(self, query: str) -> Optional[list[CitySearchResult]]:
+    def search_city(self, query: str) -> list[CitySearchResult] | None:
         try:
             params: dict[str, str] = {"q": query, "key": self.api_key}
             request_url: str = f"{WEATHER_URL}search.json"

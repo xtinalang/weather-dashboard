@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from flask import flash, redirect, render_template, request, url_for
 
@@ -403,7 +403,7 @@ class Helpers:
             return redirect(url_for("index"))
 
     @staticmethod
-    def get_normalized_unit(unit_param: Optional[str] = None) -> str:
+    def get_normalized_unit(unit_param: str | None = None) -> str:
         # Get unit from request or parameter
         unit = (unit_param or request.args.get("unit", DEFAULT_TEMP_UNIT)).upper()
         if unit not in VALID_TEMP_UNITS:

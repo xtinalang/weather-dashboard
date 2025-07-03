@@ -1,6 +1,5 @@
 """Tests for Typer CLI commands with proper mocking."""
 
-from typing import Union
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -455,7 +454,7 @@ def _create_mock_location(
     latitude: float,
     longitude: float,
     location_id: int,
-    region: Union[str, None] = None,
+    region: str | None = None,
 ) -> MagicMock:
     """Create a mock location object with specified attributes."""
     mock_location = MagicMock()
